@@ -27,19 +27,19 @@ const ReadProductReport = () => {
     }, []);
 
     if (loading) return <div className="flex flex-row  items-center justify-center mt-5 pb-16">
-                            <p className="font-normal text-xl text-[#BE1D21] text-center">Compiling data, please wait a moment.......</p>
-                                <div className="pt-2"> 
-                                    <MagnifyingGlass
-                                    visible={true}
-                                    height="80"
-                                    width="80"
-                                    ariaLabel="magnifying-glass-loading"
-                                    wrapperStyle={{}}
-                                    wrapperClass="magnifying-glass-wrapper"
-                                    glassColor="#FFFFFF"
-                                    color="#BE1D21"
-                                    /> </div>
-                        </div>;
+        <p className="font-normal text-xl text-[#BE1D21] text-center">Compiling data, please wait a moment.......</p>
+        <div className="pt-2">
+            <MagnifyingGlass
+                visible={true}
+                height="80"
+                width="80"
+                ariaLabel="magnifying-glass-loading"
+                wrapperStyle={{}}
+                wrapperClass="magnifying-glass-wrapper"
+                glassColor="#FFFFFF"
+                color="#BE1D21"
+            /> </div>
+    </div>;
     if (error) return <p>Error: {error.message}</p>;
 
     return (
@@ -53,11 +53,6 @@ const ReadProductReport = () => {
                             <tr>
                                 <th className="border border-gray-200 text-sm">Id</th>
                                 <th className="border border-gray-200 text-sm">Title</th>
-                                <th className="border border-gray-200 text-sm">Name</th>
-                                <th className="border border-gray-200 text-sm">Grade/Line 1</th>
-                                <th className="border border-gray-200 text-sm">API/Line 2</th>
-                                <th className="border border-gray-200 text-sm">acea/Line 3</th>
-                                <th className="border border-gray-200 text-sm">Packing</th>
                                 <th className="border border-gray-200 text-sm">TDSFile</th>
                                 <th className="border border-gray-200 text-sm">MSDSFile</th>
                                 <th className="border border-gray-200 text-sm">Image</th>
@@ -71,23 +66,9 @@ const ReadProductReport = () => {
                                         {product.id || <div className="text-center text-red-500"> --- </div>}
                                     </td>
                                     <td className="border text-sm font-light border-gray-200">
-                                        { <a href={`/product/${product.slug}`} className="underline" target="_blank" > product.title </a> || <div className="text-center text-red-500"> --- </div>}
+                                        {<a href={`/product/${product.slug}`} className="underline" target="_blank" > {product.title} </a> || <div className="text-center text-red-500"> --- </div>}
                                     </td>
-                                    <td className="border text-sm font-light border-gray-200">
-                                        {product.name || <div className="text-center text-red-500"> --- </div>}
-                                    </td>
-                                    <td className="border text-sm font-light border-gray-200">
-                                        {product.grade || <div className="text-center text-red-500"> --- </div>}
-                                    </td>
-                                    <td className="border text-sm font-light border-gray-200">
-                                        {product.api || <div className="text-center text-red-500"> --- </div>}
-                                    </td>
-                                    <td className="border text-sm font-light border-gray-200">
-                                        {product.acea || <div className="text-center text-red-500"> --- </div>}
-                                    </td>
-                                    <td className="border text-sm font-light border-gray-200">
-                                        {product.packing || <div className="text-center text-red-500"> --- </div>}
-                                    </td>
+
                                     <td className="border text-sm font-light border-gray-200">
                                         {product.TDSFile?.url ? (
                                             <a href={`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}${product.TDSFile.url}`} className="underline" target="_blank" rel="noopener noreferrer">
@@ -121,7 +102,7 @@ const ReadProductReport = () => {
                                         )}
                                     </td>
                                     <td className="border text-sm font-light border-gray-200">
-                                        {product.productImage?.alternativeText || <div className="text-center text-red-500"> --- </div>}
+                                        {product.productImage?.alternativeText || <div className="text-center text-gray-400"> title Auto Display </div>}
                                     </td>
                                 </tr>
                             ))}

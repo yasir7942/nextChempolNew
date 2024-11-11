@@ -1,6 +1,6 @@
 import React from 'react'
 import moment from 'moment';
-import {  gePosts, getBlogPage } from '../data/loader';
+import { gePosts, getBlogPage } from '../data/loader';
 import TopBanner from '../components/layout/top-banner';
 import { PaginationComponent } from "@/app/components/elements/pagination";
 import PaddingContainer from '../components/layout/padding-container';
@@ -15,101 +15,102 @@ import SEOSchema from '../components/elements/seo-schema';
 const cachedGetBlogPage = cache(getBlogPage);
 
 export async function generateMetadata({ params }) {
- 
- 
-  const pageData = await cachedGetBlogPage(); 
-    
+
+
+  const pageData = await cachedGetBlogPage();
+
   const metadataParams = {
-    pageTitle:   pageData.slug,
+    pageTitle: pageData.slug,
     pageSlug: "blog",
     pageDescription: "",
     seoTitle: pageData.seo?.seoTitle,
-     seoDescription: pageData.seo?.seoDescription,
+    seoDescription: pageData.seo?.seoDescription,
     rebotStatus: pageData.seo?.preventIndexing,
-    canonicalLinks: pageData.seo?.canonicalLinks?? "blog",
+    canonicalLinks: pageData.seo?.canonicalLinks ?? "blog",
     dataPublishedTime: pageData.publishedAt,
     category: "",
-    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL +  pageData.banner?.mobileBanner?.url,
-    imageAlternativeText:  pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-    imageExt:  pageData.banner?.mobileBanner?.mime,
+    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
+    imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
+    imageExt: pageData.banner?.mobileBanner?.mime,
   };
 
   return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
 }
 
- 
+
 const numbers = Array.from({ length: 12 }, (_, index) => index + 1);
 
 const pageSize = 9;
 
 
-const Blog = async ({searchParams }) => {
+const Blog = async ({ searchParams }) => {
 
 
-    const pageData = await cachedGetBlogPage();
-    const currentPage = Number(searchParams.page) || 1;
-    const postsData = await gePosts(currentPage,pageSize);
-    const PostCount = postsData.meta.pagination.pageCount;
-    const totalPosts = postsData.meta.pagination.total;
-     
+  const pageData = await cachedGetBlogPage();
+  const currentPage = Number(searchParams.page) || 1;
+  const postsData = await gePosts(currentPage, pageSize);
+  const PostCount = postsData.meta.pagination.pageCount;
+  const totalPosts = postsData.meta.pagination.total;
 
-    // console.log("-----------------------blog page--------------------------------------------------");
-    //console.dir(postsData, { depth: null });
-   // console.log("---------------------------End-------- Blog---------------end-----------------------");
-    //  console.log(productData.data);
-    // if(productData.data.length === 0)  return  <NotFound />
 
-    //console.dir(productData.data.title, { depth:null});
-     // console.log(currentPage + "---" + pageSize);
+  // console.log("-----------------------blog page--------------------------------------------------");
+  //console.dir(postsData, { depth: null });
+  // console.log("---------------------------End-------- Blog---------------end-----------------------");
+  //  console.log(productData.data);
+  // if(productData.data.length === 0)  return  <NotFound />
 
-    return (
-        <div>
+  //console.dir(productData.data.title, { depth:null});
+  // console.log(currentPage + "---" + pageSize);
 
-      <SEOSchema schemaList={pageData.seo?.schema}  />
+  return (
+    <div>
 
-            <TopBanner banner={pageData.banner} />
+      <SEOSchema schemaList={pageData.seo?.schema} />
 
-           <div className='-mt-60 block'>
-            <PaddingContainer  >
-                {/*  Post Area   */}
-                <div className=" w-full  flex flex-col  lg:mt-48 px-16 -mt-60      ">
-                    {/*   Content area content goes here  bg-[#2a3c46] */}
-                  {/* <SearchBar /> */}  
 
-                  <SearchBarForPost /> 
+      <TopBanner banner="/images/blog-banner.jpg" title="Blog" title2="" />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3   gap-7   ">
+      <div className=' -mt-44  block ' >
+        <PaddingContainer  >
+          {/*  Post Area   */}
+          <div className=" w-full  flex flex-col  lg:mt-48 px-16        ">
+            {/*   Content area content goes here  bg-[#2a3c46] */}
+            {/* <SearchBar /> */}
 
-                        {postsData.data.map((post) => ( 
+            <SearchBarForPost />
 
-                            <div key={post.id} className="w-full flex flex-col text-white  md:text-left pb-14   ">
-                                <a href={`/blog/${post.slug}`}> 
-                                  <Image className="w-full " src={getImageUrl(post?.featureImage.url)}  
-                                  width={800} height={600} alt={post?.featureImage.alternativeText ?? post.title} />
-                                    <h2 className="text-darkYellow font-semibold  leading-6 text-lg md:text-base pt-3  text-justify">
-                                        {post.title}
-                                    </h2>
-                                    <p className='text-sm text-gray-300 font-light'> {moment(post.PostDate).format('MMMM D, YYYY')}</p>
-                                    <p className="text-lx md:text-sm text-justify">{post.seo?.seoDesctiption || ""}</p>
-                                </a>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4   gap-7   ">
 
-                            </div>
+              {postsData.data.map((post) => (
 
-                        ))}
+                <div key={post.id} className="w-full flex flex-col text-white  md:text-left pb-14   ">
+                  <a href={`/blog/${post.slug}`}>
+                    <Image className="w-full " src={getImageUrl(post?.featureImage.url)}
+                      width={800} height={600} alt={post?.featureImage.alternativeText ?? post.title} />
+                    <h2 className="text-gray-900 font-semibold  leading-6 text-lg md:text-base pt-3  text-justify">
+                      {post.title}
+                    </h2>
+                    <p className='text-sm text-gray-700 font-light'> {moment(post.PostDate).format('MMMM D, YYYY')}</p>
+                    <p className="text-lx md:text-sm text-justify text-gray-800">{post.seo?.seoDesctiption || ""}</p>
+                  </a>
 
-                    </div>
-
-                    <Suspense fallback={<div>Loading...</div>}>
-                             <PaginationComponent pageCount={PostCount} totalPage={totalPosts} pageSize={pageSize} />
-                     </Suspense>
                 </div>
 
-            </PaddingContainer>
+              ))}
+
+            </div>
+
+            <Suspense fallback={<div>Loading...</div>}>
+              <PaginationComponent pageCount={PostCount} totalPage={totalPosts} pageSize={pageSize} />
+            </Suspense>
           </div>
-        </div>
-    )
+
+        </PaddingContainer>
+      </div>
+    </div>
+  )
 }
 
- 
+
 
 export default Blog

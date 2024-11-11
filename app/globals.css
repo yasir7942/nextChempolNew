@@ -84,10 +84,19 @@
         @apply list-decimal pl-5 space-y-0 ;
       }
 
-     
-
+    
       .rich-text p{
-        @apply text-lg font-light  ;
+        @apply text-lg font-light mt-2 ;
+ 
+       }
+
+       .rich-text a{
+        @apply text-textLightBlue hover:text-textBlue transition duration-300 ease-in-out ;
+ 
+       }
+
+       .hover-animation {
+        @apply  transition duration-300 ease-in-out ;
  
        }
   }
@@ -96,4 +105,9 @@
     body {
       @apply bg-backgroundColor;
     }
+  }
+
+
+  .descriptionSpace p {
+    @apply py-2;
   }

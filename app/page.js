@@ -1,18 +1,23 @@
 //Home Page
 
-import Image from "next/image";
-import TopBanner from "./components/layout/top-banner";
+
+
 import PaddingContainer from "./components/layout/padding-container";
 import BlogContainer from "./components/layout/blog-container";
 import { getHomePage } from "@/app/data/loader"
 import SpeakableSchema from "./components/elements/speakable-schema";
-import CertificateText from "./components/layout/certification-text";
+
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import { cache } from 'react';
 import SEOSchema from "./components/elements/seo-schema";
 
 import siteConfig from "@/config/site";
-import HomeProductCategory from "./components/layout/home-product-category";
+
+import CharcoalContentBox from "./components/layout/charcoal-content-box";
+
+import ProductCategoryGrid from "./components/layout/product-category-grid";
+import CTAcard from "./components/layout/cta-card";
+import Slider from "./components/layout/slider";
 
 
 
@@ -54,54 +59,51 @@ export default async function Home() {
   return (
     <div className="bg-backgroundColor">
 
+      <Slider />
+
       <SpeakableSchema pageTitle={homeData.title} pageUrl={homeData.seo?.canonicalLinks ?? "/"} />
       <SEOSchema schemaList={homeData.seo?.schema} />
-      <TopBanner banner={homeData.banner} home />
+
+      {/* <!--powering progress--> */}
+
+      <div className=" flex flex-col h-auto md:flex-row  w-full md:space-x-2  px-4 md:px-20 mt-10 justify-center" >
+        {/* <!--text--> */}
+        <div className="flex flex-col text-left ">
+          <h3 className=" *:first-letter: text-2xl md:text-3xl text-center font-semibold text-textBlue">Powering Progress with Innovative Chemical Solutions</h3>
+          <p className="text-darkGary mt-3 text-justify text-sm font-normal  pr-5  max-w-6xl ">We are petrochemical experts specializing in the evolution and manufacturing of chemical additives for engine oils, Viscosity Index Improvers, Special Additives, Gasoline Engine Oil Additives, and Speciality Chemical Additives. Trust us for providing high-quality formulations and exceptional service.</p>
+        </div>
+
+      </div>
+      {/* <!--end powering progress--> */}
+
+      {/* <!--Cards container--> */}
+
+      <PaddingContainer  >
+        <div className="flex flex-col md:flex-row  justify-center h-auto space-y-5 md:space-y-0 md:space-x-2 lg:space-x-6  md:pb-5      mt-2 md:mt-10">
+
+          <CharcoalContentBox title="About Chempol"
+            description="Chempol is a top-tier manufacturer of Lubricant raw materials, additives, and other chemical specialities, catering to multiple industries’ needs..."
+            image="/images/about-chempol.jpg" />
+
+          <CharcoalContentBox title="Reliability Solutions"
+            description="At Chempol, we’re your go-to partner for all your lubrication Polymer Applications, Polymer Additives, and speciality polymer needs. Our team..."
+            image="/images/relaibility.jpg" />
+
+          <CharcoalContentBox title="Core Values"
+            description="At Chempol, we are committed to delivering exceptional results to our customters. We believe that our success is driven by our ability to inspire..."
+            image="/images/caore-value.jpg" />
 
 
-      {/* <!--Product Catrgories Icons--> */}
-      <PaddingContainer >
-
-        <HomeProductCategory />
-
-
-
-        {/* <!-- media section--> */}
-        <section className="flex flex-col md:flex-row w-full h-auto mt-20 p-0 pb-0 justify-between items-center space-x-0 space-y-0">
-          <div className="w-full h-auto md:w-1/2 lg:w-1/2 flex justify-center">
-            <iframe
-              className="w-[100%] h-[350px] md:w-[100%] md:h-[350px] lg:w-[100%] lg:h-[400px]"
-              src="https://www.youtube.com/embed/9xmuqQjRMEg?autoplay=1&mute=1&modestbranding=0&showinfo=0&controls=0&rel=0"
-              title="YouTube Video"
-              frameBorder="0"
-              allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              referrerPolicy="strict-origin-when-cross-origin"
-            ></iframe>
-          </div>
-
-          <div className="w-full md:w-1/2 lg:w-1/2 p-4 flex justify-center items-center">
-            <Image
-              src="/images/atlantic-products.png"
-              className="w-auto h-[350px] md:h-[300px] lg:h-[400px]"
-              width={600}
-              height={500}
-              alt="Atlantic Product Range"
-            />
-          </div>
-        </section>
-
-        {/* <!-- end media section--> */}
-
-
-        <CertificateText heading1={homeData.bodyHeading1} text1={homeData.bodyText1} heading2={homeData.bodyHeading2} text2={homeData.bodyText2} />
-
+        </div>
       </PaddingContainer>
+      {/* <!-- end card container--> */}
+
+
+      <ProductCategoryGrid />
+
+      <CTAcard />
 
       <BlogContainer />
-
-      <br />
-
-
 
     </div>
 

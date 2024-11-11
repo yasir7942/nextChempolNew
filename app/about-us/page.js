@@ -11,26 +11,26 @@ import SpeakableSchema from "../components/elements/speakable-schema";
 
 const cachedGetAboutPage = cache(getAboutPage);
 export async function generateMetadata({ params }) {
- 
- 
-  const pageData = await cachedGetAboutPage(); 
-    
-  const metadataParams = {
-    pageTitle:   "About Us",
-    pageSlug: "about-us",
-    pageDescription: pageData.seo?.seoDescription,
-    seoTitle: pageData.seo?.seoTitle,
-    seoDescription: pageData.seo?.seoDescription,
-    rebotStatus: pageData.seo?.preventIndexing,
-    canonicalLinks: pageData.seo?.canonicalLinks?? "about-us",
-    dataPublishedTime: pageData.publishedAt,
-    category: "",
-    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
-    imageAlternativeText:  pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-    imageExt:  pageData.banner?.mobileBanner?.mime,
-  };
 
-  return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+
+    const pageData = await cachedGetAboutPage();
+
+    const metadataParams = {
+        pageTitle: "About Us",
+        pageSlug: "about-us",
+        pageDescription: pageData.seo?.seoDescription,
+        seoTitle: pageData.seo?.seoTitle,
+        seoDescription: pageData.seo?.seoDescription,
+        rebotStatus: pageData.seo?.preventIndexing,
+        canonicalLinks: pageData.seo?.canonicalLinks ?? "about-us",
+        dataPublishedTime: pageData.publishedAt,
+        category: "",
+        image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
+        imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
+        imageExt: pageData.banner?.mobileBanner?.mime,
+    };
+
+    return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
 }
 
 
@@ -38,108 +38,131 @@ const AboutUsPage = async () => {
 
     const pageData = await cachedGetAboutPage();
 
-    //// console.log("-----------------------about   page--------------------------------------------------");
-   //  console.dir(pageData, { depth: null });
-   // console.log("---------------------------End-----about ------------------end-----------------------");
 
 
 
     return (
         <div>
-            <SpeakableSchema pageTitle={pageData.title} pageUrl={pageData.seo?.canonicalLinks?? "/about-us"}  />
-            <SEOSchema schemaList={pageData.seo?.schema}  />
+            <SpeakableSchema pageTitle={pageData.title} pageUrl={pageData.seo?.canonicalLinks ?? "/about-us"} />
+            <SEOSchema schemaList={pageData.seo?.schema} />
 
-            <TopBanner banner={pageData.banner} />
+
+            <TopBanner banner="/images/product-banner.jpg" title="About Us" />
+
 
             <PaddingContainer className="flex flex-col   " >
 
 
+                <div className="text-gray-700 font-light py-10 summary text-lg descriptionSpace"><BodyDataParse content={pageData.aboutus.description} /></div>
 
 
-                <div className="flex flex-col md:flex-row justify-center items-center mt-5 ">
-                    <div className="w-full h-auto pr-10 ">
-                        <Image className="w-lg block mx-auto " src={getImageUrl(pageData.aboutus.image.url)} width={800} height={500} alt={pageData.aboutus.image.alternativeText} />
-                    </div>
-                    <div className="text-white font-light    mt-5  leading-snug   pr-5 md:pr-2 rich-text text-2xl" >
-                        <h1 className="text-white text-3xl mt-5 md:mt-0 pb-5 md:pb-10 headline  uppercase"> {pageData.aboutus.title}   </h1>
-                        <div className=" max-w-7xl summary"> <BodyDataParse content={pageData.aboutus.description} /> </div>
-                    </div>
-                </div>
-
-
-                <div className="flex flex-col md:flex-row space-y-5 md:space-y-0 justify-between items-stretch md:space-x-3 lg:space-x-10 mt-16">
-                    <div className="bg-gray-800 rounded-lg text-white text-lg tracking-wider font-light p-7 md:p-3 lg:p-7 flex-grow flex items-center justify-center">
-                        {pageData.ourFocus}
-                    </div>
-                    <div className="bg-gray-800 rounded-lg text-white text-lg tracking-wider font-light p-7 flex-grow flex items-center justify-center">
-                        {pageData.facility}
-                    </div>
-                    <div className="bg-gray-800 rounded-lg text-white text-lg tracking-wider font-light p-7 flex-grow flex items-center justify-center">
-                        {pageData.commitment}
-                    </div>
-                </div>
 
             </PaddingContainer>
 
-            <div className="w-full h-auto py-10 bg-blue-950 mt-10 text-white ">
-                <PaddingContainer  >
-                    <div className="flex flex-col lg:flex-row justify-center items-center space-x-7 " >
-                        <Image className="w-96 h-auto" src={getImageUrl(pageData?.founder?.image.url)} width={800} height={500} alt={pageData?.founder?.image.alternativeText} />
-                        <div className="flex flex-col space-y-3">
-                            <h2 className="text-3xl font-light mt-7 lg:mt-0 headline uppercase">{pageData.founder.title}</h2>
-                            <div className="text-white font-light   mt-5   pr-5 md:pr-2 rich-text max-w-4xl summary " >
-                                <BodyDataParse content={pageData.founder.description} />
+            <div className=" w-full py-5 bg-gray-200">
+                <PaddingContainer>
+                    <div className="flex flex-col md:flex-row    justify-center  h-auto   md:space-x-3 lg:space-x-3 mt-3 bg-gray-200">
+                        {/* First Section */}
+                        <div className="flex flex-col  p-5  xl:p-10 md:w-1/3 h-full  border items-center   text-black text-lg tracking-wider font-light flex-grow justify-center">
+                            <div className="max-w-sm md:max-w-lg  overflow-hidden rounded-lg">
+                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.coreValue.image.url)} alt={pageData.coreValue.image.alternativeText} />
+                            </div>
+                            <h1 className="text-xl mt-5 text-left   capitalize font-normal text-textBlue">{pageData.coreValue.title}</h1>
+                            <div className="text-black md:text-justify summary 2xl:w-[80%] ">
+                                <BodyDataParse content={pageData.coreValue.description} />
+                            </div>
+                            <a href="#" className="text-left w-full text-base  2xl:w-[80%]  text-textBlue ">Read more...</a>
+                        </div>
+
+                        {/* Second Section */}
+                        <div className="flex flex-col  p-5  xl:p-10 mt-10 md:mt-0  md:w-1/3 h-full border  items-center text-black text-lg tracking-wider font-light flex-grow justify-center">
+                            <div className="max-w-sm md:max-w-lg   overflow-hidden rounded-lg">
+                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.ourMission.image.url)} alt={pageData.ourMission.image.alternativeText} />
+                            </div>
+                            <h1 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.ourMission.title}</h1>
+                            <div className="text-black md:text-justify summary  2xl:w-[80%]  ">
+                                <BodyDataParse content={pageData.ourMission.description} />
+                            </div>
+                        </div>
+
+                        {/* Third Section */}
+                        <div className="flex flex-col  p-5  xl:p-10  md:w-1/3 h-full mt-10 md:mt-0  items-center border  text-black text-lg tracking-wider font-light flex-grow justify-center">
+                            <div className="max-w-sm md:max-w-lg  overflow-hidden rounded-lg">
+                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.overVisson.image.url)} alt={pageData.overVisson.image.alternativeText} />
+                            </div>
+                            <h1 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.overVisson.title}</h1>
+                            <div className="text-black md:text-justify summary  2xl:w-[80%] ">
+                                <BodyDataParse content={pageData.overVisson.description} />
                             </div>
                         </div>
                     </div>
+
+
                 </PaddingContainer>
             </div>
 
 
-            <PaddingContainer  >
-                
-                <div className="text-white mt-16 ">
-                    <h3 className="text-3xl font-light uppercase">Our Values</h3>
 
-                    <div className="flex flex-col md:flex-row md:space-x-10 mt-10 justify-center items-stretch   min-h-full">
-                        {pageData.overValues.map((val) => (
-                            <div key={val.id} className="flex-1 flex flex-col justify-start items-center text-center   min-h-full">
-                                <div className="w-full bg-gray-800 py-2 uppercase  text-center text-white tracking-wider headline ">{val.title}</div>
-                                <div className="w-full text-white font-light pt-5 pb-7 px-5 md:px-0 summary">
-                                    {val.description}
+            <PaddingContainer>
+
+                <div className="flex flex-wrap mt-10">
+
+                    {pageData.qualities.map((val) => (
+
+
+                        <div key={val.id} className=" w-full md:w-1/2 mt-6 space-y-0 space-x-0 ">
+                            <div className="flex flex-col px-14 py-0    items-start   text-black text-lg tracking-wider font-light flex-grow justify-start  ">
+                                <div className="w-full   overflow-hidden rounded-lg before:">
+                                    <Image className="w-full 2xl:w-[80%]  h-auto object-cover" width={1000} height={1000} src={getImageUrl(val.image.url)} alt={val.image?.alternativeText} />
+                                </div>
+                                <h1 className="text-xl mt-5 text-left w-full    items-start capitalize font-normal text-textBlue">{val.title}</h1>
+                                <div className="text-black md:text-justify items-start text-base 2xl:text-left w-full 2xl:w-[80%]   ">
+                                    <BodyDataParse content={val.description} />
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+
+                    ))}
+
 
                 </div>
-
-
-
-                <div className="flex flex-col md:flex-row justify-center items-center mt-10 ">
-                    <div className="w-1/2 h-auto pr-10 ">
-                        <Image className="w-lg block mx-auto " src={getImageUrl(pageData.ourMission.image.url)} width={800} height={500} alt={pageData.aboutus.image.alternativeText} />
-                    </div>
-                    <div className="w-1/2  text-white font-light    mt-5  leading-snug   pr-5 md:pr-2 rich-text text-2xl" >
-                        <h1 className="text-white text-3xl mt-5 md:mt-0 pb-5 md:pb-10   uppercase headline"> {pageData.ourMission.title}   </h1>
-                        <div className="max-w-5xl summary">  <BodyDataParse content={pageData.ourMission.description} /> </div>
-                    </div>
-                </div>
-
-                <div className="flex flex-col md:flex-row-reverse justify-center items-center mt-5 ">
-                    <div className="w-1/2  h-auto pr-10 ">
-                        <Image className="w-lg block mx-auto " src={getImageUrl(pageData.overVisson.image.url)} width={800} height={500} alt={pageData.aboutus.image.alternativeText} />
-                    </div>
-                    <div className="w-1/2  text-white font-light    mt-5  leading-snug pr-10 md:pr-2 rich-text text-2xl" >
-                        <h1 className="text-white text-3xl mt-5 md:mt-0 pb-5 md:pb-10   uppercase headline"> {pageData.overVisson.title}   </h1>
-                        <div className=" max-w-5xl summary"> <BodyDataParse content={pageData.overVisson.description} /> </div>
-                    </div>
-                </div>
-            
-              <div className="w-full h-16"></div>
 
 
             </PaddingContainer>
+
+
+
+
+
+
+
+            <div className="relative w-full h-[200px] md:h-[300px] xl:h-[400px] mt-12 mb-10   overflow-hidden">
+                <div className="absolute inset-0 md:-top-44 w-full  pb-[56.25%] h-full">
+                    <iframe className="video-bg absolute inset-0 w-full h-full"
+                        src="https://www.youtube.com/embed/lMJXxhRFO1k?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=0&iv_load_policy=3&rel=0&playlist=lMJXxhRFO1k&t=16"
+                        allow="autoplay; encrypted-media"
+                        frameBorder="0"
+                        allowFullScreen>
+                    </iframe>
+                    <div className="absolute inset-0 bg-black opacity-50"></div>
+                </div>
+
+                <div className="absolute w-full z-10 flex flex-col text-white items-left md:text-center justify-center h-full px-6 ">
+                    <h4 className="text-white   text-xl md:text-2xl xl:text-4xl font-semibold">CHEMPOL-Additives & Chemical Specialty</h4>
+                    <p className="text-sm md:text-base xl:text-xl xl:mt-2 font-light ">Driven by the powerful blend of technology knowledge, innovation, and partnership we do in advance and look at future challenges and developments.</p>
+                </div>
+            </div>
+
+
+
+
+
+
+
+
+
+
+
 
 
         </div>

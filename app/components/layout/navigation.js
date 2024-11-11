@@ -1,4 +1,4 @@
- 
+
 
 import Image from "next/image"
 import PaddingContainer from "./padding-container"
@@ -7,7 +7,7 @@ import siteConfig from "../../../config/site";
 import MobileNavigation from "./mobile-nav";
 import MenuList from "./menu-list";
 
- 
+
 const Navigation = () => {
 
   return (
@@ -20,10 +20,10 @@ const Navigation = () => {
 
         <a href="/" className="w-52">
           <Image
-            src= "/images/logo-486x124.png"
+            src="/images/logo-486x124.png"
             width={500}
             height={300}
-            alt="Atlantic Grease and Lubricants logo" />
+            alt="chempol logo" />
         </a>
 
         <MenuList />
@@ -36,7 +36,7 @@ const Navigation = () => {
         </ul>
 
         <div className="md:hidden text-white text-4xl">
-                   
+
           <MobileNavigation />
         </div>
       </nav>

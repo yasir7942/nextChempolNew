@@ -3,35 +3,43 @@ import PaddingContainer from "./padding-container";
 import { getProductCategoryForHome } from "@/app/data/loader";
 import siteConfig from "@/config/site";
 import SocialIcons from "../elements/social-icons";
+import { MdEmail } from "react-icons/md";
+import { FaPhoneAlt } from "react-icons/fa";
+import { FaMapMarkerAlt } from "react-icons/fa";
+import { FaAngleRight } from "react-icons/fa";
+
+
 //import MenuFooterList from "./menu-footer-list";
 //import MenuFooterPcategory from "./menu-footer-product-category";
 
 const Footer = async () => {
 
   const categoryData = await getProductCategoryForHome();
-
+  // console.log("-----------------------product category  data--------------------------------------------------");
+  //    console.dir(categoryData, { depth:null});
+  //  console.log("---------------------------End-----------------------end-----------------------");
 
   return (
-    
-      <footer className="w-full mt-10 pt-5 pb-8 bg-[#040404]">
-        <PaddingContainer>
-          <div className="w-full flex flex-col md:flex-row mt-10 pl-12 md:pl-0 space-y-10 md:space-y-0 justify-between">
-            {/* About Company */}
-            <div className="flex flex-col space-y-3">
-              <div className="uppercase text-white font-medium py-4 text-xl">About Company</div>
-              <a href="/" className="w-64">
-                <Image
-                  src="/images/logo-486x124.png"
-                  width={500}
-                  height={300}
-                  alt="Atlantic Grease and Lubricants Logo"
-                />
-              </a>
-              <p className="text-base text-gray-300 font-light max-w-sm md:max-w-60 lg:max-w-80">
-                Atlantic Lubes is a premier quality lubricant product manufacturer and supplier all over the world with certified  ISO 9001, ISO 14001 & ISO 45001. ISO 17025 Accredited Testing Lab
-              </p>
-              <div className="flex flex-wrap space-x-2 line pr-3">
-             {/**    {Object.keys(siteConfig.socialMedia).map((platform) => (
+
+    <footer className="w-full pt-16 relative z-20    pb-10 bg-[#2D2D2D]">
+      <PaddingContainer>
+        <div className="w-full flex flex-col md:flex-row  md:pt-25  pl-12 md:pl-0 space-y-10 md:space-y-0 justify-between">
+          {/* About Company */}
+          <div className="flex flex-col space-y-3">
+
+            <a href="/" className="w-64">
+              <Image
+                src="/images/chempol.png"
+                width={500}
+                height={300}
+                alt="Chempol Additives and chemical specialty"
+              />
+            </a>
+            <p className="text-base pt-3 text-gray-300 font-light max-w-sm md:max-w-60 lg:max-w-80">
+              We remain true to the principles of our company: providing superior service to our clients, creating opportunities for our people.
+            </p>
+            <div className="flex flex-wrap space-x-2 line pr-3">
+              {/**    {Object.keys(siteConfig.socialMedia).map((platform) => (
                   <SocialIcons
                     key={platform}
                     plateform={platform}
@@ -41,82 +49,103 @@ const Footer = async () => {
                 ))}
             */}
 
-            
-                 </div>
-
-              
-
-                 {  <ul className="flex flex-wrap  md:w-60  lg:w-72  gap-2 line pr-3">
-                    <li><SocialIcons plateform="facebook" dark link={siteConfig.socialMedia.facebook} /></li>
-                    <li><SocialIcons plateform="instagram" dark link={siteConfig.socialMedia.instagram} /></li>
-                    <li><SocialIcons plateform="twitter" dark link={siteConfig.socialMedia.twitter} /></li>
-                    <li><SocialIcons plateform="linkedin" dark link={siteConfig.socialMedia.linkedin} /></li>
-                    <li><SocialIcons plateform="youtube" dark link={siteConfig.socialMedia.youtube} /></li>
-                    <li><SocialIcons plateform="vimeo" dark link={siteConfig.socialMedia.vimeo} /></li>
-                    <li><SocialIcons plateform="tiktok" dark link={siteConfig.socialMedia.tiktok} /></li>
-                    <li><SocialIcons plateform="pinterest" dark link={siteConfig.socialMedia.pinterest} /></li>
-                    <li><SocialIcons plateform="snapchat" dark link={siteConfig.socialMedia.snapchat} /></li>
-                 </ul>
-                  }
-             
-            </div>
-
-            {/* Quick Links */}
-            <div className="flex flex-col space-y-3">
-              <div className="uppercase text-white font-medium py-4 text-xl">Quick Links</div>
-             {/* <MenuFooterList /> */} 
-               
-              <ul className="text-gray-300 space-y-1  font-light">
-                <li> <a href={`/certificates`} > Certifications & Approvals </a>  </li>
-                <li>  <a href={`/privacy-policy`} > Privacy Policy </a>   </li>
-                <li> <a href={`/interested-parties`} > Interested Parties </a>   </li>
-                <li>    <a href={`/ims-policy`} > IMS Policy </a>  </li>
-                <li>   <a href={`/hse`} > HSE</a>   </li>
-              </ul>
 
             </div>
 
-            {/* Categories */}
-            <div className="flex flex-col space-y-3">
-              <div className="uppercase text-white font-medium py-4 text-xl">Product Categories</div>
-            {/*  <MenuFooterPcategory /> */}   
 
-              <ul className="text-gray-300  space-y-1 font-light">
 
-              { categoryData.data.map(cat => (
-                
-                    <li key={cat.id}>
-                      <a href={`/product-category/${cat.slug}`}   >{cat.title}</a>
-                    </li>
-                ))}
+            {<ul className="flex flex-wrap  md:w-60  lg:w-72  gap-2 line pr-3  ">
+              <li><SocialIcons plateform="facebook" dark link={siteConfig.socialMedia.facebook} /></li>
+              <li><SocialIcons plateform="instagram" dark link={siteConfig.socialMedia.instagram} /></li>
+              <li><SocialIcons plateform="twitter" dark link={siteConfig.socialMedia.twitter} /></li>
+              <li><SocialIcons plateform="linkedin" dark link={siteConfig.socialMedia.linkedin} /></li>
+              <li><SocialIcons plateform="youtube" dark link={siteConfig.socialMedia.youtube} /></li>
+            </ul>
+            }
 
-                
-              </ul>
-            </div>
-
-            {/* Get in Touch */}
-            <div className="flex flex-col space-y-3">
-              <div className="uppercase text-white font-medium py-4 text-xl">Get in Touch</div>
-              <p className="text-base text-gray-300 font-light max-w-60">Phone: +971-(06)-5264688</p>
-              <p className="text-base text-gray-300 font-light max-w-60">
-                Email: <a href="mailto:info@atlanticlubes.com">info@atlanticlubes.com</a>
-              </p>
-              <div className="uppercase text-white font-medium py-4 text-xl">Head Office</div>
-              <p className="text-base text-gray-300 font-light max-w-60">
-                <a href="https://maps.app.goo.gl/4SRwewpqge5hYiH9A" target="_blank" rel="noopener noreferrer">
-                  Atlantic Grease and Lubricants, <br/>Hamriyah Freezone P.O.BOX 41583, Sharjah,<br/>United Arab Emirates
-                </a>
-              </p>
-              <p className="text-base text-gray-300 font-light max-w-60">
-                <a href="https://maps.app.goo.gl/4SRwewpqge5hYiH9A" target="_blank" rel="noopener noreferrer">
-                  Open in Google Maps
-                </a>
-              </p>
-            </div>
           </div>
-        </PaddingContainer>
-      </footer>
-    
+
+          {/* Quick Links */}
+          <div className="flex flex-col space-y-3">
+            <div className="capitalize text-textBlue font-medium py-4 text-xl">Categories</div>
+            {/* <MenuFooterList /> */}
+
+
+
+            <ul className="text-gray-300  space-y-1 font-light">
+
+              {categoryData.data.map(cat => (
+
+                <li key={cat.id} className="flex  items-center">
+                  <FaAngleRight className="pr-2 text-textBlue" />
+                  <a href={`/product-category/${cat.slug}`} className="transition duration-300 ease-in-out hover:underline  hover:text-textBlue"   >{cat.title}</a>
+                </li>
+              ))}
+
+
+            </ul>
+
+          </div>
+
+          {/* Categories */}
+          <div className="flex flex-col space-y-1   ">
+            <div className="capitalize text-textBlue font-medium py-4 text-xl">Contact info</div>
+            <p className="text-base text-gray-300 font-light max-w-60">You can always contact us via email or phone. Get a quote now!</p>
+            <p className="text-base text-gray-300 font-light max-w-60 flex  items-center "><MdEmail className="text-textBlue mr-2" /> +971-(06)-5264688</p>
+            <p className="text-base text-gray-300 font-light max-w-60 flex  items-center transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
+              <FaPhoneAlt className="text-textBlue mr-2" /> <a href="mailto:info@chempol.co.uk">info@chempol.co.uk</a>
+            </p>
+
+            <p className="text-sm text-gray-300 font-light   ">
+              <a href="https://goo.gl/maps/CYy5xxMW883cpU5w8" target="_blank" rel="noopener noreferrer" className="flex transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
+                <FaMapMarkerAlt className="text-textBlue mr-3 mt-1 text-base max-w-40" />  1705, Sidra Tower, Al Sufouh 1, Sheikh Zayed Road E11 - Dubai - UAE
+              </a>
+            </p>
+
+            <p className="text-sm text-gray-300 font-light  ">
+              <a href="https://goo.gl/maps/gh9kSw6cXaj3VEyu9" target="_blank" rel="noopener noreferrer" className="flex transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
+                <FaMapMarkerAlt className="text-textBlue mr-3 mt-1 text-base" />  136 Eastern Avenue, Redbridge, Essex, England IG4 5AG, UK
+              </a>
+            </p>
+
+            <p className="text-sm text-gray-300 font-light  ">
+              <a href="https://maps.app.goo.gl/6vx17pD7yxB3BEQ56" target="_blank" rel="noopener noreferrer" className="flex transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
+                <FaMapMarkerAlt className="text-textBlue mr-3 mt-1 text-base" />  Office 304, Mall Of Gulberg, Block D1 Gulberg III, Lahore, Pakistan
+              </a>
+            </p>
+
+
+
+          </div>
+
+          {/* Get in Touch */}
+          <div className="flex flex-col space-y-1 ">
+            <div className="capitalize text-textBlue font-medium py-4 text-xl">Company support</div>
+            <Image
+              src="/images/map.png"
+              width={280}
+              height={150}
+              alt="world map"
+            />
+            <p className="text-sm text-gray-300 font-light pt-10 max-w-60"> <span className="text-textBlue font-normal">Open:</span>  Monday - Saturday</p>
+            <p className="text-sm text-gray-300 font-light max-w-60">
+              <span className="text-textBlue font-normal">Time:</span>  9:00 AM - 6:00 PM
+            </p>
+
+            <p className="text-sm text-gray-300 font-light max-w-60">
+              <span className="text-textBlue font-normal">Closed:</span> Sunday
+            </p>
+
+
+          </div>
+        </div>
+      </PaddingContainer>
+
+      <div className="w-full mt-10 pt-5 border-0 border-t-[1px] border-textBlue font-light text-sm  text-white   bg-[#2D2D2D] text-center">
+        All Copyrights Received By <a href="/" className="text-textBlue text-base" >chempol.co.uk</a>
+      </div>
+    </footer>
+
   );
 }
 

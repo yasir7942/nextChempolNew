@@ -1,67 +1,79 @@
 import Image from "next/image"
 import PaddingContainer from "./padding-container"
-import {getImageUrl} from "@/libs/helper";
+import { getImageUrl } from "@/libs/helper";
 import siteConfig from "@/config/site";
 
 
-const TopBanner = ({ banner="" , home=false }) => {
+const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "" }) => {
 
 
- 
-  if(!banner || banner == null || banner.length == 0) return <div className=" mt-32"></div>
+
+  if (!banner || banner == null || banner.length == 0) return <div className=" mt-32"></div>
 
   // image schema for seo
   const jsonLd =
   {
-      "@context": "https://schema.org/",
-      "@type": "ImageObject",
-      "contentUrl": getImageUrl(banner?.webBanner?.url),
-      "license":  siteConfig.imageObject.license,
-      "acquireLicensePage": siteConfig.imageObject.acquireLicensePage,
-      "creditText": siteConfig.imageObject.creditText,
-      "creator": {
-        "@type": "Organization",
-        "name": siteConfig.imageObject.creatorName,
-       },
-      "copyrightNotice": siteConfig.imageObject.copyrightNoticeBanner
-    };
+    "@context": "https://schema.org/",
+    "@type": "ImageObject",
+    "contentUrl": getImageUrl(banner),
+    "license": siteConfig.imageObject.license,
+    "acquireLicensePage": siteConfig.imageObject.acquireLicensePage,
+    "creditText": siteConfig.imageObject.creditText,
+    "creator": {
+      "@type": "Organization",
+      "name": siteConfig.imageObject.creatorName,
+    },
+    "copyrightNotice": siteConfig.imageObject.copyrightNoticeBanner
+  };
 
 
-  
-   
-  
+
+
+
   return (
-  // <!--Top Banner-->
+    // <!--Top Banner-->
 
-   <>
-        <script type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
-    <div className={`hidden lg:relative lg:flex z-30 w-full  mt-[-85px] ${home ?  "h-[600px]  xl:h-[810px]" : "h-[480px]  xl:h-[500px]" }  `}>
-      <div className={`lg:flex flex-col  justify-center text-left     z-20  ${home ?  "pt-28 xl:pt-36 pl-20 xl:pl-24 " : "pl-24 pt-0 xl:pt-24 " } `}> 
-        <div className={`text-darkYellow uppercase font-bold font tracking-wide  ${home ?  " text-8xl xl:text-9xl" : "text-6xl xl:text-8xl" } `} >{banner.title}</div>
-        <div className={`text-white uppercase  font-bold tracking-wider   leading-none  ${home ?  " mt-6  text-6xl xl:mt-7  xl:text-6xl" : " mt-2 xl:mt-3 text-4xl xl:text-5xl" }`}> <div dangerouslySetInnerHTML={{ __html: banner.subTitle }} /></div>
-      </div>
-
-        <Image priority  src={getImageUrl(banner.webBanner.url)} width={1440}  height={home ? 810 : 600}
-        className=" absolute w-full object-cover object-center"   alt={banner.alternativeText ?? "Atlantic Grease and Lubricants"}   />  
-    </div>
+    <>
+      <script type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
 
-     {/* show md to  sm */}
-    
-        <section className="lg:hidden relative z-20 w-full h-auto mt-[-85px] " >
-                  <Image   src={getImageUrl(banner.mobileBanner.url)} width={800} height={569}  
-                 className="w-full object-cover object-center"   alt={banner.alternativeText ?? "Atlantic Grease and Lubricants"}  />
-                 <PaddingContainer>
-                    <div className={`flex flex-col   ml-0 pb-16   ${home ?  "-mt-16 " : " -mt-28 md:-mt-60" } `}> 
-                      <div className={`text-darkYellow uppercase font-semibold font  ${home ?  "text-8xl" : "text-6xl md:text-7xl" } `} >{banner.title}</div>
-                      <div className={`text-white uppercase font-bold  leading-none ${home ?  "text-5xl" : "text-4xl md:text-5xl" }`}><div dangerouslySetInnerHTML={{ __html: banner.subTitle }}/> </div>
-                   </div>
-                  </PaddingContainer>
-        </section>
-        
-      </> 
+
+      <section className=" relative hidden md:block  z-20 w-full h-[280px]  " >
+
+        <Image src={mobileBanner ? mobileBanner : banner} width={1440} height={600}
+          className="   object-center object-cover w-full h-full" alt={title ? title : "Chempol Banner"} />
+        <PaddingContainer>
+          <div className="flex flex-col items-center pb-16 justify-center text-center -mt-44 md:-mt-44">
+            <div className="text-textLightBlue capitalize font-semibold text-xl md:text-2xl mx-auto">
+              {title}
+            </div>
+            <div className="w-full   text-white font-light max-w-screen-md xl:max-w-screen-lg 2xl:max-w-screen-2xl text-center text-xl md:text-xl mx-auto">
+              {title2}
+            </div>
+          </div>
+        </PaddingContainer>
+
+      </section>
+      <div className="hidden lg:relative w-full h-5 bg-textLightBlue"></div>
+
+      {/* show md to  sm */}
+
+      <section className="  relative block  md:hidden  z-20 w-full h-[220px]   " >
+
+        <Image src={mobileBanner ? mobileBanner : banner} width={800} height={500}
+          className="   object-center object-cover w-full h-full" alt={title} />
+        <PaddingContainer>
+          <div className="flex flex-col   ml-0 pb-16  -mt-44 "  >
+            <div className="text-textLightBlue capitalize font-semibold    text-xl md:text-2xl" >{title}</div>
+            <div className="text-white  font-light      text-normal md:text-normal"  >{title2}</div>
+
+          </div>
+        </PaddingContainer>
+      </section>
+      <div className="lg:hidden relative w-full h-1 bg-textLightBlue"></div>
+
+    </>
   )
 }
 

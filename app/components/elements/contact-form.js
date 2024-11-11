@@ -1,5 +1,5 @@
 'use client';
-import {  useState } from 'react';
+import { useState } from 'react';
 
 import React from "react";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -22,7 +22,7 @@ const ContactForm = () => {
     setIsSubmitting(true);
     setStatus('');
     //recaptchaRef.current.execute();
-   
+
     try {
       const response = await fetch('/api/send', {
         method: 'POST',
@@ -53,12 +53,12 @@ const ContactForm = () => {
   const onReCAPTCHAChange = (captchaCode) => {
     // If the reCAPTCHA code is null or undefined indicating that
     // the reCAPTCHA was expired then return early
-    if(!captchaCode) {
+    if (!captchaCode) {
       return;
     }
 
     setIsCaptchaCode(captchaCode);
-    
+
     // Else reCAPTCHA was executed successfully so proceed with the 
     // alert
     //  alert(`Hey `);
@@ -72,9 +72,9 @@ const ContactForm = () => {
       <form onSubmit={handleSubmit}>
         <div className="flex mb-4">
           <div className="w-1/2 mr-2">
-            <label className="block text-white text-sm font-semibold mb-2  " htmlFor="name">Name</label>
+            <label className="block text-gray-800 text-sm font-semibold mb-2  " htmlFor="name">Name</label>
             <input
-              className="shadow appearance-none border  rounded w-full py-2 px-3  tracking-wide text-white bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border  rounded w-full py-2 px-3  tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
               id="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -84,9 +84,9 @@ const ContactForm = () => {
             />
           </div>
           <div className="w-1/2 ml-2">
-            <label className="block text-white text-sm font-semibold mb-2" htmlFor="phoneNumber">Phone</label>
+            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="phoneNumber">Phone</label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3  tracking-wide text-white bg-transparent font-light font-lightleading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border rounded w-full py-2 px-3  tracking-wide text-gray-800 bg-transparent font-light font-lightleading-tight focus:outline-none focus:shadow-outline"
               id="phoneNumber"
               type="tel"
               value={phoneNumber}
@@ -99,9 +99,9 @@ const ContactForm = () => {
         </div>
         <div className="flex mb-4">
           <div className="w-1/2 mr-2">
-            <label className="block text-white text-sm font-semibold mb-2" htmlFor="email">Email</label>
+            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="email">Email</label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 tracking-wide text-white bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border rounded w-full py-2 px-3 tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
               id="email"
               type="email"
 
@@ -112,9 +112,9 @@ const ContactForm = () => {
             />
           </div>
           <div className="w-1/2 ml-2">
-            <label className="block text-white text-sm font-semibold mb-2" htmlFor="country">Country</label>
+            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="country">Country</label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3  tracking-wide text-white bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border rounded w-full py-2 px-3  tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
               id="country"
               type="text"
 
@@ -126,9 +126,9 @@ const ContactForm = () => {
           </div>
         </div>
         <div className="mb-4">
-          <label className="block text-white text-sm font-semibold mb-2" htmlFor="message">Message</label>
+          <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="message">Message</label>
           <textarea
-            className="shadow appearance-none border rounded w-full py-2 px-3  tracking-wide text-white bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow appearance-none border rounded w-full py-2 px-3  tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
             id="message"
             rows="4"
             placeholder="Your message"
@@ -137,19 +137,19 @@ const ContactForm = () => {
             onChange={(e) => setMessage(e.target.value)}
             required
           ></textarea>
-          <small className="error text-gray-300 font-light">Please avoid including hyperlinks or URLs in your message.</small>
+          <small className="error text-gray-500 font-light">Please avoid including hyperlinks or URLs in your message.</small>
         </div>
         <div className="mb-4">
-          <ReCAPTCHA 
+          <ReCAPTCHA
             ref={recaptchaRef}
             sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
             onChange={onReCAPTCHAChange}
-             theme="dark"
+            theme="dark"
           />
         </div>
         <div className="flex items-center justify-between">
           <button disabled={isSubmitting}
-            className="font-medium text-lg bg-transparent border border-spacing-1 border-white hover:bg-gray-50 transition duration-150 text-white hover:text-gray-800  py-2 px-12 rounded focus:outline-none focus:shadow-outline"
+            className="font-medium text-lg   border border-spacing-1 border-white bg-textBlue hover:bg-textLightBlue transition duration-150 text-white hover:text-gray-800  py-2 px-12 focus:outline-none focus:shadow-outline"
             type="submit"
           >
             Send

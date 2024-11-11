@@ -44,17 +44,17 @@ const ProductCategoryMenu = async () => {
 
   return (
     <div>
-      <div className="hidden md:flex flex-row md:flex-col space-y-0 space-x-2 md:space-y-4 md:space-x-0 text-gray-300 uppercase">
+      <div className="hidden md:flex flex-row md:flex-col space-y-0 space-x-2 md:space-y-2 md:space-x-0 text-black capitalize">
         <div className="fex fex-col space-y-3 text-base md:font-normal md:text-lg">
           <a href="#">Products Categories</a>
           <div className="w-full h-[1px] bg-[#0f0f0f]"> </div>
         </div>
         {menuData.map((menu) => (
-          <div key={menu.id} className="fex fex-col space-y-3 text-base md:font-light md:text-lg">
-            <Link href={`/product-category/${menu.slug}`}>
-              {menu.title} - <span className="text-base">({menu.products.data.length})</span>
+          <div key={menu.id} className="fex fex-col space-y-3 text-base md:font-light md:text-base ">
+            <Link href={`/product-category/${menu.slug}`} className=" transition duration-300 ease-in-out hover:text-textBlue">
+              - {menu.title}  
             </Link>
-            <div className="w-full h-[1px] bg-[#0f0f0f]"> </div>
+             
           </div>
         ))}
       </div>
