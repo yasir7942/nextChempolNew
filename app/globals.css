@@ -99,6 +99,14 @@
         @apply  transition duration-300 ease-in-out ;
  
        }
+
+       .topPadding {
+        @apply 2xl:mt-72;
+      }
+
+      .largeScreenPadding {
+        @apply 2xl:px-60;
+      }
   }
   @layer base {
    

@@ -205,7 +205,7 @@ const SingleProductPage = async ({ params }) => {
       <div className="w-full h-12 bg-textLightBlue"></div>
 
       <PaddingContainer>
-        <div className="w-full h-auto flex flex-col md:flex-row">
+        <div className="w-full h-auto flex flex-col md:flex-row topPadding">
           {/* Left Menu Column */}
           <div className="w-full md:w-3/12 lg:w-[22%]   p-6 md:pl-0 overflow-hidden">
             {/* Menu content goes here  */}

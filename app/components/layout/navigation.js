@@ -18,7 +18,7 @@ const Navigation = () => {
       {/* <!--Nav Bar --> */}
       <nav className="flex w-full h-full justify-between items-center py-6 px-4 relative z-50   ">
 
-        <a href="/" className="w-52">
+        <a href="/" className="w-52 2xl:w-64">
           <Image
             src="/images/logo-486x124.png"
             width={500}
