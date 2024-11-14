@@ -2,16 +2,15 @@ import BodyDataParse from "@/app/components/elements/data-parse-content";
 import GroupProducts from "@/app/components/layout/group-products";
 import PaddingContainer from "@/app/components/layout/padding-container";
 import ProductCategoryMenu from "@/app/components/layout/product-category-menu";
-import TopBanner from "@/app/components/layout/top-banner";
 import { geAllProductsSlug, geSingleProduct } from "@/app/data/loader";
 import { getFirstDescriptionText, getImageUrl } from "@/libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
-import { FaDownload } from "react-icons/fa";
+
 import { cache } from 'react';
 import siteConfig from "@/config/site";
 import SEOSchema from "@/app/components/elements/seo-schema";
-import ProductSize from "@/app/components/layout/product-size";
+
 
 // Cache the geSingleProduct function
 const cachedGeSingleProduct = cache(geSingleProduct);
@@ -113,8 +112,8 @@ const SingleProductPage = async ({ params }) => {
     "name": productData.data[0]?.title,
     "image": getImageUrl(productData.data[0].productImage.url),
     "image": [
-      getImageUrl(productData.data[0].productImage.url),  // large
-      getImageUrl(productData.data[0].productImage.formats.thumbnail.url),  // medium
+      getImageUrl(productData.data[0].productImage?.url),  // large
+      getImageUrl(productData.data[0].productImage?.formats?.thumbnail?.url),  // medium
     ],
     "description": seoDescription,
     "brand": {

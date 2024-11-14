@@ -243,9 +243,6 @@ export async function geProductsBySearchAdvance(query) {
     filters: {
       $or: [
         { title: { $containsi: query } }, // product_categories
-        { name: { $containsi: query } },
-        { api: { $containsi: query } },
-        { acea: { $containsi: query } },
         { product_categories: { title: { $containsi: query } } }
       ],
     },

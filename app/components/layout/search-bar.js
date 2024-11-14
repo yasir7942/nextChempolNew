@@ -125,7 +125,7 @@ const SearchBar = ({ dataType }) => {
       left-5 bg-gray-50 backdrop-blur-md bg-opacity-80 border border-1 border-gray-700 mt-1 p-5`}>
         <div className="flex flex-col space-y-2 " >
           {productData.length > 0 ? (
-            productData.map((product, index) => (
+            productData?.map((product, index) => (
               <div key={product.id} className="flex flex-col space-y-3 ">
                 <div className="flex justify-start space-x-5 items-center pl-1">
                   <Link href={`/product/${product.slug}`}>
