@@ -22,7 +22,7 @@ const Topbar = () => {
         <div className="flex justify-center md:justify-end h-full  ">
           <div className="w-full md:w-1/2 h-full  flex space-x-6 items-center  justify-center md:justify-end ">
 
-            <Link href="#" className=" border border-textBlue rounded-sm text-sm px-3 py-1 text-textBlue hover:text-lightColorHover" >Get a Qoute</Link>
+            <Link href={`/contact`} className=" border border-textBlue rounded-sm text-sm px-3 py-1 text-textBlue hover:text-lightColorHover" >Get a Qoute</Link>
 
 
             <div className='flex flex-row'>
