@@ -78,7 +78,7 @@ const Footer = async () => {
 
                 <li key={cat.id} className="flex  items-center">
                   <FaAngleRight className="pr-2 text-textBlue" />
-                  <a href={`/product-category/${cat.slug}`} className="transition duration-300 ease-in-out hover:underline  hover:text-textBlue"   >{cat.title}</a>
+                  <a href={`/product-category/${cat.slug}/`} className="transition duration-300 ease-in-out hover:underline  hover:text-textBlue"   >{cat.title}</a>
                 </li>
               ))}
 

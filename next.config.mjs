@@ -27,6 +27,9 @@ const nextConfig = {
 
     // useFileSystemPublicRoutes: fileRoutes,
 
+    // Add trailingSlash to enforce trailing slashes on all URLs
+    trailingSlash: true,
+
 
 
     images: {

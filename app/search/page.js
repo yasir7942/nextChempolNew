@@ -92,10 +92,10 @@ const searchPage = async ({ searchParams }) => {
                 <div key={product.id} className=" pt-0 mt-10 relative text-center flex flex-col  justify-center">
 
                   <div className="w-full      flex justify-center  ">
-                    <a href={`/product/${product.slug}`} > <Image className="relative w-24 text-center" src={getImageUrl(product?.productImage.url)} height={500} width={500} alt={product.title} /> </a>
+                    <a href={`/product/${product.slug}/`} > <Image className="relative w-24 text-center" src={getImageUrl(product?.productImage.url)} height={500} width={500} alt={product.title} /> </a>
                   </div>
                   <div className="flex flex-col w-full h-full " >
-                    <h2 className="uppercase text-sm text-textBlue mt-3 leading-1"> <a href={`/product/${product.slug}`}  >{product.title}</a> </h2>
+                    <h2 className="uppercase text-sm text-textBlue mt-3 leading-1"> <a href={`/product/${product.slug}/`}  >{product.title}</a> </h2>
 
                   </div>
 

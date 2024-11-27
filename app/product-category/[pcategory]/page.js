@@ -136,10 +136,10 @@ const ProductCategory = async ({ params, searchParams }) => {
                 <div key={product.id} className=" pt-0 mt-10 relative text-center flex flex-col  justify-center">
 
                   <div className="w-full flex justify-center  ">
-                    <a href={`/product/${product.slug}`} > <Image className="relative w-28 text-center" src={getImageUrl(product?.productImage.url)} priority height={400} width={400} alt={product.title} /> </a>
+                    <a href={`/product/${product.slug}/`} > <Image className="relative w-28 text-center" src={getImageUrl(product?.productImage.url)} priority height={400} width={400} alt={product.title} /> </a>
                   </div>
                   <div className="flex flex-col w-full h-full " >
-                    <h2 className="uppercase text-base text-gray-700 mt-3 font-light "> <a href={`/product/${product.slug}`} >
+                    <h2 className="uppercase text-base text-gray-700 mt-3 font-light "> <a href={`/product/${product.slug}/`} >
                       {product.title}</a> </h2>
 
                   </div>

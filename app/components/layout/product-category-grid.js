@@ -29,12 +29,12 @@ const ProductCategoryGrid = async () => {
 
 
               <div key={category.id} className="flex flex-col space-y-2 text-center justify-center relative group rounded-lg" >
-                <a href={`/product-category/${category.slug}`}  >
+                <a href={`/product-category/${category.slug}/`}  >
                   <Image className="z-2 rounded-xl"
                     src={getImageUrl(category.image.url)}
                     width={500} height={300} alt={category.title} />
                 </a>
-                <a href={`/product-category/${category.slug}`} className="text-center transition duration-300 ease-in-out hover:text-textBlue text-xl text-darkGary font-normal" >{category.title}</a>
+                <a href={`/product-category/${category.slug}/`} className="text-center transition duration-300 ease-in-out hover:text-textBlue text-xl text-darkGary font-normal" >{category.title}</a>
               </div>
 
             ))}
