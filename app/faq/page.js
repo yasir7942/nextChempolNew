@@ -6,6 +6,7 @@ import SEOSchema from "../components/elements/seo-schema";
 import SpeakableSchema from "../components/elements/speakable-schema";
 import { getFaqPage } from "../data/loader";
 import FAQs from "../components/layout/Faqs";
+import PaddingContainer from "../components/layout/padding-container";
 
 
 const cachedGetFAQPage = cache(getFaqPage);
@@ -47,7 +48,10 @@ const FAQPage = async () => {
             <SEOSchema schemaList={pageData.seo?.schema} />
 
             <TopBanner banner="/images/chempol-banner.jpg" title="FAQ" title2="" />
-            <FAQs faqList={pageData.faq} heading={pageData.heading} text={pageData.text} />
+
+            <PaddingContainer>
+                <FAQs faqList={pageData.faq} heading={pageData.heading} text={pageData.text} />
+            </PaddingContainer>
 
 
         </div >

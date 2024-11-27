@@ -93,7 +93,7 @@ export async function getPostLimitedData() {
     sort: 'PostDate:desc',
     pagination: {
       page: 1,
-      pageSize: 3
+      pageSize: 4
     },
     populate: ['seo', 'featureImage', 'seo.schema'],
   });
@@ -128,7 +128,7 @@ export async function geProductsByCategory(category, currentPage, pageSize) {
         },
       },
     },
-    populate: ['productImage', 'product_categories', 'product_categories.banner.webBanner', 'product_categories.banner.mobileBanner', 'seo.schema'],
+    populate: ['productImage', 'product_categories', 'product_categories.banner.webBanner', 'product_categories.faq', 'product_categories.banner.mobileBanner', 'seo.schema'],
 
 
     pagination: {

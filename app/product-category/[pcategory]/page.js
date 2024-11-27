@@ -11,6 +11,9 @@ import { getFirstDescriptionText, getImageUrl } from "@/libs/helper";
 import { Suspense } from "react";
 import SEOSchema from "@/app/components/elements/seo-schema";
 import BodyDataParse from "@/app/components/elements/data-parse-content";
+import SingleTab from "@/app/components/layout/SingleTab";
+import CTAcard from "@/app/components/layout/cta-card";
+import BlogContainer from "@/app/components/layout/blog-container";
 
 
 const pageSize = 12;
@@ -94,6 +97,13 @@ const ProductCategory = async ({ params, searchParams }) => {
   const totalPage = productData.meta.pagination.total;
 
   const content = productData?.data[0]?.product_categories.data[0]?.description;
+  const middleTitle = productData?.data[0]?.product_categories.data[0]?.middleTitle;
+  const middleDescrption = productData?.data[0]?.product_categories.data[0]?.middleDescription;
+  const readmoreTab = productData?.data[0]?.product_categories.data[0]?.readMoreTab;
+  const faqs = productData?.data[0]?.product_categories.data[0]?.faq;
+
+
+
 
   //  console.log("-----------------------products --------------------------------------------------");
   // console.dir(productData, { depth:null}); 
@@ -159,7 +169,26 @@ const ProductCategory = async ({ params, searchParams }) => {
         </div>
 
 
+        <div className="flex flex-col w-full h-auto text-center my-20 2xl:px-[18%]">
+          {middleTitle && <h2> {middleTitle} </h2>}
+          {middleDescrption && <div className="text-black font-normal text-sm  pb-10 rich-text">
+            <BodyDataParse content={middleDescrption} />
+          </div>}
+
+          {readmoreTab && <SingleTab heading="Read More" text={readmoreTab} />}
+
+          {faqs && faqs.length > 0 && <SingleTab faqList={faqs} />}
+
+        </div>
+
+
+
       </PaddingContainer>
+
+
+      <CTAcard />
+
+      <BlogContainer />
 
 
     </div>
