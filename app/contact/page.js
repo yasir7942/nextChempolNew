@@ -3,60 +3,55 @@
 //contact us page
 import PaddingContainer from "../components/layout/padding-container";
 import TopBanner from "../components/layout/top-banner";
-import { getContactUsPage } from "../data/loader";
+import { getContactUsPageData } from "../data/loader";
 import { cache } from 'react';
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import SEOSchema from "../components/elements/seo-schema";
 import ContactForm from "../components/elements/contact-form";
 import { PiBuildingOfficeFill } from "react-icons/pi";
 
-const cachedGetContactUsPage = cache(getContactUsPage);
+const cachedGetContactPage = cache(getContactUsPageData);
 
-/*
+
 export async function generateMetadata({ params }) {
 
 
-  const pageData = await cachedGetContactUsPage();
-  
-    const metadataParams = {
-      pageTitle: pageData.slug,
-      pageSlug: "contact",
-      pageDescription: "",
-      seoTitle: pageData.seo?.seoTitle,
-      seoDescription: pageData.seo?.seoDescription,
-      rebotStatus: pageData.seo?.preventIndexing,
-      canonicalLinks: pageData.seo?.canonicalLinks ?? "contact",
-      dataPublishedTime: pageData.publishedAt,
-      category: "",
-      image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
-      imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-      imageExt: pageData.banner?.mobileBanner?.mime,
-    }; 
-  
-    return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
-  }
-  */
+  const pageData = await cachedGetContactPage();
+
+  const metadataParams = {
+    pageTitle: pageData.slug,
+    pageSlug: "contact",
+    pageDescription: "",
+    seoTitle: pageData.seo?.seoTitle,
+    seoDescription: pageData.seo?.seoDescription,
+    rebotStatus: pageData.seo?.preventIndexing,
+    canonicalLinks: pageData.seo?.canonicalLinks ?? "contact",
+    dataPublishedTime: pageData.publishedAt,
+    category: "",
+    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
+    imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
+    imageExt: pageData.banner?.mobileBanner?.mime,
+  };
+
+  return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+}
+
 
 const ContactUs = async () => {
 
 
 
-
-
-
-
-
-  const pageData = await cachedGetContactUsPage();
-
-  console.log("****************contact us***data*****************");
-  console.dir(pageData, { depth: null });
-
-  console.log(pageData.addressBook);
-
+  const contactData = await cachedGetContactPage();
+  /*
+    console.log("****************contact us***data*****************");
+    console.dir(contactData, { depth: null });
+  
+    console.log(contactData.addressBook);
+  */
   return (
     <div>
 
-      <SEOSchema schemaList={pageData.seo?.schema} />
+      <SEOSchema schemaList={contactData.seo?.schema} />
 
       <TopBanner banner="/images/contact-banner.jpg" title="Contact Us" title2="" />
 
@@ -73,14 +68,14 @@ const ContactUs = async () => {
             <h1 className="text-textBlue text-2xl font-semibold capitalize">Our Contact Details</h1>
             <p className="text-gray-800 font-light " >It is a long Established fact that a reader will be distract readable contect of a page</p>
 
-            {pageData.addressBook?.map((contact) => (
+            {contactData.addressBook?.map((contact) => (
 
               <div key={contact.id} className="w-full text-gray-800 mt-5 flex flex-col space-y-3">
                 <div className="text-xl capitalize font-semibold">{contact.company}</div>
                 <div className="w-full flex   justify-normal space-x-4">
                   <div><PiBuildingOfficeFill size="32" className="text-textLightBlue" /></div>
                   <div>
-                    <div className="font-light text-textLightBlue text-base "><a href='mailto:{pageData.email}' >{contact.email}  </a> | {contact.phone} </div>
+                    <div className="font-light text-textLightBlue text-base "><a href='mailto:{contactData.email}' >{contact.email}  </a> | {contact.phone} </div>
                     <div className="font-light text-base  max-w-96">{contact.address}</div>
                     <div className="font-light text-base  text-textLightBlue  max-w-72"> <a target="_blank" href='{contact.mapUrl}' >Open in Google Map</a></div>
                   </div>

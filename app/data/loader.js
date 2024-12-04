@@ -355,7 +355,7 @@ export async function getFaqPage() {
 
 
 
-export async function getContactUsPage() {
+export async function getContactUsPageData() {
 
   const conatcBlockQuery = qs.stringify({
     populate: ['addressBook', 'seo', 'seo.schema'],

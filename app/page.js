@@ -21,6 +21,7 @@ import Slider from "./components/layout/slider";
 
 
 
+
 const cachedGetHomePage = cache(getHomePage);
 export async function generateMetadata({ params }) {
 
@@ -58,6 +59,14 @@ export default async function Home() {
 
   return (
     <div className="bg-backgroundColor">
+
+
+
+
+
+
+
+
 
       <Slider />
 

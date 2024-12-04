@@ -36,9 +36,9 @@ function Slider() {
     // onMouseLeave={plugin.current.reset}
 
     >
-      <CarouselContent>
+      <CarouselContent className=" xl:h-[480px] 2xl:h-[590px]   ">
         <CarouselItem >
-          <div className="relative w-full h-[400px] xl:h-[480px]  flex items-center justify-center">
+          <div className="relative w-full h-[400px] xl:h-[480px] 2xl:h-[590px]  flex items-center justify-center">
             {/* Background Image */}
             <Image
               src="/images/banner-1.jpg"
@@ -61,7 +61,7 @@ function Slider() {
         </CarouselItem>
 
         <CarouselItem className="hidden md:block">
-          <div className="relative w-full h-[400px] xl:h-[480px] flex items-center justify-center">
+          <div className="relative w-full h-[400px] xl:h-[480px] 2xl:h-[590px]   flex items-center justify-center">
             {/* Background Image */}
             <Image
               src="/images/banner-2.jpg"
