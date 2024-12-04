@@ -193,9 +193,10 @@ const Company = async () => {
                 </PaddingContainer>
             </div>
 
-            <FAQs faqList={pageData.faq} heading="FAQ" text="There are many reasons why you should select a manufacturer in UAE for chemicals." />
+            <PaddingContainer>
+                <FAQs faqList={pageData.faq} heading="FAQ" text="There are many reasons why you should select a manufacturer in UAE for chemicals." />
 
-
+            </PaddingContainer>
 
 
 
