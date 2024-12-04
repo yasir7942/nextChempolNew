@@ -177,7 +177,7 @@ const ProductCategory = async ({ params, searchParams }) => {
 
           {readmoreTab && <SingleTab heading="Read More" text={readmoreTab} />}
 
-          {faqs && faqs.length > 0 && <SingleTab faqList={faqs} />}
+          {faqs && faqs.length > 0 && <SingleTab heading="FAQs" faqList={faqs} />}
 
         </div>
 

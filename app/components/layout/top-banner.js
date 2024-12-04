@@ -39,7 +39,7 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "" }) 
 
 
 
-      <section className=" relative hidden md:block  z-20 w-full h-[280px]  " >
+      <section className=" relative hidden md:block  z-20 w-full h-[270px]  " >
 
         <Image src={mobileBanner ? mobileBanner : banner} width={1440} height={600}
           className="   object-center object-cover w-full h-full" alt={title ? title : "Chempol Banner"} />
