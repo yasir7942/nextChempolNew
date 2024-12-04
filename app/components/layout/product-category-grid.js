@@ -17,7 +17,7 @@ const ProductCategoryGrid = async () => {
       <section className="flex flex-col  mt-10 items-center justify-center space-y-1 pt-10 pb-5   ">
         <PaddingContainer>
           <div className=" font-light  tracking-widest text-darkGary text-xl text-center uppercase" >Categories</div>
-          <div className=" text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize " >Explore Our Wide Range Of Products!</div>
+          <div id="our-products" className=" text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize " >Explore Our Wide Range Of Products!</div>
           <div className="text-center h-[2px] bg-blueOpecity  w-40" ></div>
 
           {/* <!--category grid--> */}

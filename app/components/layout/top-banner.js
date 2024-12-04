@@ -44,7 +44,7 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "" }) 
         <Image src={mobileBanner ? mobileBanner : banner} width={1440} height={600}
           className="   object-center object-cover w-full h-full" alt={title ? title : "Chempol Banner"} />
         <PaddingContainer>
-          <div className="flex flex-col items-center pb-16 justify-center text-center -mt-44 md:-mt-44">
+          <div className="flex flex-col items-center pb-16 justify-center text-center -mt-44 ">
             <div className="text-textLightBlue capitalize font-semibold text-xl md:text-2xl mx-auto">
               {title}
             </div>
@@ -65,8 +65,8 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "" }) 
           className="   object-center object-cover w-full h-full" alt={title} />
         <PaddingContainer>
           <div className="flex flex-col   ml-0 pb-16  -mt-44 "  >
-            <div className="text-textLightBlue capitalize font-semibold    text-xl md:text-2xl" >{title}</div>
-            <div className="text-white  font-light      text-normal md:text-normal"  >{title2}</div>
+            <div className="text-textLightBlue capitalize font-semibold  text-center    text-xl md:text-2xl" >{title}</div>
+            <div className="text-white  font-light  text-center     text-normal md:text-normal"  >{title2}</div>
 
           </div>
         </PaddingContainer>

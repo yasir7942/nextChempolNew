@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { Search, Mail } from 'lucide-react'
 import { TfiHeadphoneAlt } from "react-icons/tfi";
 import MenuList from '../layout/menu-list';
-import MobileNavigation from '../layout/mobile-nav';
+import MobileNavigation from './mobile-nav';
 import PaddingContainer from '../layout/padding-container';
 
 
@@ -59,7 +59,7 @@ const Topbar = () => {
 
           <MenuList />
 
-          <div className="md:hidden text-black text-4xl">
+          <div className="flex justify-center md:hidden w-full      py-2 text-black text-4xl">
             <MobileNavigation />
           </div>
 

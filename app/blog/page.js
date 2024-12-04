@@ -73,7 +73,7 @@ const Blog = async ({ searchParams }) => {
       <div className=' -mt-44  block ' >
         <PaddingContainer  >
           {/*  Post Area   */}
-          <div className=" w-full  flex flex-col  lg:mt-48 px-16        ">
+          <div className=" w-full  flex flex-col mt-48 px-16       ">
             {/*   Content area content goes here  bg-[#2a3c46] */}
             {/* <SearchBar /> */}
 
@@ -91,7 +91,10 @@ const Blog = async ({ searchParams }) => {
                       {post.title}
                     </h2>
                     <p className='text-sm text-gray-700 font-light'> {moment(post.PostDate).format('MMMM D, YYYY')}</p>
-                    <p className="text-lx md:text-sm text-justify text-gray-800">{post.seo?.seoDesctiption || ""}</p>
+                    <p className="text-lx md:text-sm text-justify text-gray-800">{post.seo?.seoDesctiption ? post.seo.seoDesctiption.split(" ").length > 30
+                      ? post.seo.seoDesctiption.split(" ").slice(0, 30).join(" ") + " ..."
+                      : post.seo.seoDesctiption
+                      : ""}</p>
                   </a>
 
                 </div>

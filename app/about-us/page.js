@@ -71,7 +71,7 @@ const AboutUsPage = async () => {
                             <div className="text-black md:text-justify summary 2xl:w-[80%] ">
                                 <BodyDataParse content={pageData.coreValue.description} />
                             </div>
-                            <a href="#" className="text-left w-full text-base  2xl:w-[80%]  text-textBlue ">Read more...</a>
+                            <a href="#" className=" hidden text-left w-full text-base  2xl:w-[80%]  text-textBlue ">Read more...</a>
                         </div>
 
                         {/* Second Section */}

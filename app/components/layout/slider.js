@@ -82,11 +82,12 @@ function Slider() {
               </div>
 
               <div className="flex mt-6 text-white items-center justify-center space-x-4">
-                <div> <a href="/"
+                <div> <a href="#our-products"
                   className="bg-textLightBlue border border-textLightBlue hover:bg-[#001a35] hover:text-textLightBlue text-[#001a35] uppercase px-2 py-2 font-semibold text-sm rounded-md transition duration-300 ease-in-out" >
                   Our Products </a>
                 </div>
-                <div> <a href="/" className="bg-[#001a35] border border-textLightBlue hover:bg-textLightBlue hover:text-[#001a35] text-textLightBlue uppercase px-2 py-2 font-semibold text-sm rounded-md transition duration-300 ease-in-out" >
+
+                <div> <a href={`/contact/`} className="bg-[#001a35] border border-textLightBlue hover:bg-textLightBlue hover:text-[#001a35] text-textLightBlue uppercase px-2 py-2 font-semibold text-sm rounded-md transition duration-300 ease-in-out" >
                   Get In touch  </a> </div>
               </div>
 

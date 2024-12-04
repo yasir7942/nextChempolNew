@@ -4,7 +4,7 @@ import Image from "next/image"
 import PaddingContainer from "./padding-container"
 import SocialIcons from "../elements/social-icons"
 import siteConfig from "../../../config/site";
-import MobileNavigation from "./mobile-nav";
+import MobileNavigation from "../navigation/mobile-nav";
 import MenuList from "./menu-list";
 
 
