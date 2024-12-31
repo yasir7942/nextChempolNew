@@ -71,6 +71,7 @@ const ContactForm = () => {
     <div>
       <form onSubmit={handleSubmit}>
         <div className="flex mb-4">
+
           <div className="w-1/2 mr-2">
             <label className="block text-gray-800 text-sm font-semibold mb-2  " htmlFor="name">Name</label>
             <input

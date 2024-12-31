@@ -21,10 +21,10 @@ const ProductCategoryMenu = async () => {
 
   */
 
-  const ProductCategoryMenu = () => {
-    const [menuData, setMenuData] = useState([]);
-    const [openSheet, setOpenSheet] = useState(false);
-  
+const ProductCategoryMenu = () => {
+  const [menuData, setMenuData] = useState([]);
+  const [openSheet, setOpenSheet] = useState(false);
+
   // Fetch data on client-side when component mounts
   useEffect(() => {
     const fetchMenuData = async () => {
@@ -52,15 +52,15 @@ const ProductCategoryMenu = async () => {
         {menuData.map((menu) => (
           <div key={menu.id} className="fex fex-col space-y-3 text-base md:font-light md:text-base ">
             <Link href={`/product-category/${menu.slug}`} className=" transition duration-300 ease-in-out hover:text-textBlue">
-              - {menu.title}  
+              - {menu.title}
             </Link>
-             
+
           </div>
         ))}
       </div>
 
       <div className="flex flex-row justify-start md:hidden text-white">
-        <Sheet  open={openSheet} onOpenChange={setOpenSheet} >
+        <Sheet open={openSheet} onOpenChange={setOpenSheet} >
           <SheetTrigger className="flex justify-start items-end space-x-2">
             <IoMdMenu size={20} />
             <div className="font-light">Product Category</div>

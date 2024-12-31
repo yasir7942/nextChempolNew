@@ -1,0 +1,3 @@
+Update next js version to 15
+Product category on left side add schema 
+update Strapi Version 15

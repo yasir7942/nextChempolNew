@@ -69,11 +69,11 @@ const searchPage = async ({ searchParams }) => {
     <div>
 
       <SEOSchema schemaList={pageData.seo?.schema} />
-
+      <div className="w-full mt-5 h-[1px] bg-textBlue"></div>
       <PaddingContainer>
 
 
-        <div className="w-full h-auto flex flex-col md:flex-row mt-20  ">
+        <div className="w-full relative  h-auto md:min-h-[400px] lg:min-h-[600px]  flex flex-col md:flex-row mt-20   ">
           {/*  Left Menu Column  */}
           <div className="w-full md:w-3/12 lg:w-1/6  p-6 md:pl-0  overflow-hidden">
             {/* <!-- Menu content goes here   */}
@@ -81,7 +81,7 @@ const searchPage = async ({ searchParams }) => {
           </div>
 
           {/*  Content Area   */}
-          <div className=" w-full md:w-9/12 lg:w-5/6  flex flex-col  p-3 md:p-4 pb-3   ">
+          <div className=" w-full md:w-9/12 lg:w-5/6  flex flex-col  p-3 md:p-4 pb-3  relative  ">
             {/*   Content area content goes here  */}
             <SearchComponenet />
 

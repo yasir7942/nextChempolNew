@@ -167,7 +167,7 @@ export async function geSingleProduct(slug) {
     },
     populate: ['productImage', 'seo', 'seo.schema', 'productSchema', 'productSchema.reviews',
       'related_products.productImage', 'product_categories',
-      'TDSFile.url', 'MSDSFile.url'],
+      'TDSFile.url', 'MSDSFile.url', 'table'],
   });
 
 
@@ -361,7 +361,7 @@ export async function getContactUsPageData() {
     populate: ['addressBook', 'seo', 'seo.schema'],
 
   });
-  return await fetchData("contact-us", conatcBlockQuery);
+  return await fetchData("contact", conatcBlockQuery);
 
 }
 

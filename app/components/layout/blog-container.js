@@ -25,7 +25,7 @@ const BlogContainer = async () => {
       <PaddingContainer>
 
         {/* <!--Latest News --> */}
-        <section className="flex flex-col  md:p-0   " >
+        <section className="flex flex-col pb-5  md:p-0   " >
 
           {/* <!--heading--> */}
           <div className="flex flex-col">

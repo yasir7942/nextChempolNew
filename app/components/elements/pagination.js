@@ -13,24 +13,24 @@ const PaginationArrow = ({ direction, page, isDisabled }) => {
 
   const handleClick = () => {
     if (!isDisabled) {
-     // router.push(page);
-     router.replace(page, undefined, { shallow: true, scroll: false });
+      // router.push(page);
+      router.replace(page, undefined, { shallow: true, scroll: false });
     }
   };
 
   return (
     <Button
       onClick={handleClick}
-      className={`bg-transparent p-2 text-gray-100 hover:bg-gray-700 ${disabledClassName}`}
+      className={`bg-transparent p-2 disabled:opacity-10   text-gray-100 hover:bg-gray-700 ${disabledClassName}`}
       aria-disabled={isDisabled}
       disabled={isDisabled}
     >
-      {isLeft ? <FaChevronLeft size={20}  /> : <FaChevronRight size={20}  /> }
+      {isLeft ? <FaChevronLeft className="text-gray-900" size={20} /> : <FaChevronRight className="text-gray-900" size={20} />}
     </Button>
   );
 };
 
-export function PaginationComponent({ pageCount, totalPage, pageSize=12 }) {
+export function PaginationComponent({ pageCount, totalPage, pageSize = 12 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page")) || 1;
@@ -42,7 +42,7 @@ export function PaginationComponent({ pageCount, totalPage, pageSize=12 }) {
   };
 
   return (
-    <Pagination className="mt-10 pt-10"  >
+    <Pagination className="mt-10 mb-16 pt-10 "  >
       <PaginationContent>
         <PaginationItem>
           <PaginationArrow
@@ -52,7 +52,7 @@ export function PaginationComponent({ pageCount, totalPage, pageSize=12 }) {
           />
         </PaginationItem>
         <PaginationItem>
-          <span className="p-8 font-normal tracking-widest text-gray-500">Page {currentPage} / {Math.ceil(totalPage / pageSize)}</span>
+          <span className="p-8 font-normal tracking-widest text-gray-800">Page {currentPage} / {Math.ceil(totalPage / pageSize)}</span>
         </PaginationItem>
         <PaginationItem>
           <PaginationArrow

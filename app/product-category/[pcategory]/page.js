@@ -170,8 +170,8 @@ const ProductCategory = async ({ params, searchParams }) => {
 
 
         <div className="flex flex-col w-full h-auto text-center my-20 2xl:px-[18%]">
-          {middleTitle && <h2> {middleTitle} </h2>}
-          {middleDescrption && <div className="text-black font-normal text-sm  pb-10 rich-text">
+          {middleTitle && <h1 className="text-lg"> {middleTitle} </h1>}
+          {middleDescrption && <div className="text-black  pb-10 rich-text">
             <BodyDataParse content={middleDescrption} />
           </div>}
 

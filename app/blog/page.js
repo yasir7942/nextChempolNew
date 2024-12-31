@@ -87,7 +87,7 @@ const Blog = async ({ searchParams }) => {
                   <a href={`/blog/${post.slug}`}>
                     <Image className="w-full " src={getImageUrl(post?.featureImage.url)}
                       width={800} height={600} alt={post?.featureImage.alternativeText ?? post.title} />
-                    <h2 className="text-gray-900 font-semibold  leading-6 text-lg md:text-base pt-3  text-justify">
+                    <h2 className="text-gray-900 font-semibold  leading-6 text-lg md:text-base pt-3  ">
                       {post.title}
                     </h2>
                     <p className='text-sm text-gray-700 font-light'> {moment(post.PostDate).format('MMMM D, YYYY')}</p>

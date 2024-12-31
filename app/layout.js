@@ -1,6 +1,6 @@
 //import { Inter } from "next/font/google";
 import "./globals.css";
-import { Poppins } from "next/font/google"
+import { Open_Sans } from "next/font/google";
 import Footer from "./components/layout/footer";
 import siteConfig from "@/config/site";
 import Topbar from "./components/navigation/topbar";
@@ -11,10 +11,10 @@ import Topbar from "./components/navigation/topbar";
 
 //const inter = Inter({ subsets: ["latin"] });
 
-const poppins = Poppins({
+const openSans = Open_Sans({
   subsets: ['latin'],
-  weight: ['200', '500', '600', '700']
-})
+  weight: ['300', '400', '600', '700'], // Adjust the weights as needed
+});
 
 
 export const metadata = {
@@ -162,7 +162,7 @@ export default function RootLayout({ children }) {
     
 */}
 
-      <body className={poppins.className} >
+      <body className={openSans.className} >
 
         {/*  JSON-LD of Page */}
         <script type="application/ld+json"

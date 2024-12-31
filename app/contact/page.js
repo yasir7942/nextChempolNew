@@ -42,12 +42,12 @@ const ContactUs = async () => {
 
 
   const contactData = await cachedGetContactPage();
-  /*
-    console.log("****************contact us***data*****************");
-    console.dir(contactData, { depth: null });
-  
-    console.log(contactData.addressBook);
-  */
+
+  /* console.log("****************contact us***data*****************");
+   console.dir(contactData, { depth: null });
+ 
+   console.log(contactData.addressBook);
+   */
   return (
     <div>
 

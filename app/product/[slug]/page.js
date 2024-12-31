@@ -16,6 +16,16 @@ import SEOSchema from "@/app/components/elements/seo-schema";
 const cachedGeSingleProduct = cache(geSingleProduct);
 
 
+const tableData = [
+  { property: "color", method: "getColor", value: "blue" },
+  { property: "size", method: "getSize", value: "medium" },
+  { property: "shape", method: "getShape", value: "circle" },
+  { property: "weight", method: "getWeight", value: "light" },
+  { property: "border", method: "getBorder", value: "solid" },
+];
+
+
+
 export const generateStaticParams = async () => {
   try {
     const productSlugs = await geAllProductsSlug();
@@ -212,16 +222,16 @@ const SingleProductPage = async ({ params }) => {
           </div>
 
           {/* Content Area */}
-          <div className="w-full md:w-9/12 justify-between lg:w-[78%]  flex flex-col  pb-3">
+          <div className="w-full md:w-9/12 justify-between lg:w-[78%]  flex flex-col  pb-3   ">
             {/* Content area content goes here */}
             <div className="flex flex-col md:flex-row w-full h-auto p-0 lg:p-8">
 
               {/* image section */}
-              <div className="w-full md:w-2/6 items-center ">
-                <div className="w-full flex flex-col justify-center     items-center text-center">
+              <div className="w-full md:w-2/6 items-center  ">
+                <div className="w-full flex flex-col justify-center  items-center text-center">
                   <Image
                     priority
-                    className="relative w-full h-auto text-center"
+                    className="relative w-[100%] h-auto text-center "
                     src={getImageUrl(productData.data[0].productImage.url)}
                     height={1000}
                     width={1000}
@@ -239,8 +249,8 @@ const SingleProductPage = async ({ params }) => {
                 </div>
 
 
-                <div className="font-light text-gray-800 text-base mt-5 max-w-xl pr-5 md:pr-2 rich-text">
-                  <div className="font-normal py-2">Application</div>
+                <div className="font-light text-black text-base mt-5 max-w-xl pr-5 md:pr-2 rich-text">
+                  <div className="text-xl font-semibold py-2">Application</div>
                   {productData.data[0].application}
                 </div>
 
@@ -287,9 +297,43 @@ const SingleProductPage = async ({ params }) => {
 
             </div>
 
-            <div className="font-light text-gray-800 text-base mt-5  w-full   pr-5 md:pr-2 rich-text">
-              <div className="font-normal py-2">Description</div>
+            <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full lg:w-[90%]     pr-5 md:pr-2 rich-text">
+              <div className="text-xl font-semibold py-2">Description</div>
               <BodyDataParse content={content} />
+            </div>
+
+            {/* table of product */}
+            <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full   pr-5 md:pr-2 ">
+
+              {productData.data[0].table && productData.data[0].table.length > 0 && (
+                <div className=" mt-4 ">
+
+                  <table className="w-full lg:w-[80%] xl:w-[60%] 2xl:w-[60%] text-left border-collapse">
+                    {/* Table Header */}
+                    <thead>
+                      <tr className="bg-[#F7F7F7]">
+                        <th className="p-4 font-normal border">Property</th>
+                        <th className="p-4 font-normal border">Method</th>
+                        <th className="p-4 font-normal border">Value</th>
+                      </tr>
+                    </thead>
+
+                    {/* Table Body */}
+                    <tbody>
+                      {productData.data[0].table.map((row, index) => (
+                        <tr
+                          key={index}
+                          className={`${index % 2 === 0 ? "bg-[#FDFDFD]" : "bg-[#F7F7F7]"}`}
+                        >
+                          <td className="p-4 border">{row.property}</td>
+                          <td className="p-4 border">{row.method}</td>
+                          <td className="p-4 border">{row.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* Related Product section */}
@@ -298,8 +342,8 @@ const SingleProductPage = async ({ params }) => {
             </div>
           </div>
         </div>
-      </PaddingContainer>
-    </div>
+      </PaddingContainer >
+    </div >
   );
 };
 

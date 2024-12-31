@@ -103,6 +103,9 @@ const SingleBlogPage = async ({ params }) => {
 
       <SEOSchema schemaList={postData.data[0].seo?.schema} />
 
+
+      <div className="w-full mt-5 h-[1px] bg-textBlue"></div>
+
       <PaddingContainer>
 
         {/*  Post Area   */}
@@ -123,6 +126,7 @@ const SingleBlogPage = async ({ params }) => {
       </PaddingContainer>
 
       <BlogContainer />
+
     </div>
   );
 }
