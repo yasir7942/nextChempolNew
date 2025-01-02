@@ -7,6 +7,7 @@ import SpeakableSchema from "../components/elements/speakable-schema";
 import { getFaqPage } from "../data/loader";
 import FAQs from "../components/layout/Faqs";
 import PaddingContainer from "../components/layout/padding-container";
+import siteConfig from "@/config/site";
 
 
 const cachedGetFAQPage = cache(getFaqPage);
@@ -16,18 +17,18 @@ export async function generateMetadata({ params }) {
     const pageData = await cachedGetFAQPage();
 
     const metadataParams = {
-        pageTitle: "FAQ Page",
+        pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : "FAQ Page",
         pageSlug: "faq",
-        pageDescription: pageData.seo?.seoDescription,
+        pageDescription: pageData.seo?.seoDesctiption,
         seoTitle: pageData.seo?.seoTitle,
-        seoDescription: pageData.seo?.seoDescription,
+        seoDescription: pageData.seo?.seoDesctiption,
         rebotStatus: pageData.seo?.preventIndexing,
         canonicalLinks: pageData.seo?.canonicalLinks ?? "faq",
         dataPublishedTime: pageData.publishedAt,
         category: "",
-        image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
-        imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-        imageExt: pageData.banner?.mobileBanner?.mime,
+        image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + siteConfig.ogImage,
+        imageAlternativeText: "",
+        imageExt: siteConfig.ogImageExt,
     };
 
     return await generatePageMetadata({ type: "page", path: "", params: metadataParams });

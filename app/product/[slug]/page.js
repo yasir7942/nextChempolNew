@@ -52,7 +52,7 @@ export async function generateMetadata({ params }) {
     pageSlug: productData.data[0]?.slug,
     pageDescription: getFirstDescriptionText(productData.data[0].description),
     seoTitle: productData.data[0].seo?.seoTitle,
-    seoDescription: productData.data[0].seo?.seoDescription,
+    seoDescription: productData.data[0].seo?.seoDesctiption,
     rebotStatus: productData.data[0].seo?.preventIndexing,
     canonicalLinks: productData.data[0].seo?.canonicalLinks,
     dataPublishedTime: productData.data[0].publishedAt,
@@ -61,6 +61,9 @@ export async function generateMetadata({ params }) {
     imageAlternativeText: productData.data[0].productImage?.alternativeText,
     imageExt: productData.data[0].productImage?.mime,
   };
+
+
+
 
   return await generatePageMetadata({ type: "product", path: "/product/", params: metadataParams });
 }
@@ -80,7 +83,7 @@ const SingleProductPage = async ({ params }) => {
   const content = productData.data[0].description;
   const productGroup = productData.data[0].related_products;
   const firstDescriptionText = getFirstDescriptionText(productData.data[0].description);
-  const seoDescription = productData.data[0].seo?.seoDescription ? productData.data[0].seo?.seoDescription : firstDescriptionText;
+  const seoDescription = productData.data[0].seo?.seoDesctiption ? productData.data[0].seo?.seoDesctiption : firstDescriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   const category = productData.data[0].product_categories[0]?.title ? productData.data[0].product_categories[0]?.title : "product Category";
   const categorySlug = productData.data[0].product_categories[0]?.slug ? productData.data[0].product_categories[0]?.slug : "#";

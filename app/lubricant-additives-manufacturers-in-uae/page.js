@@ -17,6 +17,7 @@ import { MdVerifiedUser } from "react-icons/md";
 import * as Icons from 'react-icons/md';
 import * as Icons2 from "react-icons/fa6";
 import FAQs from "../components/layout/Faqs";
+import siteConfig from "@/config/site";
 
 
 
@@ -29,18 +30,18 @@ export async function generateMetadata({ params }) {
     const pageData = await cachedGetLubricantAddtives();
 
     const metadataParams = {
-        pageTitle: "Lubricant Additives Manufacturers in UAE",
+        pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : "Lubricant Additives Manufacturers in UAE",
         pageSlug: "lubricant-additives-manufacturers-in-uae",
-        pageDescription: pageData.seo?.seoDescription,
+        pageDescription: pageData.seo?.seoDesctiption,
         seoTitle: pageData.seo?.seoTitle,
-        seoDescription: pageData.seo?.seoDescription,
+        seoDescription: pageData.seo?.seoDesctiption,
         rebotStatus: pageData.seo?.preventIndexing,
         canonicalLinks: pageData.seo?.canonicalLinks ?? "lubricant-additives-manufacturers-in-uae",
         dataPublishedTime: pageData.publishedAt,
         category: "",
-        image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
-        imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-        imageExt: pageData.banner?.mobileBanner?.mime,
+        image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + siteConfig.ogImage,
+        imageAlternativeText: "",
+        imageExt: siteConfig.ogImageExt,
     };
 
     return await generatePageMetadata({ type: "page", path: "", params: metadataParams });

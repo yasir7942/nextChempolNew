@@ -139,7 +139,7 @@ const SearchBar = ({ dataType }) => {
                   </Link>
                   <Link href={`/product/${product.slug}`} className="flex flex-col items-start space-y-2">
                     <div className="font-normal text-sm text-black tracking-widest">
-                      {product.product_categories?.data[0]?.title}: {product.title}
+                      {product.product_categories[0]?.title}: {product.title}
                     </div>
 
                   </Link>

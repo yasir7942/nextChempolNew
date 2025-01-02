@@ -35,7 +35,7 @@ export async function generateMetadata({ params }) {
 
 
 
-  return await generatePageMetadata({ type: "post", path: "/post/", params: metadataParams });
+  return await generatePageMetadata({ type: "blog", path: "/blog/", params: metadataParams });
 }
 
 

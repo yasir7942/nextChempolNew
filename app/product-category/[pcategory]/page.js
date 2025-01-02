@@ -64,18 +64,15 @@ export async function generateMetadata({ params }) {
     pageSlug: categoryData.data[0].slug,
     pageDescription: getFirstDescriptionText(categoryData.data[0].description),
     seoTitle: categoryData.data[0].seo?.seoTitle,
-    seoDescription: categoryData.data[0].seo?.seoDescription,
+    seoDescription: categoryData.data[0].seo?.seoDesctiption,
     rebotStatus: categoryData.data[0].seo?.preventIndexing,
     canonicalLinks: categoryData.data[0].seo?.canonicalLinks,
     dataPublishedTime: categoryData.data[0].publishedAt,
     category: "",
-    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + categoryData.data[0].banner?.mobileBanner?.url,
-    imageAlternativeText: categoryData.data[0].banner?.mobileBanner?.alternativeText,
-    imageExt: categoryData.data[0].banner?.mobileBanner?.mime,
+    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + categoryData.data[0].image?.url,
+    imageAlternativeText: categoryData.data[0].image?.alternativeText,
+    imageExt: categoryData.data[0].image?.mime,
   };
-
-  // console.dir(categoryData, { depth:null}); 
-  //console.dir(metadataParams ); 
 
   return await generatePageMetadata({ type: "category", path: "/product-category/", params: metadataParams });
 }

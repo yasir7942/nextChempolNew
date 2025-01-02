@@ -29,24 +29,25 @@ export async function generateMetadata({ params }) {
   const pageData = await cachedGetHomePage();
 
   const metadataParams = {
-    pageTitle: pageData.title,
+    pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : pageData.title,
     pageSlug: "/",
     pageDescription: siteConfig.description,
     seoTitle: pageData.seo?.seoTitle,
-    seoDescription: pageData.seo?.seoDescription,
+    seoDescription: pageData.seo?.seoDesctiption,
     rebotStatus: pageData.seo?.preventIndexing,
     canonicalLinks: pageData.seo?.canonicalLinks ?? "/",
     dataPublishedTime: pageData.publishedAt,
     category: "",
-    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
-    imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-    imageExt: pageData.banner?.mobileBanner?.mime,
+    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + siteConfig.ogImage,
+    imageAlternativeText: "",
+    imageExt: siteConfig.ogImageExt,
   };
 
   return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
 }
 
 export default async function Home() {
+
 
 
 

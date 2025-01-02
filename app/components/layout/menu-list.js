@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/navigation-menu"
 import { Search } from "lucide-react";
 import { getProductCategoryForHome } from "@/app/data/loader";
+import siteConfig from "@/config/site";
 
 
 
@@ -25,6 +26,8 @@ import { getProductCategoryForHome } from "@/app/data/loader";
 
 
 const MenuList = ({ className, title, children, ...props }, ref) => {
+
+
 
   const [productCategory, setProductCategory] = useState([]);
   const [error, setError] = useState(null);
@@ -94,7 +97,7 @@ const MenuList = ({ className, title, children, ...props }, ref) => {
                 <li className="row-span-3 ">
                   <NavigationMenuLink asChild>
                     <Link
-                      className="flex h-full w-full select-none flex-col justify-center rounded-md bg-gradient-to-b from-muted/50 to-muted p-3 no-underline outline-none focus:shadow-md"
+                      className="flex h-full w-full select-none flex-col justify-center rounded-md bg-blue-50  to-muted p-3 no-underline outline-none focus:shadow-md"
                       href="/"
                     >
                       { /* <Icons.logo className="h-6 w-6" /> */}
@@ -102,10 +105,8 @@ const MenuList = ({ className, title, children, ...props }, ref) => {
                       <div className="mb-2 mt-2 text-lg font-medium text-textBlue">
                         Chempol
                       </div>
-                      <p className="text-sm leading-tight text-muted-foreground font-light">
-                        Beautifully designed components that you can copy and
-                        paste into your apps. Accessible. Customizable. Open
-                        Source.
+                      <p className="text-sm leading-tight text-muted-foreground text-gray-800 font-light">
+                        {siteConfig.description}
                       </p>
                     </Link>
                   </NavigationMenuLink>

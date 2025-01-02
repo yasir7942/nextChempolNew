@@ -128,7 +128,7 @@ export default function RootLayout({ children }) {
       "@type": "SearchAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": siteConfig.baseUrl + "/search?q={search_term_string}"
+        "urlTemplate": siteConfig.baseUrl + "/search?s={search_term_string}"
       },
       "query-input": "required name=search_term_string"
     }

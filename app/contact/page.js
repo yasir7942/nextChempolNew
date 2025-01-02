@@ -9,6 +9,7 @@ import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import SEOSchema from "../components/elements/seo-schema";
 import ContactForm from "../components/elements/contact-form";
 import { PiBuildingOfficeFill } from "react-icons/pi";
+import siteConfig from "@/config/site";
 
 const cachedGetContactPage = cache(getContactUsPageData);
 
@@ -19,18 +20,18 @@ export async function generateMetadata({ params }) {
   const pageData = await cachedGetContactPage();
 
   const metadataParams = {
-    pageTitle: pageData.slug,
+    pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : "Chempol Contact Page",
     pageSlug: "contact",
     pageDescription: "",
     seoTitle: pageData.seo?.seoTitle,
-    seoDescription: pageData.seo?.seoDescription,
+    seoDescription: pageData.seo?.seoDesctiption,
     rebotStatus: pageData.seo?.preventIndexing,
     canonicalLinks: pageData.seo?.canonicalLinks ?? "contact",
     dataPublishedTime: pageData.publishedAt,
     category: "",
-    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
-    imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-    imageExt: pageData.banner?.mobileBanner?.mime,
+    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + siteConfig.ogImage,
+    imageAlternativeText: "",
+    imageExt: siteConfig.ogImageExt,
   };
 
   return await generatePageMetadata({ type: "page", path: "", params: metadataParams });

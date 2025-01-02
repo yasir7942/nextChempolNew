@@ -11,6 +11,7 @@ import SearchBarForPost from '../components/layout/search-bar-post';
 import { cache } from 'react';
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import SEOSchema from '../components/elements/seo-schema';
+import siteConfig from '@/config/site';
 
 const cachedGetBlogPage = cache(getBlogPage);
 
@@ -20,18 +21,18 @@ export async function generateMetadata({ params }) {
   const pageData = await cachedGetBlogPage();
 
   const metadataParams = {
-    pageTitle: pageData.slug,
+    pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : "Chempol Blogs",
     pageSlug: "blog",
     pageDescription: "",
     seoTitle: pageData.seo?.seoTitle,
-    seoDescription: pageData.seo?.seoDescription,
+    seoDescription: pageData.seo?.seoDesctiption,
     rebotStatus: pageData.seo?.preventIndexing,
     canonicalLinks: pageData.seo?.canonicalLinks ?? "blog",
     dataPublishedTime: pageData.publishedAt,
     category: "",
-    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
-    imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-    imageExt: pageData.banner?.mobileBanner?.mime,
+    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + siteConfig.ogImage,
+    imageAlternativeText: "",
+    imageExt: siteConfig.ogImageExt,
   };
 
   return await generatePageMetadata({ type: "page", path: "", params: metadataParams });

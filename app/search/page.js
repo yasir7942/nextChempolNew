@@ -10,6 +10,7 @@ import { getImageUrl } from "@/libs/helper";
 import SearchComponenet from "../components/layout/search-component";
 import { cache } from 'react';
 import SEOSchema from "../components/elements/seo-schema";
+import siteConfig from "@/config/site";
 
 
 const cachedGetSearchPage = cache(getSearchPage);
@@ -20,18 +21,18 @@ export async function generateMetadata({ params }) {
   const pageData = await cachedGetSearchPage();
 
   const metadataParams = {
-    pageTitle: pageData.slug,
+    pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : "Chempol Search Page",
     pageSlug: "search",
     pageDescription: "",
     seoTitle: pageData.seo?.seoTitle,
-    seoDescription: pageData.seo?.seoDescription,
+    seoDescription: pageData.seo?.seoDesctiption,
     rebotStatus: pageData.seo?.preventIndexing,
     canonicalLinks: pageData.seo?.canonicalLinks ?? "search",
     dataPublishedTime: pageData.publishedAt,
     category: "",
-    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
-    imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-    imageExt: pageData.banner?.mobileBanner?.mime,
+    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + siteConfig.ogImage,
+    imageAlternativeText: "",
+    imageExt: siteConfig.ogImageExt,
   };
 
   return await generatePageMetadata({ type: "page", path: "", params: metadataParams });

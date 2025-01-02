@@ -16,7 +16,7 @@ export async function fetchData(path, filter) {
   {
     method: "GET",
     headers: {
-      "Content-Type": "application-json",
+      "Content-Type": "application/json",
       "Strapi-Response-Format": "v4",
       Authorization: `Bearer ${authToken}`,
     },
@@ -413,7 +413,7 @@ export async function getProductCategory(slug) {
         $eq: slug,
       },
     },
-    populate: ['banner', 'banner.webBanner', 'banner.mobileBanner', 'seo', 'seo.schema'],
+    populate: ['image', 'banner', 'banner.webBanner', 'banner.mobileBanner', 'seo', 'seo.schema'],
 
   });
   return await fetchData("product-categories", blogBlockQuery);

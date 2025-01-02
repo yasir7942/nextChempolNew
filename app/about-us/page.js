@@ -8,6 +8,7 @@ import { cache } from 'react';
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import SEOSchema from "../components/elements/seo-schema";
 import SpeakableSchema from "../components/elements/speakable-schema";
+import siteConfig from "@/config/site";
 
 const cachedGetAboutPage = cache(getAboutPage);
 export async function generateMetadata({ params }) {
@@ -16,19 +17,21 @@ export async function generateMetadata({ params }) {
     const pageData = await cachedGetAboutPage();
 
     const metadataParams = {
-        pageTitle: "About Us",
+        pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : "About Us",
         pageSlug: "about-us",
-        pageDescription: pageData.seo?.seoDescription,
+        pageDescription: pageData.seo?.seoDesctiption,
         seoTitle: pageData.seo?.seoTitle,
-        seoDescription: pageData.seo?.seoDescription,
+        seoDescription: pageData.seo?.seoDesctiption,
         rebotStatus: pageData.seo?.preventIndexing,
         canonicalLinks: pageData.seo?.canonicalLinks ?? "about-us",
         dataPublishedTime: pageData.publishedAt,
         category: "",
-        image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + pageData.banner?.mobileBanner?.url,
-        imageAlternativeText: pageData.banner?.mobileBanner?.alternativeText ?? pageData.title,
-        imageExt: pageData.banner?.mobileBanner?.mime,
+        image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + siteConfig.ogImage,
+        imageAlternativeText: "",
+        imageExt: siteConfig.ogImageExt,
     };
+
+
 
     return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
 }

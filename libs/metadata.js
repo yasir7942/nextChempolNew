@@ -3,7 +3,7 @@ import { getFirstDescriptionText, validateCanonicalSlug, getImageUrl } from "@/l
 
 export async function generateMetadata({ type, path, params }) {
 
-  
+
   const {
     pageTitle,
     pageSlug,
@@ -21,21 +21,21 @@ export async function generateMetadata({ type, path, params }) {
 
   const finalSeoTitle = seoTitle?.trim() ? seoTitle : pageTitle;
   const finalSeoDescription = seoDescription?.trim() ? seoDescription : pageDescription;
-  const finalRebotStatus = rebotStatus ? "noindex" : "index";
+  const finalRebotStatus = rebotStatus !== true;  // rebotStatus ture means prevent Indexing
   const autoCanonicalSlug = path + pageSlug + "/";
   const manualCanonicalSlug = validateCanonicalSlug(canonicalLinks?.trim());
   const canonicalLink = process.env.NEXT_PUBLIC_BASE_URL + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug);
   const finalImageText = imageAlternativeText ? imageAlternativeText : finalSeoTitle;
 
+
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL),
     title: finalSeoTitle,
     description: finalSeoDescription,
-    ...((type === "product" || type === "post") ? { category } : {}),
+    ...((type === "product" || type === "blog") ? { category } : {}),
     robots: {
       index: finalRebotStatus,
       follow: finalRebotStatus,
-      nocache: finalRebotStatus,
     },
     alternates: {
       canonical: canonicalLink,
@@ -52,7 +52,7 @@ export async function generateMetadata({ type, path, params }) {
         {
           "url": image,
           "alt": finalImageText,
-          "type": imageExt 
+          "type": imageExt
         }
       ],
       locale: 'en_US',
@@ -64,4 +64,8 @@ export async function generateMetadata({ type, path, params }) {
       'og:type': "ImageObject",
     },
   };
+
+
+
+
 }
