@@ -15,6 +15,7 @@ const CTAcard = () => {
         fill
         src="/images/Chempol-CTA-BANNER.webp"
         className="w-full object-cover object-center "
+        alt="Work with Us WE ARE A GLOBAL NETWORK OF EXPERTS "
       />
 
       <PaddingContainer>

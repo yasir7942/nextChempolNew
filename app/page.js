@@ -52,20 +52,11 @@ export default async function Home() {
 
   const homeData = await cachedGetHomePage();
 
-  //  console.log("-----------------------home page--------------------------------------------------");
-  //  console.dir(homeData, { depth:null});
-  //  console.log("---------------------------End-----------------------end-----------------------");
+
 
 
   return (
     <div className="bg-backgroundColor">
-
-
-
-
-
-
-
 
 
       <Slider />

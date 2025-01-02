@@ -44,9 +44,6 @@ export const generateStaticParams = async () => {
 }
 
 
-
-
-
 export async function generateMetadata({ params }) {
   const productData = await geSingleProduct(params.slug);
 
@@ -59,7 +56,7 @@ export async function generateMetadata({ params }) {
     rebotStatus: productData.data[0].seo?.preventIndexing,
     canonicalLinks: productData.data[0].seo?.canonicalLinks,
     dataPublishedTime: productData.data[0].publishedAt,
-    category: productData.data[0].product_categories?.data[0]?.title,
+    category: productData.data[0].product_categories[0]?.title,
     image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + productData.data[0].productImage.url,
     imageAlternativeText: productData.data[0].productImage?.alternativeText,
     imageExt: productData.data[0].productImage?.mime,
@@ -76,17 +73,17 @@ const SingleProductPage = async ({ params }) => {
 
 
 
-  //  console.log("-----------------single product data --------------");
-  //    console.dir(productData, { depth:null});
-  //  console.log("-----------------End------------");
+  console.log("-----------------single product data --------------");
+  //console.dir(productData, { depth: null });
+  console.log("-----------------End------------");
 
   const content = productData.data[0].description;
   const productGroup = productData.data[0].related_products;
   const firstDescriptionText = getFirstDescriptionText(productData.data[0].description);
   const seoDescription = productData.data[0].seo?.seoDescription ? productData.data[0].seo?.seoDescription : firstDescriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  const category = productData.data[0].product_categories?.data[0]?.title ? productData.data[0].product_categories.data[0]?.title : "product Category";
-  const categorySlug = productData.data[0].product_categories?.data[0]?.slug ? productData.data[0].product_categories.data[0]?.slug : "#";
+  const category = productData.data[0].product_categories[0]?.title ? productData.data[0].product_categories[0]?.title : "product Category";
+  const categorySlug = productData.data[0].product_categories[0]?.slug ? productData.data[0].product_categories[0]?.slug : "#";
 
   let ratingCounter = 0;
 

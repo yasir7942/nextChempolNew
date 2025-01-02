@@ -39,8 +39,6 @@ const AboutUsPage = async () => {
     const pageData = await cachedGetAboutPage();
 
 
-
-
     return (
         <div>
             <SpeakableSchema pageTitle={pageData.title} pageUrl={pageData.seo?.canonicalLinks ?? "/about-us"} />
@@ -65,7 +63,7 @@ const AboutUsPage = async () => {
                         {/* First Section */}
                         <div className="flex flex-col  p-5  xl:p-10 md:w-1/3 h-full  border items-center   text-black text-lg tracking-wider font-light flex-grow justify-center">
                             <div className="max-w-sm md:max-w-lg  overflow-hidden rounded-lg">
-                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.coreValue.image.url)} alt={pageData.coreValue.image.alternativeText} />
+                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.coreValue.image.url)} alt={pageData.coreValue.image.alternativeText ? pageData.coreValue.image.alternativeText : "Chempol Core value"} />
                             </div>
                             <h1 className="text-xl mt-5 text-left   capitalize font-normal text-textBlue">{pageData.coreValue.title}</h1>
                             <div className="text-black md:text-justify summary 2xl:w-[80%] ">
@@ -77,7 +75,7 @@ const AboutUsPage = async () => {
                         {/* Second Section */}
                         <div className="flex flex-col  p-5  xl:p-10 mt-10 md:mt-0  md:w-1/3 h-full border  items-center text-black text-lg tracking-wider font-light flex-grow justify-center">
                             <div className="max-w-sm md:max-w-lg   overflow-hidden rounded-lg">
-                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.ourMission.image.url)} alt={pageData.ourMission.image.alternativeText} />
+                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.ourMission.image.url)} alt={pageData.ourMission.image.alternativeText ? pageData.ourMission.image.alternativeText : "Chempol Mission"} />
                             </div>
                             <h1 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.ourMission.title}</h1>
                             <div className="text-black md:text-justify summary  2xl:w-[80%]  ">
@@ -88,7 +86,7 @@ const AboutUsPage = async () => {
                         {/* Third Section */}
                         <div className="flex flex-col  p-5  xl:p-10  md:w-1/3 h-full mt-10 md:mt-0  items-center border  text-black text-lg tracking-wider font-light flex-grow justify-center">
                             <div className="max-w-sm md:max-w-lg  overflow-hidden rounded-lg">
-                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.overVisson.image.url)} alt={pageData.overVisson.image.alternativeText} />
+                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.overVisson.image.url)} alt={pageData.overVisson.image.alternativeText ? pageData.overVisson.image.alternativeText : "Chempol Vission"} />
                             </div>
                             <h1 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.overVisson.title}</h1>
                             <div className="text-black md:text-justify summary  2xl:w-[80%] ">
@@ -113,7 +111,7 @@ const AboutUsPage = async () => {
                         <div key={val.id} className=" w-full md:w-1/2 mt-6 space-y-0 space-x-0 ">
                             <div className="flex flex-col px-14 py-0    items-start   text-black text-lg tracking-wider font-light flex-grow justify-start  ">
                                 <div className="w-full   overflow-hidden rounded-lg before:">
-                                    <Image className="w-full 2xl:w-[80%]  h-auto object-cover" width={1000} height={1000} src={getImageUrl(val.image.url)} alt={val.image?.alternativeText} />
+                                    <Image className="w-full 2xl:w-[80%]  h-auto object-cover" width={1000} height={1000} src={getImageUrl(val.image.url)} alt={val.image?.alternativeText ? val.image?.alternativeText : val.title} />
                                 </div>
                                 <h1 className="text-xl mt-5 text-left w-full    items-start capitalize font-normal text-textBlue">{val.title}</h1>
                                 <div className="text-black md:text-justify items-start text-base 2xl:text-left w-full 2xl:w-[80%]   ">

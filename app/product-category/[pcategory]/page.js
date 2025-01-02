@@ -93,14 +93,17 @@ const ProductCategory = async ({ params, searchParams }) => {
   const productData = await geProductsByCategory(params.pcategory, currentPage, pageSize);
   //const productData = await cachedGetingleProductCategory(params.pcategory, currentPage, pageSize);
 
+
+
   const PageCount = productData.meta.pagination.pageCount;
   const totalPage = productData.meta.pagination.total;
 
-  const content = productData?.data[0]?.product_categories.data[0]?.description;
-  const middleTitle = productData?.data[0]?.product_categories.data[0]?.middleTitle;
-  const middleDescrption = productData?.data[0]?.product_categories.data[0]?.middleDescription;
-  const readmoreTab = productData?.data[0]?.product_categories.data[0]?.readMoreTab;
-  const faqs = productData?.data[0]?.product_categories.data[0]?.faq;
+  const content = productData?.data[0]?.product_categories[0]?.description;
+  const middleTitle = productData?.data[0]?.product_categories[0]?.middleTitle;
+
+  const middleDescrption = productData?.data[0]?.product_categories[0]?.middleDescription;
+  const readmoreTab = productData?.data[0]?.product_categories[0]?.readMoreTab;
+  const faqs = productData?.data[0]?.product_categories[0]?.faq;
 
 
 
@@ -119,7 +122,7 @@ const ProductCategory = async ({ params, searchParams }) => {
       <SEOSchema schemaList={productData.data[0]?.seo?.schema} />
 
       {/* title={productData?.data[0]?.product_categories.data[0]?.title}  */}
-      <TopBanner banner="/images/product-banner.jpg" title={productData?.data[0]?.product_categories.data[0]?.title} />
+      <TopBanner banner="/images/product-banner.jpg" title={productData?.data[0]?.product_categories[0]?.title} />
 
       <div className="w-full h-10 "></div>
       <PaddingContainer>

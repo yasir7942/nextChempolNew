@@ -30,10 +30,13 @@ const ProductCategoryMenu = () => {
     const fetchMenuData = async () => {
       try {
         const response = await geProductCategoryLeftMenu();
-        const filteredData = response.data.filter(
-          (menu) => menu.products.data.length > 0
-        );
-        setMenuData(filteredData);
+
+
+        /* const filteredData = response.data.filter(
+           (menu) => menu.products.data.length > 0
+         );*/
+
+        setMenuData(response.data);
       } catch (error) {
         console.error("Error fetching product categories:", error);
       }

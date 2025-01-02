@@ -12,16 +12,19 @@ if (appMode == "dev") {
 export async function fetchData(path, filter) {
 
   const authToken = null;
-  const headers =
+  const header =
   {
     method: "GET",
-    header: {
+    headers: {
       "Content-Type": "application-json",
-      cache: cacheSystem,
+      "Strapi-Response-Format": "v4",
       Authorization: `Bearer ${authToken}`,
-    }
+    },
+    cache: cacheSystem,
 
   }
+
+
 
 
   const url = new URL(path, baseUrl);
@@ -32,7 +35,7 @@ export async function fetchData(path, filter) {
 
   try {
 
-    const response = await fetch(url.href, authToken ? headers : {});
+    const response = await fetch(url.href, authToken ? header : {});
     const data = await response.json();
 
     const flattenedData = flattenAttributes(data);
@@ -108,7 +111,7 @@ export async function geProductCategoryLeftMenu() {
   const blogBlockQuery = qs.stringify({
 
     sort: ['index'],
-    populate: ['products', 'seo.schema', 'image', 'bImage'],
+    populate: ['products', 'seo.schema', 'image'],
   });
   return await fetchData("product-categories", blogBlockQuery);
 
@@ -161,13 +164,13 @@ export async function geSingleProduct(slug) {
     filters: {
 
       slug: {
-        $eq: slug, // Replace ' ' with the actual slug variable
+        $eq: slug,
       },
 
     },
     populate: ['productImage', 'seo', 'seo.schema', 'productSchema', 'productSchema.reviews',
       'related_products.productImage', 'product_categories',
-      'TDSFile.url', 'MSDSFile.url', 'table'],
+      'table'],
   });
 
 
@@ -317,7 +320,7 @@ export async function getAboutPage() {
 
   const blogBlockQuery = qs.stringify({
 
-    populate: ['aboutus.image', 'founder.image', 'overValues', 'coreValue.image', 'overVisson.image', 'ourMission.image', 'qualities', 'qualities.image', 'seo.schema'],
+    populate: ['aboutus.image', 'overValues', 'coreValue.image', 'overVisson.image', 'ourMission.image', 'qualities', 'qualities.image', 'seo.schema'],
 
   });
 
