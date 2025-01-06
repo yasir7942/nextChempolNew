@@ -104,12 +104,12 @@ const SingleBlogPage = async ({ params }) => {
       <SEOSchema schemaList={postData.data[0].seo?.schema} />
 
 
-      <div className="w-full mt-5 h-[1px] bg-textBlue"></div>
+      <div className="w-full  mt-5 h-[1px] bg-textBlue"></div>
 
       <PaddingContainer>
 
         {/*  Post Area   */}
-        <div className=" w-full  flex flex-col mt-20  justify-center  p-10 pt-0 space-y-7   ">
+        <div className=" w-full  flex flex-col mt-20  justify-center  md:p-10 pt-0 space-y-7   ">
 
           <div className="W-full h-auto 2xl:w-3/4  " >
             <Image className="w-full h-auto " src={getImageUrl(postData.data[0].featureImage.url)} height={1400} width={1400} alt={postData.data[0].title} />

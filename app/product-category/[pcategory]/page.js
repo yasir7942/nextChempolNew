@@ -121,13 +121,13 @@ const ProductCategory = async ({ params, searchParams }) => {
       {/* title={productData?.data[0]?.product_categories.data[0]?.title}  */}
       <TopBanner banner="/images/product-banner.jpg" title={productData?.data[0]?.product_categories[0]?.title} />
 
-      <div className="w-full h-10 "></div>
+      <div className="w-full h-0 md:h-10 "></div>
       <PaddingContainer>
 
         <div className="text-black font-normal text-sm  pb-10 rich-text">
           <BodyDataParse content={content} />
         </div>
-        <div className="w-full h-auto flex flex-col md:flex-row  ">
+        <div className="w-full h-auto flex flex-col md:flex-row     ">
           {/*  Left Menu Column  */}
           <div className="w-full md:w-3/12 lg:w-[22%] p-6 md:pl-0  overflow-hidden ">
             {/* <!-- Menu content goes here   */}
@@ -135,7 +135,7 @@ const ProductCategory = async ({ params, searchParams }) => {
           </div>
 
           {/*  Content Area   */}
-          <div className=" w-full md:w-9/12 lg:w-[78%]  flex flex-col   p-3 md:p-4 pb-3 ">
+          <div className=" w-full md:w-9/12 lg:w-[78%]  flex flex-col   p-1 md:p-4 pb-3   ">
             {/*   Content area content goes here  */}
             <SearchBar dataType="products" />
 

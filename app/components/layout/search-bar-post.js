@@ -78,7 +78,7 @@ const SearchBar = ({ dataType }) => {
   }, []);
 
   return (
-    <div className="flex flex-col relative z-[100] w-full p-6 text-gray-800 text-center justify-center" ref={searchContainerRef}>
+    <div className="flex flex-col relative z-[100] w-full p-2 md:p-6  text-gray-800 text-center justify-center" ref={searchContainerRef}>
       <form className="flex item bg-center w-full gap-2 font-light text-gray-900">
         <input
           placeholder={'Search  ' + dataType}

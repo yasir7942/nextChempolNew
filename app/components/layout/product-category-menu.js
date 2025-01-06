@@ -62,24 +62,24 @@ const ProductCategoryMenu = () => {
         ))}
       </div>
 
-      <div className="flex flex-row justify-start md:hidden text-white">
+      <div className="flex flex-row justify-start md:hidden text-gray-900">
         <Sheet open={openSheet} onOpenChange={setOpenSheet} >
-          <SheetTrigger className="flex justify-start items-end space-x-2">
+          <SheetTrigger className="flex justify-start items-end space-x-2 ">
             <IoMdMenu size={20} />
             <div className="font-light">Product Category</div>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[250px]">
+          <SheetContent side="left" className="w-[80%] ">
             <SheetHeader>
-              <SheetDescription className="h-screen w-full pb-16">
+              <SheetDescription className="h-screen w-full pb-16  ">
                 <div className="w-full h-full overflow-hidden py-3">
-                  <div className="w-[218px] h-full overflow-y-auto">
+                  <div className="w-full h-full overflow-y-auto  ">
                     <div className="fex fex-col space-y-3 text-left mb-5 text-base font-normal">
                       <a href="#">Products Categories</a>
                     </div>
                     {menuData.map((menu) => (
                       <div key={"mobile-" + menu.id} className="fex fex-col text-left pl-2 space-y-3 mt-2 text-base font-light">
                         <Link href={`/product-category/${menu.slug}`} onClick={() => setOpenSheet(false)} >{menu.title}</Link>
-                        <div className="w-[70%] h-[1px] bg-[#0f0f0f]"> </div>
+                        <div className="w-[75%] h-[1px] bg-gray-300"> </div>
                       </div>
                     ))}
                   </div>

@@ -13,7 +13,7 @@ const BlogContainer = async () => {
 
 
   return (
-    <div className="bg-[#F2F2F2] pt-14 w-full h-auto">
+    <div className="bg-[#F2F2F2] mt-5 pt-14 w-full h-auto">
 
 
       <PaddingContainer>

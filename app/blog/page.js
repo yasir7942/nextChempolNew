@@ -71,16 +71,16 @@ const Blog = async ({ searchParams }) => {
 
       <TopBanner banner="/images/blog-banner.jpg" title="Blog" title2="" />
 
-      <div className=' -mt-44  block ' >
+      <div className=' -mt-44  block  ' >
         <PaddingContainer  >
           {/*  Post Area   */}
-          <div className=" w-full  flex flex-col mt-48 px-16       ">
+          <div className=" w-full  flex flex-col mt-48 md:px-16        ">
             {/*   Content area content goes here  bg-[#2a3c46] */}
             {/* <SearchBar /> */}
 
             <SearchBarForPost />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4   gap-7   ">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4   gap-7 mt-6   ">
 
               {postsData.data.map((post) => (
 

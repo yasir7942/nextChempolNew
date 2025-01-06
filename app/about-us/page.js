@@ -104,15 +104,15 @@ const AboutUsPage = async () => {
 
 
 
-            <PaddingContainer>
+            <PaddingContainer className="">
 
-                <div className="flex flex-wrap mt-10">
+                <div className="flex flex-wrap mt-10 ">
 
                     {pageData.qualities.map((val) => (
 
 
-                        <div key={val.id} className=" w-full md:w-1/2 mt-6 space-y-0 space-x-0 ">
-                            <div className="flex flex-col px-14 py-0    items-start   text-black text-lg tracking-wider font-light flex-grow justify-start  ">
+                        <div key={val.id} className=" w-full md:w-1/2 mt-6 space-y-0 space-x-0   ">
+                            <div className="flex flex-col md:px-14 py-0    items-start   text-black text-lg tracking-wider font-light flex-grow justify-start   ">
                                 <div className="w-full   overflow-hidden rounded-lg before:">
                                     <Image className="w-full 2xl:w-[80%]  h-auto object-cover" width={1000} height={1000} src={getImageUrl(val.image.url)} alt={val.image?.alternativeText ? val.image?.alternativeText : val.title} />
                                 </div>
