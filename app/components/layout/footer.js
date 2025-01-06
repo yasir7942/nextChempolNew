@@ -24,8 +24,8 @@ const Footer = async () => {
 
     <footer className="w-full pt-16 relative z-20    pb-10 bg-[#2D2D2D]">
 
-      <WhatsAppButton />
 
+      <WhatsAppButton />
 
       <PaddingContainer>
         <div className="w-full flex flex-col md:flex-row  md:pt-25  pl-12 md:pl-0 space-y-10 md:space-y-0 justify-between">

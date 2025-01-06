@@ -9,6 +9,7 @@ import MetaPixelInitializer from "./components/elements/MetaPixelInitializer";
 
 
 
+
 //const inter = Inter({ subsets: ["latin"] });
 
 const openSans = Open_Sans({
@@ -163,7 +164,12 @@ export default function RootLayout({ children }) {
     
 */}
 
+
+
       <body className={openSans.className} >
+
+
+
 
         <GTMInitializer /> {/* Initialize GTM here */}
         <MetaPixelInitializer /> {/* Meta Pixel */}

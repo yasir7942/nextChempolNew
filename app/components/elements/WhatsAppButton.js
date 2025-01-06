@@ -1,11 +1,26 @@
-import React from 'react';
+"use client";
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const WhatsAppButton = () => {
-    return (
-        //    href="https://wa.me/+447548378089"
-        <div className="fixed bottom-12 right-4 z-50">
+    const [isClient, setIsClient] = useState(false);
+    const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+    // Ensure the code runs only on the client side
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    // Render the button using createPortal if on the client side
+    if (!isClient) return null;
+
+    const button = (
+        <div
+            className="fixed bottom-12 right-4 z-[2147483647] pointer-events-auto"
+            style={{ position: 'fixed', zIndex: 2147483647 }}
+        >
             <a
-                href="https://wa.me/+447548378089"
+                //href="https://wa.me/+447548378089"
+                href={`https://wa.me/${whatsappNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-14 h-14 bg-green-500 rounded-full shadow-lg hover:bg-green-600 transition"
@@ -23,6 +38,8 @@ const WhatsAppButton = () => {
             </a>
         </div>
     );
+
+    return createPortal(button, document.body);
 };
 
 export default WhatsAppButton;
