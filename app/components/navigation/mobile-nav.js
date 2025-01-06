@@ -59,10 +59,10 @@ const MobileNavigation = () => {
     <div >
       <Sheet open={openSheet} onOpenChange={setOpenSheet}   >
         <SheetTrigger asChild><a href="#" className='   flex   flex-row text-textBlue text-xl items-center justify-start  '>Menu <IoMdMenu aria-label={`Mobile Menu`} size={20} /> </a></SheetTrigger>
-        <SheetContent className="w-96  border-l-4 border-textBlue bg-blue-50 ">
+        <SheetContent className="w-[85%]  border-l-4 border-textBlue bg-blue-50  overflow-scroll">
           <SheetHeader>
 
-            <SheetDescription   >
+            <SheetDescription    >
 
               <div className="flex flex-col w-full h-full justify-between items-left py-4 px-2 relative    ">
 
