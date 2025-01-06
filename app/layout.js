@@ -1,11 +1,11 @@
-//import { Inter } from "next/font/google";
+
 import "./globals.css";
 import { Open_Sans } from "next/font/google";
 import Footer from "./components/layout/footer";
 import siteConfig from "@/config/site";
 import Topbar from "./components/navigation/topbar";
-
-
+import GTMInitializer from "./components/elements/gmt";
+import MetaPixelInitializer from "./components/elements/MetaPixelInitializer";
 
 
 
@@ -40,6 +40,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+
 
 
   const jsonLdBusiness = {
@@ -163,6 +164,11 @@ export default function RootLayout({ children }) {
 */}
 
       <body className={openSans.className} >
+
+        <GTMInitializer /> {/* Initialize GTM here */}
+        <MetaPixelInitializer /> {/* Meta Pixel */}
+
+
 
         {/*  JSON-LD of Page */}
         <script type="application/ld+json"
