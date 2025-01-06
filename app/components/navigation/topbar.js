@@ -52,7 +52,7 @@ const Topbar = () => {
             <Image className='w-72 md:w-72'
               src="/images/chempol.png"
               width={350}
-              height={200}
+              height={150}
               alt="Chempol A Leading Manufacturer of Lubricant Additives and Specialty Chemicals in UAE"
             />
           </a>
