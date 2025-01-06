@@ -65,7 +65,7 @@ const ContactUs = async () => {
           </div>
 
           {/* map */}
-          <div className=" w-full   text-gray-800 mt-10 md:mt-0  ">
+          <div className=" w-full   text-gray-800 mt-28 md:mt-10 md:mt-0   ">
             <h1 className="text-textBlue text-2xl font-semibold capitalize">Our Contact Details</h1>
             <p className="text-gray-800 font-light " >It is a long Established fact that a reader will be distract readable contect of a page</p>
 

@@ -222,9 +222,16 @@ const SingleProductPage = async ({ params }) => {
           </div>
 
           {/* Content Area */}
-          <div className="w-full md:w-9/12 justify-between lg:w-[78%]  flex flex-col  pb-3   ">
+          <div className="w-full md:w-9/12 justify-between lg:w-[78%]  flex flex-col  pb-3     ">
             {/* Content area content goes here */}
             <div className="flex flex-col md:flex-row w-full h-auto p-0 lg:p-8">
+
+              {/* title just for mobile */}
+              <div className="capitalize font-semibold text-2xl pb-5 md:hidden ">
+                {productData.data[0].title}
+              </div>
+
+
 
               {/* image section */}
               <div className="w-full md:w-2/6 items-center  ">
@@ -243,8 +250,8 @@ const SingleProductPage = async ({ params }) => {
 
 
               {/* text section */}
-              <div className="w-full md:w-4/6 flex flex-col text-gray-800">
-                <div className="capitalize font-semibold text-2xl  ">
+              <div className="w-full md:w-4/6 flex flex-col text-gray-800 ">
+                <div className="capitalize font-semibold text-2xl hidden md:block  ">
                   {productData.data[0].title}
                 </div>
 

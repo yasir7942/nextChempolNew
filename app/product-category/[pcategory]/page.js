@@ -14,7 +14,7 @@ import BodyDataParse from "@/app/components/elements/data-parse-content";
 import SingleTab from "@/app/components/layout/SingleTab";
 import CTAcard from "@/app/components/layout/cta-card";
 import BlogContainer from "@/app/components/layout/blog-container";
-
+import { cache } from 'react';
 
 const pageSize = 12;
 
@@ -54,10 +54,10 @@ export const generateStaticParams = async () => {
 
 
 
-
+const cachedGetProductCategory = cache(getProductCategory);
 export async function generateMetadata({ params }) {
 
-  const categoryData = await getProductCategory(params.pcategory);
+  const categoryData = await cachedGetProductCategory(params.pcategory);
 
   const metadataParams = {
     pageTitle: categoryData.data[0].title,
@@ -81,7 +81,12 @@ export async function generateMetadata({ params }) {
 const numbers = Array.from({ length: 12 }, (_, index) => index + 1);
 
 
+
+
+
 const ProductCategory = async ({ params, searchParams }) => {
+
+  const categoryData = await cachedGetProductCategory(params.pcategory);  // use cache
 
   const currentPage = Number(searchParams.page) || 1;
 
@@ -111,15 +116,15 @@ const ProductCategory = async ({ params, searchParams }) => {
   //  console.log(productData.data);
   // if(productData.data.length === 0)  return  <NotFound />
 
-
+  console.log(categoryData.data[0].seo?.schema);
 
   return (
     <div className=" z-10">
 
-      <SEOSchema schemaList={productData.data[0]?.seo?.schema} />
+      <SEOSchema schemaList={categoryData.data[0].seo?.schema} />
 
       {/* title={productData?.data[0]?.product_categories.data[0]?.title}  */}
-      <TopBanner banner="/images/product-banner.jpg" title={productData?.data[0]?.product_categories[0]?.title} />
+      <TopBanner banner="/images/product-banner.jpg" title={productData?.data[0].product_categories.data[0].title} title2={categoryData.data[0].seo?.seoDesctiption ? categoryData.data[0].seo?.seoDesctiption : ""} />
 
       <div className="w-full h-0 md:h-10 "></div>
       <PaddingContainer>

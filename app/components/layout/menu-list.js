@@ -18,12 +18,12 @@ import { Search } from "lucide-react";
 import { getProductCategoryForHome } from "@/app/data/loader";
 import siteConfig from "@/config/site";
 
+import { cache } from 'react';
 
 
 
 
-
-
+const cachedGetProductCategoryForHome = cache(getProductCategoryForHome);
 
 const MenuList = ({ className, title, children, ...props }, ref) => {
 
@@ -35,7 +35,7 @@ const MenuList = ({ className, title, children, ...props }, ref) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const categoryData1 = await getProductCategoryForHome();
+        const categoryData1 = await cachedGetProductCategoryForHome();
 
         //  console.log("-----------------------product category  data--------------------------------------------------");
         // console.dir(productCategory, { depth:null});

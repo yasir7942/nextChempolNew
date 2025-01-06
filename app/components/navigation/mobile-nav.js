@@ -3,7 +3,7 @@
 import { IoMdMenu } from "react-icons/io";
 import React, { useState, useEffect } from 'react';
 import { MdChevronRight } from "react-icons/md";
-
+import { cache } from 'react';
 
 
 
@@ -22,7 +22,7 @@ import Image from 'next/image';
 import { getProductCategoryForHome } from '@/app/data/loader';
 
 
-
+const cachedGetProductCategoryForHome = cache(getProductCategoryForHome);
 const MobileNavigation = () => {
 
   const [openSheet, setOpenSheet] = useState(false);
@@ -32,7 +32,7 @@ const MobileNavigation = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const categoryData1 = await getProductCategoryForHome();
+        const categoryData1 = await cachedGetProductCategoryForHome();
 
         /*  console.log("-----------------------product category  data--------------------------------------------------");
           console.dir(productCategory, { depth: null });

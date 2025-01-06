@@ -48,7 +48,7 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "" }) 
             <div className="text-textLightBlue capitalize font-semibold text-xl md:text-2xl mx-auto">
               {title}
             </div>
-            <div className="w-full   text-white font-light max-w-screen-md xl:max-w-screen-lg 2xl:max-w-screen-2xl text-center text-xl md:text-xl mx-auto">
+            <div className="w-full   text-white font-light max-w-screen-md xl:max-w-screen-lg 2xl:max-w-screen-2xl text-center text-sm md:text-xl mx-auto overflow-hidden">
               {title2}
             </div>
           </div>

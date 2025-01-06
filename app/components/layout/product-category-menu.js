@@ -11,6 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Link from "next/link";
+import { cache } from 'react';
 /*
 const ProductCategoryMenu = async () => {
   
@@ -21,6 +22,8 @@ const ProductCategoryMenu = async () => {
 
   */
 
+const cachedGeProductCategoryLeftMenu = cache(geProductCategoryLeftMenu);
+
 const ProductCategoryMenu = () => {
   const [menuData, setMenuData] = useState([]);
   const [openSheet, setOpenSheet] = useState(false);
@@ -29,7 +32,7 @@ const ProductCategoryMenu = () => {
   useEffect(() => {
     const fetchMenuData = async () => {
       try {
-        const response = await geProductCategoryLeftMenu();
+        const response = await cachedGeProductCategoryLeftMenu();
 
 
         /* const filteredData = response.data.filter(
