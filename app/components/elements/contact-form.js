@@ -37,6 +37,7 @@ const ContactForm = () => {
         setStatus('Email sent successfully!');
       } else {
         const result = await response.json();
+        console.log("contact form Error");
         console.log(result.error);
         setStatus(`Failed to send email: ${'System Error Email Us'}`);
       }
@@ -145,7 +146,7 @@ const ContactForm = () => {
             ref={recaptchaRef}
             sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
             onChange={onReCAPTCHAChange}
-            theme="dark"
+
           />
         </div>
         <div className="flex items-center justify-between">

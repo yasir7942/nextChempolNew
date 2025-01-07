@@ -7,6 +7,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request) {
 
+    console.log("Request..................")
+    // console.log(request)
+
     // Check for API key in headers
     const apiKey = request.headers.get('Authorization') + '7JtBCBL777KkUJp';
 
@@ -14,7 +17,7 @@ export async function POST(request) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-
+    console.log("........Pass Auth local.................")
     const { fullName, phoneNumber, email, country, message, isCaptchaCode } = await request.json();
 
 
@@ -24,6 +27,7 @@ export async function POST(request) {
         return new Response(JSON.stringify({ error: 'Invalid input or Missing Values' }), { status: 400 });
     }
 
+    console.log("........Pass data Empty Data validation................")
 
 
     // Regular expression to detect URLs
@@ -49,15 +53,22 @@ export async function POST(request) {
         return new Response(JSON.stringify({ error: 'Invalid email address.' }), { status: 400 });
     }
 
+
+    console.log("........Pass Email validation................")
+
     if (containsUrl(message)) {  // Check if the message contains a URL
         console.log("Message contains a URL, which is not allowed");
         return new Response(JSON.stringify({ error: 'Message contains a URL, which is not allowed.' }), { status: 400 });
     }
 
+    console.log("........Pass Message URL validation................")
+
     if (containsSpam(message)) {  // Check if the message contains spammy words
         console.log("Message contains spammy or unwanted words.");
         return new Response(JSON.stringify({ error: 'Message contains spammy or unwanted words.' }), { status: 400 });
     }
+
+    console.log("........Pass Message SPAM WORD validation................")
 
 
 
@@ -78,6 +89,10 @@ export async function POST(request) {
 
 
         if (captchaValidation.success && process.env.NEXT_PUBLIC_SITE == captchaValidation.hostname) {
+
+
+            console.log("........Pass MGoogle Captcha validation................")
+
 
             const { data, error } = await resend.emails.send({
                 from: 'Chempol Site <website@chempol.co.uk>',
