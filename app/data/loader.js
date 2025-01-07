@@ -31,7 +31,7 @@ export async function fetchData(path, filter) {
   url.search = filter;
 
   // show API links
-  console.log(url.href);
+  //console.log(url.href);
 
   try {
 
@@ -413,7 +413,7 @@ export async function getProductCategory(slug) {
         $eq: slug,
       },
     },
-    populate: ['image', 'banner', 'banner.webBanner', 'banner.mobileBanner', 'seo', 'seo.schema'],
+    populate: ['image', 'banner', 'banner.webBanner', 'banner.mobileBanner', 'seo', 'seo.schema', 'faq'],
 
   });
   return await fetchData("product-categories", blogBlockQuery);

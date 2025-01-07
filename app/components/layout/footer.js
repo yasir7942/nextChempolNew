@@ -8,6 +8,7 @@ import { FaPhoneAlt } from "react-icons/fa";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { FaAngleRight } from "react-icons/fa";
 import WhatsAppButton from "../elements/WhatsAppButton";
+import FooterAddressList from "./footerAddressList";
 
 
 //import MenuFooterList from "./menu-footer-list";
@@ -101,23 +102,8 @@ const Footer = async () => {
               <FaPhoneAlt className="text-textBlue mr-2" /> <a href="mailto:info@chempol.co.uk">info@chempol.co.uk</a>
             </p>
 
-            <p className="text-sm text-gray-300 font-light   ">
-              <a href="https://goo.gl/maps/CYy5xxMW883cpU5w8" target="_blank" rel="noopener noreferrer" className="flex transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
-                <FaMapMarkerAlt className="text-textBlue mr-3 mt-1 text-base max-w-40" />  1705, Sidra Tower, Al Sufouh 1, Sheikh Zayed Road E11 - Dubai - UAE
-              </a>
-            </p>
 
-            <p className="text-sm text-gray-300 font-light  ">
-              <a href="https://goo.gl/maps/gh9kSw6cXaj3VEyu9" target="_blank" rel="noopener noreferrer" className="flex transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
-                <FaMapMarkerAlt className="text-textBlue mr-3 mt-1 text-base" />  136 Eastern Avenue, Redbridge, Essex, England IG4 5AG, UK
-              </a>
-            </p>
-
-            <p className="text-sm text-gray-300 font-light  ">
-              <a href="https://maps.app.goo.gl/6vx17pD7yxB3BEQ56" target="_blank" rel="noopener noreferrer" className="flex transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
-                <FaMapMarkerAlt className="text-textBlue mr-3 mt-1 text-base" />  Office 304, Mall Of Gulberg, Block D1 Gulberg III, Lahore, Pakistan
-              </a>
-            </p>
+            <FooterAddressList />
 
 
 

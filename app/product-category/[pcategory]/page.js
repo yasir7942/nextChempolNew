@@ -100,12 +100,13 @@ const ProductCategory = async ({ params, searchParams }) => {
   const PageCount = productData.meta.pagination.pageCount;
   const totalPage = productData.meta.pagination.total;
 
-  const content = productData?.data[0]?.product_categories[0]?.description;
-  const middleTitle = productData?.data[0]?.product_categories[0]?.middleTitle;
+  const content = categoryData.data[0].description;
+  const middleTitle = categoryData.data[0].middleTitle;
 
-  const middleDescrption = productData?.data[0]?.product_categories[0]?.middleDescription;
-  const readmoreTab = productData?.data[0]?.product_categories[0]?.readMoreTab;
-  const faqs = productData?.data[0]?.product_categories[0]?.faq;
+  const middleDescrption = categoryData.data[0].middleDescription;
+  const readmoreTab = categoryData.data[0].readMoreTab;
+  const faqs = categoryData.data[0].faq;
+
 
 
 
@@ -116,7 +117,7 @@ const ProductCategory = async ({ params, searchParams }) => {
   //  console.log(productData.data);
   // if(productData.data.length === 0)  return  <NotFound />
 
-  console.log(categoryData.data[0].seo?.schema);
+
 
   return (
     <div className=" z-10">
@@ -175,6 +176,7 @@ const ProductCategory = async ({ params, searchParams }) => {
 
 
         <div className="flex flex-col w-full h-auto text-center my-20 2xl:px-[18%]">
+
           {middleTitle && <h1 className="text-lg"> {middleTitle} </h1>}
           {middleDescrption && <div className="text-black  pb-10 rich-text">
             <BodyDataParse content={middleDescrption} />

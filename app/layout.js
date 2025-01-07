@@ -10,6 +10,7 @@ import MetaPixelInitializer from "./components/elements/MetaPixelInitializer";
 
 
 
+
 //const inter = Inter({ subsets: ["latin"] });
 
 const openSans = Open_Sans({
@@ -21,7 +22,7 @@ const openSans = Open_Sans({
 export const metadata = {
   title: siteConfig.homeTitle,
   description: siteConfig.description,
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL),
+
   alternates: {
     canonical: process.env.NEXT_PUBLIC_BASE_URL,
     languages: {
@@ -33,12 +34,14 @@ export const metadata = {
     },
   },
   openGraph: {
-    images: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + '/opengraph-image.jpg',
+    images: siteConfig.ogImage,
     locale: 'en_US',
     type: 'website',
   },
 
 };
+
+
 
 export default function RootLayout({ children }) {
 
@@ -142,34 +145,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en"  >
 
-
-      {/*  Google tag (gtag.js)    */}
-      {/*   <Script 
-      strategy="afterInteractive" 
-      src="https://www.googletagmanager.com/gtag/js?id=AW-11316755137" 
-      async 
-       />
-      <Script 
-      id="google-analytics" 
-      strategy="afterInteractive" 
-      dangerouslySetInnerHTML={{
-        __html: `
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'AW-11316755137');
-        `
-      }} 
-    />
-    
-*/}
-
-
-
       <body className={openSans.className} >
-
-
-
 
         <GTMInitializer /> {/* Initialize GTM here */}
         <MetaPixelInitializer /> {/* Meta Pixel */}

@@ -39,7 +39,7 @@ export async function generateMetadata({ params }) {
         canonicalLinks: pageData.seo?.canonicalLinks ?? "lubricant-additives-manufacturers-in-uae",
         dataPublishedTime: pageData.publishedAt,
         category: "",
-        image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + siteConfig.ogImage,
+        image: siteConfig.ogImage,
         imageAlternativeText: "",
         imageExt: siteConfig.ogImageExt,
     };

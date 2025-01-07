@@ -19,6 +19,8 @@ export async function generateMetadata({ params }) {
 
   const pageData = await cachedGetContactPage();
 
+
+
   const metadataParams = {
     pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : "Chempol Contact Page",
     pageSlug: "contact",
@@ -29,7 +31,7 @@ export async function generateMetadata({ params }) {
     canonicalLinks: pageData.seo?.canonicalLinks ?? "contact",
     dataPublishedTime: pageData.publishedAt,
     category: "",
-    image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + siteConfig.ogImage,
+    image: siteConfig.ogImage,
     imageAlternativeText: "",
     imageExt: siteConfig.ogImageExt,
   };
@@ -38,17 +40,26 @@ export async function generateMetadata({ params }) {
 }
 
 
+
 const ContactUs = async () => {
 
 
 
   const contactData = await cachedGetContactPage();
 
+
+  //console.log("****************contact us***data********ss*********");
+  //console.log(contactData)
+
   /* console.log("****************contact us***data*****************");
    console.dir(contactData, { depth: null });
  
    console.log(contactData.addressBook);
    */
+
+
+
+
   return (
     <div>
 
@@ -65,7 +76,7 @@ const ContactUs = async () => {
           </div>
 
           {/* map */}
-          <div className=" w-full   text-gray-800 mt-28 md:mt-10 md:mt-0   ">
+          <div className=" w-full   text-gray-800 mt-28 md:mt-10    ">
             <h1 className="text-textBlue text-2xl font-semibold capitalize">Our Contact Details</h1>
             <p className="text-gray-800 font-light " >It is a long Established fact that a reader will be distract readable contect of a page</p>
 
