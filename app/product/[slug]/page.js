@@ -78,6 +78,7 @@ const SingleProductPage = async ({ params }) => {
 
   console.log("-----------------single product data --------------");
   //console.dir(productData, { depth: null });
+
   console.log("-----------------End------------");
 
   const content = productData.data[0].description;

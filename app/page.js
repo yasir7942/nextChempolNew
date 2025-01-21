@@ -84,15 +84,15 @@ export default async function Home() {
 
           <CharcoalContentBox title="About Chempol"
             description="Chempol is a top-tier manufacturer of Lubricant raw materials, additives, and other chemical specialities, catering to multiple industries’ needs..."
-            image="/images/about-chempol.jpg" />
+            image="/images/about-chempol.jpg" url="about-us" />
 
           <CharcoalContentBox title="Reliability Solutions"
             description="At Chempol, we’re your go-to partner for all your lubrication Polymer Applications, Polymer Additives, and speciality polymer needs. Our team..."
-            image="/images/relaibility.jpg" />
+            image="/images/relaibility.jpg" url="about-us" />
 
           <CharcoalContentBox title="Core Values"
             description="At Chempol, we are committed to delivering exceptional results to our customters. We believe that our success is driven by our ability to inspire..."
-            image="/images/caore-value.jpg" />
+            image="/images/caore-value.jpg" url="about-us" />
 
 
         </div>

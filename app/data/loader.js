@@ -169,7 +169,7 @@ export async function geSingleProduct(slug) {
 
     },
     populate: ['productImage', 'seo', 'seo.schema', 'productSchema', 'productSchema.reviews',
-      'related_products.productImage', 'product_categories',
+      'related_products.productImage', 'product_categories', 'TDSFile.url', 'MSDSFile.url',
       'table'],
   });
 
