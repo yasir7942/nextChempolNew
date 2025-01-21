@@ -6,6 +6,7 @@ import { TfiHeadphoneAlt } from "react-icons/tfi";
 import MenuList from '../layout/menu-list';
 import MobileNavigation from './mobile-nav';
 import PaddingContainer from '../layout/padding-container';
+import SearchBar from '../layout/search-bar';
 
 
 
@@ -16,11 +17,17 @@ const Topbar = () => {
     <div className='flex flex-col w-full   '>
 
       {/* <!--top bar--> */}
-      <section className="  w-full  h-12 px-4 md:px-20  bg-[#f2f2f2] ">
+      <section className="  w-full  h-32 md:h-12   px-4 md:px-20  bg-[#f2f2f2] ">
 
 
-        <div className="flex justify-center md:justify-end h-full  ">
-          <div className="w-full md:w-1/2 h-full  flex space-x-6 items-center  justify-center md:justify-end ">
+        <div className="flex flex-col md:flex-row justify-center md:justify-end h-full   ">
+
+
+          <div className="w-full md:w-1/2 h-full  flex space-x-3 items-center  justify-center md:justify-end    ">
+            <SearchBar dataType="products" topBar={true} />
+          </div>
+
+          <div className="w-full md:w-1/2 h-full  flex space-x-6 items-center  justify-center md:justify-end mb-3 md:mb-0    ">
 
             <Link href={`/contact`} className=" border border-textBlue rounded-sm text-sm px-3 py-1 text-textBlue hover:text-lightColorHover" >Get a Qoute</Link>
 

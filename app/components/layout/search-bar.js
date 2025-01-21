@@ -12,9 +12,7 @@ import { LineWave } from 'react-loader-spinner';
 
 
 
-
-
-const SearchBar = ({ dataType }) => {
+const SearchBar = ({ dataType, topBar = false }) => {
 
   const [productData, setProductData] = useState([]);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -84,14 +82,14 @@ const SearchBar = ({ dataType }) => {
 
   return (
     <div className="flex flex-col relative z-[100] w-full p-4 md:p-6 text-gray-800 text-center justify-center" ref={searchContainerRef}>
-      <form className="flex item bg-center w-full gap-2 font-light text-gray-900">
+      <form className="flex item bg-center w-full gap-2 font-light  text-gray-900">
         <input
           placeholder={'Search  ' + dataType}
           name="searchbar"
           ref={inputRef}
           onChange={(e) => handleSearch(e.target.value)}
           onClick={handleInputClick}
-          className="w-full px-5 py-2 text-gray-800 text-base bg-transparent outline-none border border-gray-500 border-solid"
+          className={`${topBar ? ' border-b border-l border-gray-300' : ' border border-gray-500'} w-full px-5 py-2 text-gray-800 text-base bg-transparent outline-none   border-solid `}
         />
 
         {/* isLoading */}
@@ -113,9 +111,14 @@ const SearchBar = ({ dataType }) => {
 
           </div>
         ) : (<span></span>)}
-        <button onClick={clearSearch} className="px-5 py-2 whitespace-nowrap bg-white border text-gray-800 border-gray-500 border-solid">
-          Clear
-        </button>
+
+        {!topBar ? (
+          <button onClick={clearSearch} className="px-5 py-2 whitespace-nowrap bg-white border text-gray-800 border-gray-500 border-solid">
+            Clear
+          </button>
+        ) : (<span></span>)}
+
+
 
       </form>
 
