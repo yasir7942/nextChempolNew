@@ -58,7 +58,7 @@ const MobileNavigation = () => {
   return (
     <div >
       <Sheet open={openSheet} onOpenChange={setOpenSheet}   >
-        <SheetTrigger asChild><a href="#" className='   flex   flex-row text-textBlue text-xl items-center justify-start  '>Menu <IoMdMenu aria-label={`Mobile Menu`} size={20} /> </a></SheetTrigger>
+        <SheetTrigger asChild><Link href="#" className='   flex   flex-row text-textBlue text-xl items-center justify-start  '>Menu <IoMdMenu aria-label={`Mobile Menu`} size={20} /> </Link></SheetTrigger>
         <SheetContent className="w-[85%]  border-l-4 border-textBlue bg-blue-50  overflow-scroll">
           <SheetHeader>
 
@@ -68,13 +68,13 @@ const MobileNavigation = () => {
 
 
 
-                <a href="/" className="w-[80%]">
+                <Link href="/" className="w-[80%]">
                   <Image
                     src="/images/chempol.png"
                     width={332}
                     height={88}
                     alt="Chempol Addtives and Chemical logo" />
-                </a>
+                </Link>
 
 
                 <ul className="flex flex-col   mt-10 space-y-2   text-lg text-textBlue font-normal capitalize  text-left   ">

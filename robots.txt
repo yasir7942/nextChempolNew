@@ -1,5 +1,5 @@
 User-Agent:*
-Allow: /
-Disallow: /private/
+Disallow: /
+ 
 
-Sitemap: https://chempol.co.uk/sitemap.xml
+ 

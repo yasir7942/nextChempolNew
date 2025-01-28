@@ -38,7 +38,7 @@ const Topbar = () => {
               </div>
               <div className='text-sm font-light'>
                 Customer Support & Sales <br />
-                <a className='font-normal text-textBlue' href='mailto:info@chemol.co.uk'>info@chempol.co.uk</a>
+                <Link className='font-normal text-textBlue' href='mailto:info@chemol.co.uk'>info@chempol.co.uk</Link>
               </div>
             </div>
 
@@ -54,7 +54,7 @@ const Topbar = () => {
       <PaddingContainer >
         <section className="  flex flex-col md:flex-row w-full   h-auto justify-between items-center space-y-5 md:space-y-0 py-3 md:py-4 px-4 md:px-2 ">
 
-          <a href="/" className="    ">
+          <Link href="/" className="    ">
 
             <Image className='w-72 md:w-72'
               src="/images/chempol.png"
@@ -62,7 +62,7 @@ const Topbar = () => {
               height={150}
               alt="Chempol A Leading Manufacturer of Lubricant Additives and Specialty Chemicals in UAE"
             />
-          </a>
+          </Link>
 
           <MenuList />
 

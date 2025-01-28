@@ -9,6 +9,7 @@ import { FaMapMarkerAlt } from "react-icons/fa";
 import { FaAngleRight } from "react-icons/fa";
 import WhatsAppButton from "../elements/WhatsAppButton";
 import FooterAddressList from "./footerAddressList";
+import Link from "next/link";
 
 
 //import MenuFooterList from "./menu-footer-list";
@@ -33,14 +34,14 @@ const Footer = async () => {
           {/* About Company */}
           <div className="flex flex-col space-y-3">
 
-            <a href="/" className="w-64">
+            <Link href="/" className="w-64">
               <Image
                 src="/images/chempol.png"
                 width={500}
                 height={300}
                 alt="Chempol Additives and chemical specialty"
               />
-            </a>
+            </Link>
             <p className="text-base pt-3 text-gray-300 font-light max-w-sm md:max-w-60 lg:max-w-80">
               We remain true to the principles of our company: providing superior service to our clients, creating opportunities for our people.
             </p>
@@ -84,7 +85,7 @@ const Footer = async () => {
 
                 <li key={cat.id} className="flex  items-center">
                   <FaAngleRight className="pr-2 text-textBlue" />
-                  <a href={`/product-category/${cat.slug}/`} className="transition duration-300 ease-in-out hover:underline  hover:text-textBlue"   >{cat.title}</a>
+                  <Link href={`/product-category/${cat.slug}/`} className="transition duration-300 ease-in-out hover:underline  hover:text-textBlue"   >{cat.title}</Link>
                 </li>
               ))}
 
@@ -99,7 +100,7 @@ const Footer = async () => {
             <p className="text-base text-gray-300 font-light max-w-60">You can always contact us via email or phone. Get a quote now!</p>
             <p className="text-base text-gray-300 font-light max-w-60 flex  items-center "><MdEmail className="text-textBlue mr-2" /> +971-(06)-5264688</p>
             <p className="text-base text-gray-300 font-light max-w-60 flex  items-center transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
-              <FaPhoneAlt className="text-textBlue mr-2" /> <a href="mailto:info@chempol.co.uk">info@chempol.co.uk</a>
+              <FaPhoneAlt className="text-textBlue mr-2" /> <Link href="mailto:info@chempol.co.uk">info@chempol.co.uk</Link>
             </p>
 
 
@@ -133,7 +134,7 @@ const Footer = async () => {
       </PaddingContainer>
 
       <div className="w-full mt-10 pt-5 border-0 border-t-[1px] border-textBlue font-light text-sm  text-white   bg-[#2D2D2D] text-center">
-        All Copyrights Received By <a href="/" className="text-textBlue text-base" >chempol.co.uk</a>
+        All Copyrights Received By <Link href="/" className="text-textBlue text-base" >chempol.co.uk</Link>
       </div>
     </footer>
 
