@@ -23,7 +23,8 @@ import Slider from "./components/layout/slider";
 
 
 const cachedGetHomePage = cache(getHomePage);
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
 
 
   const pageData = await cachedGetHomePage();

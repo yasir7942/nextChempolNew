@@ -10,25 +10,26 @@ import ReadProductReport from "../components/layout/product-report";
 
 
 
-export async function generateMetadata({ params }) {
-      
-    const metadataParams = {
-      pageTitle:   "Product Report",
-      pageSlug: "product-report",
-      pageDescription: "product Report Page",
-      seoTitle: "Product Report",
-      seoDescription: "Product Report",
-      rebotStatus: true,
-      canonicalLinks: "product-report",
-      dataPublishedTime: "",
-      category: "",
-      image: "",
-      imageAlternativeText:  "",
-      imageExt:  "",
-    };
-  
-    return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
-  }
+export async function generateMetadata(props) {
+  const params = await props.params;
+
+  const metadataParams = {
+    pageTitle:   "Product Report",
+    pageSlug: "product-report",
+    pageDescription: "product Report Page",
+    seoTitle: "Product Report",
+    seoDescription: "Product Report",
+    rebotStatus: true,
+    canonicalLinks: "product-report",
+    dataPublishedTime: "",
+    category: "",
+    image: "",
+    imageAlternativeText:  "",
+    imageExt:  "",
+  };
+
+  return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+}
   
 
   

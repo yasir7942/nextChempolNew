@@ -11,7 +11,9 @@ import SpeakableSchema from "../components/elements/speakable-schema";
 import siteConfig from "@/config/site";
 
 const cachedGetAboutPage = cache(getAboutPage);
-export async function generateMetadata({ params }) {
+
+export async function generateMetadata(props) {
+    const params = await props.params;
 
 
     const pageData = await cachedGetAboutPage();

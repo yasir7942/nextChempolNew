@@ -15,7 +15,8 @@ import siteConfig from "@/config/site";
 
 const cachedGetSearchPage = cache(getSearchPage);
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
 
 
   const pageData = await cachedGetSearchPage();
@@ -44,7 +45,8 @@ export async function generateMetadata({ params }) {
 
 
 
-const searchPage = async ({ searchParams }) => {
+const searchPage = async props => {
+  const searchParams = await props.searchParams;
 
   const pageData = await cachedGetSearchPage();
 

@@ -14,7 +14,8 @@ import { cache } from 'react';
 // Cache the geSinglePost function
 const cachedGeSinglePost = cache(geSinglePost);
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const postData = await cachedGeSinglePost(params.slug);
 
   const metadataParams = {
@@ -59,7 +60,8 @@ export const generateStaticParams = async () => {
 
 
 
-const SingleBlogPage = async ({ params }) => {
+const SingleBlogPage = async props => {
+  const params = await props.params;
 
   const postData = await cachedGeSinglePost(params.slug);
 

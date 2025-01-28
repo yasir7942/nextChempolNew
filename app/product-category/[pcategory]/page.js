@@ -55,7 +55,8 @@ export const generateStaticParams = async () => {
 
 
 const cachedGetProductCategory = cache(getProductCategory);
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
 
   const categoryData = await cachedGetProductCategory(params.pcategory);
 
@@ -84,7 +85,9 @@ const numbers = Array.from({ length: 12 }, (_, index) => index + 1);
 
 
 
-const ProductCategory = async ({ params, searchParams }) => {
+const ProductCategory = async props => {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
 
   const categoryData = await cachedGetProductCategory(params.pcategory);  // use cache
 

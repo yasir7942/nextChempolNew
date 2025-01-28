@@ -15,7 +15,8 @@ import siteConfig from '@/config/site';
 
 const cachedGetBlogPage = cache(getBlogPage);
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
 
 
   const pageData = await cachedGetBlogPage();
@@ -44,7 +45,8 @@ const numbers = Array.from({ length: 12 }, (_, index) => index + 1);
 const pageSize = 9;
 
 
-const Blog = async ({ searchParams }) => {
+const Blog = async props => {
+  const searchParams = await props.searchParams;
 
 
   const pageData = await cachedGetBlogPage();

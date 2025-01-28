@@ -24,7 +24,8 @@ import siteConfig from "@/config/site";
 
 
 const cachedGetLubricantAddtives = cache(getLubricantAddtives);
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+    const params = await props.params;
 
 
     const pageData = await cachedGetLubricantAddtives();

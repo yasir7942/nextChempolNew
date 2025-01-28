@@ -11,7 +11,8 @@ import siteConfig from "@/config/site";
 
 
 const cachedGetFAQPage = cache(getFaqPage);
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+    const params = await props.params;
 
 
     const pageData = await cachedGetFAQPage();

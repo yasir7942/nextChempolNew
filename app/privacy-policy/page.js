@@ -4,7 +4,8 @@ import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import siteConfig from "@/config/site";
 
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+    const params = await props.params;
 
 
     const metadataParams = {
