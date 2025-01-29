@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 
 
 const CharcoalContentBox = ({ title, description, image, url = "" }) => {
@@ -15,23 +16,23 @@ const CharcoalContentBox = ({ title, description, image, url = "" }) => {
           <Image
             className="w-full"
             src={image}
-            width={600}
-            height={300}
-            alt="" />
-          <a href={`/${url}/`} >
+            width={400}
+            height={200}
+            alt={description} />
+          <Link href={`/${url}/`} aria-label={title} >
             <div
               className="  absolute bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-[hsla(0,0%,98%,0.15)] bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-100"></div>
-          </a>
+          </Link>
         </div>
         <div className="p-6 text-surface bg-[#f2f2f2] text-white h-full ">
-          <h5 className="mb-2 text-base font-medium text-textBlue uppercase leading-tight">{title}</h5>
+          <h3 className="mb-2 text-base font-medium text-textBlue uppercase leading-tight">{title}</h3>
           <p className="mb-4   text-sm font-normal  text-darkGary ">
 
             {description}
 
 
           </p>
-          <a href={`/${url}/`} >  <button
+          <a href={`/${url}/`} aria-label={title} >  <button
 
             type="button"
             className="text-textBlue inline-block  pb-2 pt-2.5 text-xs font-medium uppercase"

@@ -34,8 +34,8 @@ const SearchBar = ({ dataType }) => {
 
         const result = await geProductsBySearch(query);
         setProductData(result.data);
-        console.log("****************serech****result***data*****************");
-        console.log(result.data);
+        // console.log("****************serech****result***data*****************");
+        //console.log(result.data);
 
       } catch (error) {
         console.error('Error fetching search results:', error);
@@ -49,7 +49,7 @@ const SearchBar = ({ dataType }) => {
   };
 
   const handleSearch = useDebouncedCallback((term) => {
-    console.log(`Searching... ${term}`);
+    // console.log(`Searching... ${term}`);
     handleSearchQuery(term);
   }, 300);
 

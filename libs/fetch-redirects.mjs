@@ -35,9 +35,9 @@ export async function fetchRedirects() {
 
   const jsonData = await response.json();
 
-  console.log("-----------------------redirect urls--------------------------------------------------");
-  console.dir(jsonData.data, { depth: null });
-  console.log("---------------------------End-----------------------end-----------------------");
+  // console.log("-----------------------redirect urls--------------------------------------------------");
+  // console.dir(jsonData.data, { depth: null });
+  // console.log("---------------------------End-----------------------end-----------------------");
 
 
   if (!response.ok) {
@@ -74,7 +74,7 @@ export async function fetchRedirects() {
     destination: redirect.attributes.destination,
     permanent: true,
   })) || [{
-    source: '/contact-us',
+    source: '/hard-code',
     destination: '/contact',
     permanent: true,
   },];

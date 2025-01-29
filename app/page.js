@@ -71,7 +71,7 @@ export default async function Home() {
       <div className=" flex flex-col h-auto md:flex-row  w-full md:space-x-2  px-4 md:px-20 mt-10 justify-center" >
         {/* <!--text--> */}
         <div className="flex flex-col text-left ">
-          <h3 className=" *:first-letter: text-2xl md:text-3xl text-center font-semibold text-textBlue">Powering Progress with Innovative Chemical Solutions</h3>
+          <h2 className=" *:first-letter: text-2xl md:text-3xl text-center font-semibold text-textBlue">Powering Progress with Innovative Chemical Solutions</h2>
           <p className="text-darkGary mt-3 text-justify text-sm font-normal  pr-5  max-w-6xl ">We are petrochemical experts specializing in the evolution and manufacturing of chemical additives for engine oils, Viscosity Index Improvers, Special Additives, Gasoline Engine Oil Additives, and Speciality Chemical Additives. Trust us for providing high-quality formulations and exceptional service.</p>
         </div>
 

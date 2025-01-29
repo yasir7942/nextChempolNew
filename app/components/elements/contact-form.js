@@ -29,8 +29,7 @@ const ContactForm = () => {
         body: JSON.stringify({ fullName, phoneNumber, email, country, message, isCaptchaCode }),
       });
 
-      console.log("55555555555555555555555555555555555555555555555555");
-      console.log(response);
+
 
 
       if (response.ok) {
