@@ -98,9 +98,9 @@ const Footer = async () => {
           <div className="flex flex-col space-y-1   ">
             <div className="capitalize text-textBlue font-medium py-4 text-xl">Contact info</div>
             <p className="text-base text-gray-300 font-light max-w-60">You can always contact us via email or phone. Get a quote now!</p>
-            <p className="text-base text-gray-300 font-light max-w-60 flex  items-center "><MdEmail className="text-textBlue mr-2" /> +971-(06)-5264688</p>
+            <p className="text-base text-gray-300 font-light max-w-60 flex  items-center "><FaPhoneAlt className="text-textBlue mr-2" /> +971-(06)-5264688</p>
             <p className="text-base text-gray-300 font-light max-w-60 flex  items-center transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
-              <FaPhoneAlt className="text-textBlue mr-2" /> <Link href="mailto:info@chempol.co.uk">info@chempol.co.uk</Link>
+              <MdEmail className="text-textBlue mr-2" /> <Link href="mailto:info@chempol.co.uk">info@chempol.co.uk</Link>
             </p>
 
 

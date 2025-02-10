@@ -96,7 +96,7 @@ export async function POST(request) {
 
             const { data, error } = await resend.emails.send({
                 from: 'Chempol Site <website@chempol.co.uk>',
-                to: ['it@atlanticlubes.com'],
+                to: ['info@chempol.co.uk'],
                 subject: 'Chempol Contact Form - ' + fullName,
                 react: EmailTemplate({
                     name: fullName,
