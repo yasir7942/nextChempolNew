@@ -1,5 +1,5 @@
 import PaddingContainer from "@/app/components/layout/padding-container"
-import ProductCategoryMenu from "@/app/components/layout/product-category-menu";
+
 
 import Image from "next/image";
 import { geProductsBySearchAdvance, getSearchPage } from "@/app/data/loader"
@@ -11,6 +11,7 @@ import SearchComponenet from "../components/layout/search-component";
 import { cache } from 'react';
 import SEOSchema from "../components/elements/seo-schema";
 import siteConfig from "@/config/site";
+import ProductCategoryMenuWrapper from "../components/layout/ProductCategoryMenuWrapper";
 
 
 const cachedGetSearchPage = cache(getSearchPage);
@@ -80,7 +81,7 @@ const searchPage = async props => {
           {/*  Left Menu Column  */}
           <div className="w-full md:w-3/12 lg:w-1/6  p-6 md:pl-0  overflow-hidden">
             {/* <!-- Menu content goes here   */}
-            <ProductCategoryMenu />
+            <ProductCategoryMenuWrapper />
           </div>
 
           {/*  Content Area   */}

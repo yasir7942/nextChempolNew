@@ -1,7 +1,6 @@
 import BodyDataParse from "@/app/components/elements/data-parse-content";
 import GroupProducts from "@/app/components/layout/group-products";
 import PaddingContainer from "@/app/components/layout/padding-container";
-import ProductCategoryMenu from "@/app/components/layout/product-category-menu";
 import { geAllProductsSlug, geSingleProduct } from "@/app/data/loader";
 import { getFirstDescriptionText, getImageUrl } from "@/libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
@@ -10,6 +9,7 @@ import Image from "next/image";
 import { cache } from 'react';
 import siteConfig from "@/config/site";
 import SEOSchema from "@/app/components/elements/seo-schema";
+import ProductCategoryMenuWrapper from "@/app/components/layout/ProductCategoryMenuWrapper";
 
 
 // Cache the geSingleProduct function
@@ -78,10 +78,10 @@ const SingleProductPage = async props => {
 
 
 
-  console.log("-----------------single product data --------------");
-  //console.dir(productData, { depth: null });
+  /*console.log("-----------------single product data --------------");
+  console.log(productData.data[0].productSchema?.reviews.length);
 
-  console.log("-----------------End------------");
+  console.log("-----------------End------------");  */
 
   const content = productData.data[0].description;
   const productGroup = productData.data[0].related_products;
@@ -139,7 +139,7 @@ const SingleProductPage = async props => {
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": averageRating,   // average rating value
-      "reviewCount": productData.data[0].productSchema?.offerCount,     // total reviews
+      "reviewCount": productData.data[0].productSchema?.reviews?.length,     // total reviews
       "bestRating": "5",
       "worstRating": "2",
     },
@@ -221,7 +221,7 @@ const SingleProductPage = async props => {
           {/* Left Menu Column */}
           <div className="w-full md:w-3/12 lg:w-[22%]   p-6 md:pl-0 overflow-hidden">
             {/* Menu content goes here  */}
-            <ProductCategoryMenu />
+            <ProductCategoryMenuWrapper />
           </div>
 
           {/* Content Area */}

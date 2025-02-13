@@ -1,5 +1,5 @@
 import PaddingContainer from "@/app/components/layout/padding-container"
-import ProductCategoryMenu from "@/app/components/layout/product-category-menu";
+
 import SearchBar from "@/app/components/layout/search-bar";
 import TopBanner from "@/app/components/layout/top-banner"
 import Image from "next/image";
@@ -15,6 +15,7 @@ import SingleTab from "@/app/components/layout/SingleTab";
 import CTAcard from "@/app/components/layout/cta-card";
 import BlogContainer from "@/app/components/layout/blog-container";
 import { cache } from 'react';
+import ProductCategoryMenuWrapper from "@/app/components/layout/ProductCategoryMenuWrapper";
 
 const pageSize = 12;
 
@@ -140,7 +141,8 @@ const ProductCategory = async props => {
           {/*  Left Menu Column  */}
           <div className="w-full md:w-3/12 lg:w-[22%] p-6 md:pl-0  overflow-hidden ">
             {/* <!-- Menu content goes here   */}
-            <ProductCategoryMenu />
+            <ProductCategoryMenuWrapper />
+
           </div>
 
           {/*  Content Area   */}
