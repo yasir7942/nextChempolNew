@@ -3,10 +3,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Search, Mail } from 'lucide-react'
 import { TfiHeadphoneAlt } from "react-icons/tfi";
-import MenuList from '../layout/menu-list';
+
 import MobileNavigation from './mobile-nav';
 import PaddingContainer from '../layout/padding-container';
 import SearchBar from '../layout/search-bar';
+import HomneCategoryMenuWrapper from '../layout/HomeCategoryMenuWrapper';
 
 
 
@@ -64,7 +65,7 @@ const Topbar = () => {
             />
           </Link>
 
-          <MenuList />
+          <HomneCategoryMenuWrapper />
 
           <div className="flex justify-center md:hidden w-full      py-2 text-black text-4xl">
             <MobileNavigation />

@@ -59,7 +59,7 @@ export async function fetchRedirects() {
     console.log('No redirect data found.');
     return [
       {
-        source: '/contact-us',
+        source: '/contact-us-hard-code',
         destination: '/contact',
         permanent: true,
       },

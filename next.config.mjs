@@ -1,13 +1,6 @@
 /** @type {import('next').NextConfig} */
 
-
-import fetchRedirects from './libs/fetch-redirects.mjs';
-
-const getRedirects = async () => {
-    const redirectsData = await fetchRedirects(); // Access the function via the imported module object
-    return redirectsData;
-};
-
+//import fetchRedirects from './libs/fetch-redirects.mjs';
 
 let unOptimized = true;
 let fileRoutes = true;
@@ -17,51 +10,34 @@ if (process.env.MODE === "pro") {
     fileRoutes = false;
 }
 
+// Fetch redirects synchronously before exporting nextConfig
+/*let redirectsList = [];
 
+async function loadRedirects() {
+    redirectsList = await fetchRedirects();
+} */
 
-
+//await loadRedirects(); // Fetch redirects before exporting
 
 const nextConfig = {
-
     reactStrictMode: true,
-
-    // useFileSystemPublicRoutes: fileRoutes,
-
-    // Add trailingSlash to enforce trailing slashes on all URLs
     trailingSlash: true,
-
-
-
     images: {
-        unoptimized: unOptimized,   //false in in live server make webp images 
+        unoptimized: unOptimized,
         remotePatterns: [
-            {
-                hostname: "front.chempol.co.uk",
-                protocol: "https",
-            },
-            {
-                hostname: "chempolco.uk",
-                protocol: "https",
-            },
-            {
-                hostname: "admin.chempol.co.uk",
-                protocol: "https",
-            },
-            {
-                hostname: "localhost",
-                protocol: "http",
-            }
+            { hostname: "front.chempol.co.uk", protocol: "https" },
+            { hostname: "chempolco.uk", protocol: "https" },
+            { hostname: "admin.chempol.co.uk", protocol: "https" },
+            { hostname: "localhost", protocol: "http" }
         ],
     },
-
-    async redirects() {
-        return await getRedirects();
-    },
-
-
-
-
+    /* redirects() {
+ 
+          
+ 
+ 
+         return redirectsList;
+     },  */
 };
 
 export default nextConfig;
-

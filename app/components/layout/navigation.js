@@ -7,6 +7,7 @@ import siteConfig from "../../../config/site";
 import MobileNavigation from "../navigation/mobile-nav";
 import MenuList from "./menu-list";
 import { Link } from "lucide-react";
+import HomneCategoryMenuWrapper from "./HomeCategoryMenuWrapper";
 
 
 const Navigation = () => {
@@ -27,7 +28,7 @@ const Navigation = () => {
             alt="chempol logo" />
         </Link>
 
-        <MenuList />
+        <HomneCategoryMenuWrapper />
 
         <ul className="hidden md:flex text-white  md:space-x-2 lg:space-x-5">
           <li><SocialIcons plateform="facebook" link={siteConfig.socialMedia.facebook} /></li>
