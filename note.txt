@@ -1,10 +1,12 @@
-Update next js version to 15
-Product category on left side add schema 
-update Strapi Version 15
+ 
+Product category on left side add schema  
+ 
 
+make search throth api of next js remove Cross origan problem
+ 
+make again redirect with .htaccess
 
-review rating  recheck
-
+make workable code when change in strapi make static content
 
 upgrade to 15 
 codemod
