@@ -139,7 +139,7 @@ const SingleProductPage = async props => {
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": averageRating,   // average rating value
-      "reviewCount": productData.data[0].productSchema?.reviews?.length,     // total reviews
+      "reviewCount": productData.data[0].productSchema?.reviews?.length || 1,   // total reviews  set 1 if null, undefine or 0 
       "bestRating": "5",
       "worstRating": "2",
     },
