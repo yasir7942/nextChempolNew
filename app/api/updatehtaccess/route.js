@@ -5,8 +5,8 @@ import path from "path";
 import { NextResponse } from "next/server";
 import { flattenAttributes } from "@/libs/data-utils";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_ADMIN_BASE_URL + "/api/redirection-urls";  //get direct strapi api call
-const VALID_TOKEN = process.env.ADMIN_TOKEN;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_ADMIN_BASE_URL + "api/redirection-urls";  //get direct strapi api call
+const VALID_TOKEN = process.env.ADMIN_TOKEN || "";
 
 const logFilePath = join(process.cwd(), "strapi-webhooks.log");
 

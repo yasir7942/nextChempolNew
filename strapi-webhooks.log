@@ -43,3 +43,10 @@
 [2025-02-17T11:49:51.992Z] Revalidate Auto -  Revalidate: product : chempol-5177-silicon-base-antifoam-inhibitor 
 [2025-02-17T11:51:55.396Z] Revalidate Auto -  Revalidate: product : chempol-5177-silicon-base-antifoam-inhibitor 
 [2025-02-17T11:52:35.806Z] Revalidate Auto -  Revalidate: product : chempol-5177-silicon-base-antifoam-inhibitor 
+[2025-02-18T07:35:28.796Z] Redirection Manual - Redirection make  
+[2025-02-18T07:36:08.518Z] Redirection Auto -  Redirection Model: redirection-url 
+[2025-02-18T07:36:08.525Z] Redirection Auto -  Redirection Model: redirection-url 
+[2025-02-18T07:36:09.026Z] Revalidate Auto -  Revalidate: redirection-url : undefined 
+[2025-02-18T07:36:09.036Z] Revalidate Auto -  Revalidate: redirection-url : undefined 
+[2025-02-18T08:35:30.862Z] Redirection Auto -  Redirection Model: redirection-url 
+[2025-02-18T08:35:31.285Z] Revalidate Auto -  Revalidate: redirection-url : undefined 
