@@ -438,6 +438,10 @@ export async function getRedirectLinks() {
     filters: {
     },
     populate: [],
+    pagination: {
+      pageSize: 1000,
+      page: 1,
+    },
 
   });
   return await fetchData("redirection-urls", blogBlockQuery);
