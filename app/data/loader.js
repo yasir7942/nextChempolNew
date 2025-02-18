@@ -432,6 +432,17 @@ export async function getProductCategoryList() {
 }
 
 
+export async function getRedirectLinks() {
+
+  const blogBlockQuery = qs.stringify({
+    filters: {
+    },
+    populate: [],
+
+  });
+  return await fetchData("redirection-urls", blogBlockQuery);
+}
+
 export async function getProductCategoryForHome() {
 
   const blogBlockQuery = qs.stringify({
