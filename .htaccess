@@ -1,7 +1,7 @@
 # BEGIN Redirects
 # Auto-generated Redirection by Next.js API 
 
-Redirect 301 /about-me1 /about
+Redirect 301 /about-me2 /about
 Redirect 301 /contact-me1 /contact
 Redirect 301 /product/chempol-8013-diesel-gasoline-engine-oil-additive-package/ /product/chempol-8013-diesel-and-gasoline-engine-oil-additive-package/
 

@@ -1,7 +1,0 @@
-Redirect 301 /product_cat-sitemap.xml /sitemap.xml
-Redirect 301 /about-me /about
-Redirect 301 /category-sitemap.xml /sitemap.xml
-Redirect 301 /page-sitemap.xml /sitemap.xml
-Redirect 301 /post-sitemap.xml /sitemap.xml
-Redirect 301 /sitemap_index.xml /sitemap.xml
-Redirect 301 /product/chempol-8013-diesel-gasoline-engine-oil-additive-package/ /product/chempol-8013-diesel-and-gasoline-engine-oil-additive-package/
