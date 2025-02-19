@@ -434,17 +434,43 @@ export async function getProductCategoryList() {
 
 export async function getRedirectLinks() {
 
-  const blogBlockQuery = qs.stringify({
-    filters: {
-    },
-    populate: [],
-    pagination: {
-      pageSize: 1000,
-      page: 1,
-    },
+  let allRecords = [];
+  let page = 1;
+  const pageSize = 25;
+  let hasMore = true;
 
-  });
-  return await fetchData("redirection-urls", blogBlockQuery);
+  while (hasMore) {
+    const blogBlockQuery = qs.stringify({
+      filters: {},
+      populate: [],
+      pagination: {
+        pageSize,
+        page,
+      },
+    });
+
+    const response = await fetchData("redirection-urls", blogBlockQuery);
+
+    // Log response for debugging (remove when confirmed working)
+    //console.log(`Page ${page} response:`, response);
+
+    const records = response.data || [];
+    allRecords = allRecords.concat(records);
+
+    // Option 1: Using API metadata (if available)
+    if (response.meta && response.meta.pagination) {
+      const { pageCount, page: currentPage } = response.meta.pagination;
+      hasMore = currentPage < pageCount;
+    } else {
+      // Option 2: Fallback - if the returned records count is less than the pageSize,
+      // assume it's the last page.
+      hasMore = records.length === pageSize;
+    }
+
+    page++;
+  }
+
+  return allRecords;
 }
 
 export async function getProductCategoryForHome() {
