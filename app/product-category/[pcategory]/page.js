@@ -16,6 +16,7 @@ import CTAcard from "@/app/components/layout/cta-card";
 import BlogContainer from "@/app/components/layout/blog-container";
 import { cache } from 'react';
 import ProductCategoryMenuWrapper from "@/app/components/layout/ProductCategoryMenuWrapper";
+import { notFound } from "next/navigation";
 
 const pageSize = 12;
 
@@ -61,6 +62,10 @@ export async function generateMetadata(props) {
 
   const categoryData = await cachedGetProductCategory(params.pcategory);
 
+  if (!categoryData || !categoryData.data[0]) {
+    notFound();
+  }
+
   const metadataParams = {
     pageTitle: categoryData.data[0].title,
     pageSlug: categoryData.data[0].slug,
@@ -80,7 +85,7 @@ export async function generateMetadata(props) {
 }
 
 
-const numbers = Array.from({ length: 12 }, (_, index) => index + 1);
+
 
 
 
@@ -91,6 +96,10 @@ const ProductCategory = async props => {
   const params = await props.params;
 
   const categoryData = await cachedGetProductCategory(params.pcategory);  // use cache
+
+  if (!categoryData || !categoryData.data[0]) {
+    notFound();
+  }
 
   const currentPage = Number(searchParams.page) || 1;
 

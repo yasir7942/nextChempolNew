@@ -49,12 +49,7 @@ export async function generateMetadata(props) {
 
 export default async function Home() {
 
-
-
-
   const homeData = await cachedGetHomePage();
-
-
 
 
   return (

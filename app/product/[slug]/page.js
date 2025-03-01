@@ -5,7 +5,7 @@ import { geAllProductsSlug, geSingleProduct } from "@/app/data/loader";
 import { getFirstDescriptionText, getImageUrl } from "@/libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
-
+import { notFound } from "next/navigation";
 import { cache } from 'react';
 import siteConfig from "@/config/site";
 import SEOSchema from "@/app/components/elements/seo-schema";
@@ -15,14 +15,6 @@ import ProductCategoryMenuWrapper from "@/app/components/layout/ProductCategoryM
 // Cache the geSingleProduct function
 const cachedGeSingleProduct = cache(geSingleProduct);
 
-
-const tableData = [
-  { property: "color", method: "getColor", value: "blue" },
-  { property: "size", method: "getSize", value: "medium" },
-  { property: "shape", method: "getShape", value: "circle" },
-  { property: "weight", method: "getWeight", value: "light" },
-  { property: "border", method: "getBorder", value: "solid" },
-];
 
 
 
@@ -47,6 +39,11 @@ export const generateStaticParams = async () => {
 export async function generateMetadata(props) {
   const params = await props.params;
   const productData = await geSingleProduct(params.slug);
+
+  if (!productData || !productData.data[0]) {
+    notFound();
+  }
+
 
   const metadataParams = {
     pageTitle: productData.data[0]?.title,
@@ -76,7 +73,9 @@ const SingleProductPage = async props => {
   const params = await props.params;
   const productData = await cachedGeSingleProduct(params.slug);
 
-
+  if (!productData || !productData.data[0]) {
+    notFound();
+  }
 
   /*console.log("-----------------single product data --------------");
   console.log(productData.data[0].productSchema?.reviews.length);
@@ -275,6 +274,7 @@ const SingleProductPage = async props => {
                       <a
                         href={`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}${productData.data[0].TDSFile.url}`}
                         target="_blank"
+                        rel="nofollow"
                         className="w-1/2"
                         download
                       >
@@ -291,6 +291,7 @@ const SingleProductPage = async props => {
                       <a
                         href={`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}${productData.data[0].MSDSFile.url}`}
                         target="_blank"
+                        rel="nofollow"
                         className="w-1/2"
                         download
                       >

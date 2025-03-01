@@ -8,7 +8,7 @@ import { getFirstDescriptionText, getImageUrl, validateCanonicalSlug } from "@/l
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
 import { cache } from 'react';
-
+import { notFound } from "next/navigation";
 
 
 // Cache the geSinglePost function
@@ -17,6 +17,10 @@ const cachedGeSinglePost = cache(geSinglePost);
 export async function generateMetadata(props) {
   const params = await props.params;
   const postData = await cachedGeSinglePost(params.slug);
+
+  if (!postData || !postData.data[0]) {
+    notFound();
+  }
 
   const metadataParams = {
     pageTitle: postData.data[0].title,
@@ -64,6 +68,10 @@ const SingleBlogPage = async props => {
   const params = await props.params;
 
   const postData = await cachedGeSinglePost(params.slug);
+
+  if (!postData || !postData.data[0]) {
+    notFound();
+  }
 
 
   // console.log("-----------------------single post page--------------------------------------------------");
