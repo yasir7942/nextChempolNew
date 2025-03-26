@@ -88,6 +88,7 @@ async function revalidate(req, model, slug) {
         }
         else if (model == 'post') {
             console.log("revalidate post");
+            revalidatePath(`/`); // for home page need to test
             revalidatePath(`/blog/`);
             revalidatePath(`/blog/${slug}/`);
         }
@@ -101,6 +102,7 @@ async function revalidate(req, model, slug) {
 
         else if (model == 'product-category') {
 
+            revalidatePath(`/`); // for home page need to test
             revalidatePath(`/product-category/${slug}/`);
 
         }

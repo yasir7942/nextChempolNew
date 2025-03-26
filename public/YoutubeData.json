@@ -1,0 +1,284 @@
+{
+    "kind": "youtube#searchListResponse",
+    "etag": "e4QuSQANqqJltiYnvICxpQWfel4",
+    "nextPageToken": "CAgQAA",
+    "regionCode": "PK",
+    "pageInfo": {
+        "totalResults": 38,
+        "resultsPerPage": 8
+    },
+    "items": [
+        {
+            "kind": "youtube#searchResult",
+            "etag": "007gGs9BR4h8MZnvHSpGajeLGmU",
+            "id": {
+                "kind": "youtube#video",
+                "videoId": "2UtyZ4LaER4"
+            },
+            "snippet": {
+                "publishedAt": "2023-09-27T12:05:12Z",
+                "channelId": "UCa16oZVYnwixGIPVAZ9l5rw",
+                "title": "Join #Chempol! Automechanika Dubai 2023 #automobile #aftermarket #additives",
+                "description": "",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://i.ytimg.com/vi/2UtyZ4LaER4/default.jpg",
+                        "width": 120,
+                        "height": 90
+                    },
+                    "medium": {
+                        "url": "https://i.ytimg.com/vi/2UtyZ4LaER4/mqdefault.jpg",
+                        "width": 320,
+                        "height": 180
+                    },
+                    "high": {
+                        "url": "https://i.ytimg.com/vi/2UtyZ4LaER4/hqdefault.jpg",
+                        "width": 480,
+                        "height": 360
+                    }
+                },
+                "channelTitle": "Chempol Additives and Chemical Specialty",
+                "liveBroadcastContent": "none",
+                "publishTime": "2023-09-27T12:05:12Z"
+            }
+        },
+        {
+            "kind": "youtube#searchResult",
+            "etag": "gmhmmMmx2ISK8aAtcM6875I-9Oc",
+            "id": {
+                "kind": "youtube#video",
+                "videoId": "2CsNgZVk1uo"
+            },
+            "snippet": {
+                "publishedAt": "2024-12-10T14:14:10Z",
+                "channelId": "UCa16oZVYnwixGIPVAZ9l5rw",
+                "title": "Exclusive insight with Sheheryar Nisar at @automechanikaDu 2024",
+                "description": "Day 1: Experience the Excellence of Chempol at Automehanika Dubai 2024 Get Exclusive insights from Director, Sheheryar Nisar ...",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://i.ytimg.com/vi/2CsNgZVk1uo/default.jpg",
+                        "width": 120,
+                        "height": 90
+                    },
+                    "medium": {
+                        "url": "https://i.ytimg.com/vi/2CsNgZVk1uo/mqdefault.jpg",
+                        "width": 320,
+                        "height": 180
+                    },
+                    "high": {
+                        "url": "https://i.ytimg.com/vi/2CsNgZVk1uo/hqdefault.jpg",
+                        "width": 480,
+                        "height": 360
+                    }
+                },
+                "channelTitle": "Chempol Additives and Chemical Specialty",
+                "liveBroadcastContent": "none",
+                "publishTime": "2024-12-10T14:14:10Z"
+            }
+        },
+        {
+            "kind": "youtube#searchResult",
+            "etag": "EvLSO8-wmYmoUmBc2ibIXjE6wT4",
+            "id": {
+                "kind": "youtube#playlist",
+                "playlistId": "PLAdCE2sEruzK6Zez-QNoUUT1kGTJKUd1S"
+            },
+            "snippet": {
+                "publishedAt": "2023-09-27T06:37:53Z",
+                "channelId": "UCa16oZVYnwixGIPVAZ9l5rw",
+                "title": "Automechanika Dubai",
+                "description": "Join us as we delve deep into the Automechanika exhibition and conference showcasing the latest breakthroughs in automotive ...",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://i.ytimg.com/vi/B75eSskN4ls/default.jpg",
+                        "width": 120,
+                        "height": 90
+                    },
+                    "medium": {
+                        "url": "https://i.ytimg.com/vi/B75eSskN4ls/mqdefault.jpg",
+                        "width": 320,
+                        "height": 180
+                    },
+                    "high": {
+                        "url": "https://i.ytimg.com/vi/B75eSskN4ls/hqdefault.jpg",
+                        "width": 480,
+                        "height": 360
+                    }
+                },
+                "channelTitle": "Chempol Additives and Chemical Specialty",
+                "liveBroadcastContent": "none",
+                "publishTime": "2023-09-27T06:37:53Z"
+            }
+        },
+        {
+            "kind": "youtube#searchResult",
+            "etag": "u-vhdN2tTSJL0k7n5tJypcdz6kk",
+            "id": {
+                "kind": "youtube#video",
+                "videoId": "1VrClpA-kMA"
+            },
+            "snippet": {
+                "publishedAt": "2024-12-11T14:40:25Z",
+                "channelId": "UCa16oZVYnwixGIPVAZ9l5rw",
+                "title": "Director of Atlantic Group of Companies, Mr. Nofil Shamim Welcomes you to Automechanika Dubai 2024",
+                "description": "At Chempol Additives and Chemical Specialty, we are renowned for our premium additives formulated to meet the evolving needs ...",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://i.ytimg.com/vi/1VrClpA-kMA/default.jpg",
+                        "width": 120,
+                        "height": 90
+                    },
+                    "medium": {
+                        "url": "https://i.ytimg.com/vi/1VrClpA-kMA/mqdefault.jpg",
+                        "width": 320,
+                        "height": 180
+                    },
+                    "high": {
+                        "url": "https://i.ytimg.com/vi/1VrClpA-kMA/hqdefault.jpg",
+                        "width": 480,
+                        "height": 360
+                    }
+                },
+                "channelTitle": "Chempol Additives and Chemical Specialty",
+                "liveBroadcastContent": "none",
+                "publishTime": "2024-12-11T14:40:25Z"
+            }
+        },
+        {
+            "kind": "youtube#searchResult",
+            "etag": "h6TMh6nj3cmBGY4fITqRH9AOBHg",
+            "id": {
+                "kind": "youtube#video",
+                "videoId": "CxjOE_xP6H4"
+            },
+            "snippet": {
+                "publishedAt": "2024-06-04T07:26:32Z",
+                "channelId": "UCa16oZVYnwixGIPVAZ9l5rw",
+                "title": "Grease – HCO (Hydrogenated Castor Oil) | #ExplorewithChempol",
+                "description": "Hydrogenated Castor Oil (HCO) isn't just an ingredient; it's the foundation for superior grease performance. #LubricantInnovation ...",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://i.ytimg.com/vi/CxjOE_xP6H4/default.jpg",
+                        "width": 120,
+                        "height": 90
+                    },
+                    "medium": {
+                        "url": "https://i.ytimg.com/vi/CxjOE_xP6H4/mqdefault.jpg",
+                        "width": 320,
+                        "height": 180
+                    },
+                    "high": {
+                        "url": "https://i.ytimg.com/vi/CxjOE_xP6H4/hqdefault.jpg",
+                        "width": 480,
+                        "height": 360
+                    }
+                },
+                "channelTitle": "Chempol Additives and Chemical Specialty",
+                "liveBroadcastContent": "none",
+                "publishTime": "2024-06-04T07:26:32Z"
+            }
+        },
+        {
+            "kind": "youtube#searchResult",
+            "etag": "hRgn8uFJO5w75gHL0b4cQq2kr9k",
+            "id": {
+                "kind": "youtube#video",
+                "videoId": "MJhWexGvMes"
+            },
+            "snippet": {
+                "publishedAt": "2024-11-19T10:55:08Z",
+                "channelId": "UCa16oZVYnwixGIPVAZ9l5rw",
+                "title": "Introduction: Chempol Additives and Chemical Speciality",
+                "description": "Explore The Science Behind Chempol's High-Quality Lubricant Additives Welcome to the future of industrial performance with ...",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://i.ytimg.com/vi/MJhWexGvMes/default.jpg",
+                        "width": 120,
+                        "height": 90
+                    },
+                    "medium": {
+                        "url": "https://i.ytimg.com/vi/MJhWexGvMes/mqdefault.jpg",
+                        "width": 320,
+                        "height": 180
+                    },
+                    "high": {
+                        "url": "https://i.ytimg.com/vi/MJhWexGvMes/hqdefault.jpg",
+                        "width": 480,
+                        "height": 360
+                    }
+                },
+                "channelTitle": "Chempol Additives and Chemical Specialty",
+                "liveBroadcastContent": "none",
+                "publishTime": "2024-11-19T10:55:08Z"
+            }
+        },
+        {
+            "kind": "youtube#searchResult",
+            "etag": "7EP2HF_DBof4P2REWJKc2qAn1NI",
+            "id": {
+                "kind": "youtube#video",
+                "videoId": "38KaKMs67SM"
+            },
+            "snippet": {
+                "publishedAt": "2024-07-16T07:00:02Z",
+                "channelId": "UCa16oZVYnwixGIPVAZ9l5rw",
+                "title": "CHEMPOL 7182 Diesel Engine Oil Additive | #ExplorewithChempol",
+                "description": "Rev up your engine's performance! Chempol 7182 is a powerful additive designed to enhance the performance and protection of ...",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://i.ytimg.com/vi/38KaKMs67SM/default.jpg",
+                        "width": 120,
+                        "height": 90
+                    },
+                    "medium": {
+                        "url": "https://i.ytimg.com/vi/38KaKMs67SM/mqdefault.jpg",
+                        "width": 320,
+                        "height": 180
+                    },
+                    "high": {
+                        "url": "https://i.ytimg.com/vi/38KaKMs67SM/hqdefault.jpg",
+                        "width": 480,
+                        "height": 360
+                    }
+                },
+                "channelTitle": "Chempol Additives and Chemical Specialty",
+                "liveBroadcastContent": "none",
+                "publishTime": "2024-07-16T07:00:02Z"
+            }
+        },
+        {
+            "kind": "youtube#searchResult",
+            "etag": "G43jKMSR-GT-Yx-pNq0rx7SVhy8",
+            "id": {
+                "kind": "youtube#video",
+                "videoId": "JP4_k97w4oA"
+            },
+            "snippet": {
+                "publishedAt": "2024-12-11T14:46:46Z",
+                "channelId": "UCa16oZVYnwixGIPVAZ9l5rw",
+                "title": "Additives Technology from Mr. Nofil Shamim, Director of Chempol at Automechanika Dubai 2024!",
+                "description": "automechanikaDu #AutoMechanikaDU #exhibitors #lubricants #Automechanika #Dubai #Automechanika2024 ...",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://i.ytimg.com/vi/JP4_k97w4oA/default.jpg",
+                        "width": 120,
+                        "height": 90
+                    },
+                    "medium": {
+                        "url": "https://i.ytimg.com/vi/JP4_k97w4oA/mqdefault.jpg",
+                        "width": 320,
+                        "height": 180
+                    },
+                    "high": {
+                        "url": "https://i.ytimg.com/vi/JP4_k97w4oA/hqdefault.jpg",
+                        "width": 480,
+                        "height": 360
+                    }
+                },
+                "channelTitle": "Chempol Additives and Chemical Specialty",
+                "liveBroadcastContent": "none",
+                "publishTime": "2024-12-11T14:46:46Z"
+            }
+        }
+    ]
+}

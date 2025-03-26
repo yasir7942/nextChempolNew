@@ -18,6 +18,10 @@ import CharcoalContentBox from "./components/layout/charcoal-content-box";
 import ProductCategoryGrid from "./components/layout/product-category-grid";
 import CTAcard from "./components/layout/cta-card";
 import Slider from "./components/layout/slider";
+import FretchVideosWrapper from "./components/elements/FretchVideosWrapper";
+
+
+
 
 
 
@@ -48,6 +52,8 @@ export async function generateMetadata(props) {
 }
 
 export default async function Home() {
+
+
 
   const homeData = await cachedGetHomePage();
 
@@ -102,6 +108,14 @@ export default async function Home() {
 
       <BlogContainer />
 
+      <div className="bg-[#F2F2F2] w-full h-auto pt-14 pb-10">
+
+        <PaddingContainer className=" ">
+          <h3 className=" text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize r   ml-5 z-20" >Videos</h3>
+          <FretchVideosWrapper limitedVideo={true} />
+        </PaddingContainer>
+
+      </div>
     </div>
 
   );

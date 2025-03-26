@@ -13,3 +13,18 @@ codemod
 
 
 
+https://www.youtube.com/watch?v=idYUy3hf3D0
+AIzaSyDcb89aot60EEI2scJk60ef-B9by-bLlhQ
+
+https://developers.google.com/youtube/v3/docs/search/list?apix_params=%7B%22part%22%3A%5B%22snippet%22%5D%2C%22channelId%22%3A%22UCa16oZVYnwixGIPVAZ9l5rw%22%2C%22maxResults%22%3A8%2C%22order%22%3A%22date%22%7D
+
+
+GET https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=UCa16oZVYnwixGIPVAZ9l5rw&maxResults=8&key=AIzaSyDcb89aot60EEI2scJk60ef-B9by-bLlhQ 
+HTTP/1.1
+
+Authorization: Bearer [YOUR_ACCESS_TOKEN]
+Accept: application/json
+
+
+
+

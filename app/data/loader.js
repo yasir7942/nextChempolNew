@@ -16,6 +16,8 @@ export async function fetchData(path, filter) {
   {
     method: "GET",
     headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Content-Type": "application/json",
       "Strapi-Response-Format": "v4",
       Authorization: `Bearer ${authToken}`,
@@ -23,6 +25,7 @@ export async function fetchData(path, filter) {
     cache: cacheSystem,
 
   }
+
 
 
 
