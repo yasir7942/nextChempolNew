@@ -65,6 +65,22 @@ export async function getHomePage() {
   return homePage
 }
 
+
+export async function getVideosLimitedData() {
+
+  const videoBlockQuery = qs.stringify({
+    sort: 'youtubePublishedAt:desc',
+    pagination: {
+      page: 1,
+      pageSize: 4
+    },
+    populate: ['image'],
+  });
+
+  return await fetchData("videos", videoBlockQuery);
+
+}
+
 export async function getPostPage() {
 
   const blogBlockQuery = qs.stringify({

@@ -1,16 +1,37 @@
-"use client";
-import { useEffect, useState } from "react";
-import FretchVideos from "../layout/FretchVideos";
+
+import { getVideosLimitedData } from "@/app/data/loader";
 
 
-const FretchVideosWrapper = ({ limitedVideo }) => {
-    const [componentKey, setComponentKey] = useState(Math.random()); // Unique key to force re-render
 
-    useEffect(() => {
-        setComponentKey(Math.random()); // Re-render when user navigates back
-    }, []);
+import DisaplyFrontVideos from "../layout/DisaplyFrontVideos";
 
-    return <FretchVideos key={componentKey} limitedVideo={limitedVideo} />;
+const FretchVideosWrapper = async () => {
+
+
+
+
+
+
+
+
+
+    const videoData = await getVideosLimitedData();
+
+    /* console.log("--------------------------video limited-----------------------------------");
+ 
+     console.dir(videoData, { depth: null });
+ 
+ 
+      const [componentKey, setComponentKey] = useState(Math.random()); // Unique key to force re-render
+  
+      useEffect(() => {
+          setComponentKey(Math.random()); // Re-render when user navigates back
+      }, []);
+      */
+
+    return <DisaplyFrontVideos VideoData={videoData} />;
+
+
 };
 
 export default FretchVideosWrapper;

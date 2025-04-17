@@ -99,6 +99,12 @@ async function revalidate(req, model, slug) {
             revalidatePath(`/product-category/${categorySlug?.toString()}`);
 
         }
+        else if (model == 'video') {
+            console.log("revalidate video");
+            revalidatePath(`/`); // for home page need to test
+            revalidatePath(`/videos/`);
+
+        }
 
         else if (model == 'product-category') {
 

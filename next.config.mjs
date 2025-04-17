@@ -28,7 +28,10 @@ const nextConfig = {
             { hostname: "front.chempol.co.uk", protocol: "https" },
             { hostname: "chempolco.uk", protocol: "https" },
             { hostname: "admin.chempol.co.uk", protocol: "https" },
-            { hostname: "localhost", protocol: "http" }
+            { hostname: "localhost", protocol: "http" },
+            { hostname: "youtube.com", protocol: "https" },
+            { hostname: "i.ytimg.com", protocol: "https" }
+
         ],
     },
     /* redirects() {

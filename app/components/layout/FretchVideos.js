@@ -1,82 +1,44 @@
 "use client";
 import Image from "next/image";
 import moment from "moment";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import VideoPopup from "../elements/VideoPopup";
-
+import { getImageUrl } from "@/libs/helper";
 
 const FretchVideos = ({ limitedVideo = false }) => {
-
     const [youtubeData, setYoutubeData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [selectedVideoId, setSelectedVideoId] = useState(null);
-    const [nextPageToken, setNextPageToken] = useState(null);
-    const [totalResults, setTotalResults] = useState(0);
-    const [isFetchingMore, setIsFetchingMore] = useState(false);
-    const observerRef = useRef(null);
 
-    const fetchVideos = async (pageToken = "") => {
+    const fetchVideos = async () => {
         try {
-            setIsFetchingMore(true);
-
-            const maxResults = limitedVideo ? 4 : 18; // 🔥 Load only 4 if limitedVideo is true
-            const response = await fetch(`/api/youtube?maxResults=${maxResults}&pageToken=${pageToken}`);
+            const limitParam = limitedVideo ? "&pagination[pageSize]=4" : "";
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}videos?populate=*&sort=youtubePublishedAt:desc${limitParam}`);
             if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
-
-            const data = await response.json();
-            const newVideos = data.items?.filter(video => video.id.videoId) || [];
-
-            // 🔥 Remove duplicates using a Set
-            setYoutubeData((prevVideos) => {
-                const existingVideoIds = new Set(prevVideos.map(video => video.id.videoId));
-                const uniqueVideos = newVideos.filter(video => !existingVideoIds.has(video.id.videoId));
-                return limitedVideo ? uniqueVideos : [...prevVideos, ...uniqueVideos]; // Only 4 if limited
-            });
-
-            setNextPageToken(limitedVideo ? null : data.nextPageToken || null); // 🔥 Stop pagination if limited
-            setTotalResults(data.pageInfo?.totalResults || 0);
+            console.log(".....................here is i am");
+            const json = await response.json();
+            const videos = json.data || [];
+            console.log(videos);
+            setYoutubeData(videos);
         } catch (e) {
             setError(e);
-            console.error("Error fetching YouTube data:", e);
+            console.error("Error fetching Strapi video data:", e);
         } finally {
             setLoading(false);
-            setIsFetchingMore(false);
         }
     };
 
     useEffect(() => {
-        fetchVideos(); // Load initial videos
+        fetchVideos();
     }, []);
-
-    useEffect(() => {
-        if (limitedVideo || !nextPageToken || youtubeData.length >= totalResults) return; // 🔥 Stop observer if limited
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && !isFetchingMore) {
-                    fetchVideos(nextPageToken);
-                }
-            },
-            { threshold: 1.0 }
-        );
-
-        if (observerRef.current) {
-            observer.observe(observerRef.current);
-        }
-
-        return () => {
-            if (observerRef.current) {
-                observer.unobserve(observerRef.current);
-            }
-        };
-    }, [nextPageToken, isFetchingMore]);
 
     const handleOpenPopup = (videoId) => {
         setSelectedVideoId(videoId);
         setIsPopupOpen(true);
     };
+
     const handleClosePopup = () => {
         setSelectedVideoId(null);
         setIsPopupOpen(false);
@@ -95,60 +57,50 @@ const FretchVideos = ({ limitedVideo = false }) => {
         <div className="overflow-x-auto font-serif">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-7 mt-6">
                 {youtubeData.map((video) => {
-                    const videoKey = video.id.videoId;
+                    const { id, attributes } = video;
+                    const videoId = attributes.videoId;
+                    const thumbnailUrl = attributes.image?.data?.attributes?.url;
+
                     return (
-                        <div key={videoKey} className="w-full flex flex-col text-white md:text-left pb-14">
-                            <div className="relative cursor-pointer group" onClick={() => handleOpenPopup(videoKey)}>
-                                {/* YouTube Thumbnail */}
+                        <div key={id} className="w-full flex flex-col text-white md:text-left pb-14">
+                            <div className="relative cursor-pointer group" onClick={() => handleOpenPopup(videoId)}>
                                 <Image
                                     className="w-full opacity-75"
-                                    src={video.snippet?.thumbnails.high.url}
+                                    src={getImageUrl(thumbnailUrl) || "/placeholder.jpg"}
                                     width={800}
                                     height={600}
-                                    alt={video.snippet?.title || ""}
+                                    quality={100}
+                                    alt={attributes.title || ""}
                                 />
-
-                                {/* YouTube Play Button Overlay */}
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className=" ">
-                                        <Image
-                                            src="../images/youtube.png" // Ensure this file is in the /public folder
-                                            width={120}
-                                            height={80}
-                                            alt="Play Video"
-                                            className="w-20 h-12 "
-                                        />
-                                    </div>
+                                    <Image
+                                        src="/images/youtube.png"
+                                        width={120}
+                                        height={80}
+                                        alt="Play Video"
+                                        className="w-20 h-12"
+                                    />
                                 </div>
                             </div>
 
-                            {/* Video Title & Description */}
                             <h2 className="text-gray-900 font-semibold leading-6 text-lg md:text-base pt-3">
-                                {video.snippet?.title || ""}
+                                {attributes.title}
                             </h2>
+
                             <p className="text-sm text-gray-700 font-light">
-                                {moment(video.snippet?.publishTime).format("MMMM D, YYYY")}
+                                {moment(attributes.youtubeFullDate).format("MMMM D, YYYY")}
                             </p>
+
                             <p className="text-lx md:text-sm text-justify text-gray-800">
-                                {video.snippet?.description
-                                    ? video.snippet?.description.split(" ").length > 30
-                                        ? video.snippet?.description.split(" ").slice(0, 30).join(" ") + " ..."
-                                        : video.snippet?.description
-                                    : ""}
+                                {attributes.description?.split(" ").length > 30
+                                    ? attributes.description.split(" ").slice(0, 30).join(" ") + " ..."
+                                    : attributes.description}
                             </p>
                         </div>
                     );
                 })}
             </div>
 
-            {/* Infinite Scroll Loader (🔥 Hidden if limitedVideo is true) */}
-            {!limitedVideo && nextPageToken && youtubeData.length < totalResults && (
-                <div ref={observerRef} className="flex justify-center py-6">
-                    <div className="w-10 h-10 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                </div>
-            )}
-
-            {/* Video Popup */}
             {isPopupOpen && selectedVideoId && (
                 <VideoPopup videoId={selectedVideoId} onClose={handleClosePopup} />
             )}
