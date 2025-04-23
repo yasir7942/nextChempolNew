@@ -34,7 +34,7 @@ export async function fetchData(path, filter) {
   url.search = filter;
 
   // show API links
-  //console.log(url.href);
+  console.log(url.href);
 
   try {
 

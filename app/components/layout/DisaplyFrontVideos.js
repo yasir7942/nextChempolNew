@@ -5,11 +5,15 @@ import Image from "next/image";
 import moment from "moment";
 import { getImageUrl } from "@/libs/helper";
 import VideoPopup from "../elements/VideoPopup";
+import Link from "next/link";
 
 
 const DisaplyFrontVideos = ({ VideoData }) => {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [selectedVideoId, setSelectedVideoId] = useState(null);
+
+
+
 
     // Handle opening the popup when clicking on a video
     const handleOpenPopup = (videoId) => {
@@ -28,7 +32,7 @@ const DisaplyFrontVideos = ({ VideoData }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-7 mt-6">
                 {VideoData.data.map((video) => {
                     return (
-                        <div key={video.videoId} className="w-full flex flex-col text-white md:text-left pb-14">
+                        <div key={video.id} className="w-full flex flex-col text-white md:text-left pb-14">
                             <div className="relative cursor-pointer group" onClick={() => handleOpenPopup(video.videoId)}>
                                 <Image
                                     className="w-full opacity-75"
@@ -63,10 +67,15 @@ const DisaplyFrontVideos = ({ VideoData }) => {
                         </div>
                     );
                 })}
+
             </div>
 
             {/* Video Popup */}
             {isPopupOpen && selectedVideoId && <VideoPopup videoId={selectedVideoId} onClose={handleClosePopup} />}
+
+            <Link href="/videos" className="text-textBlue flex justify-end items-center w-full min-h-4 ">
+                Latest Releases
+            </Link>
         </div>
     );
 };

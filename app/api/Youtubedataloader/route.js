@@ -23,11 +23,34 @@ const VALID_TOKEN = process.env.ADMIN_TOKEN;
 // ✅ Fetch YouTube Videos (Ensures `data` is defined)
 
 async function fetchYouTubeVideos(maxResults, pageToken = "", PublishedAfterDate = "") {
-    const url = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=${maxResults}&order=date&key=${API_KEY}&pageToken=${pageToken}&publishedAfter=${PublishedAfterDate}`;
+
+
+    const baseUrl = "https://youtube.googleapis.com/youtube/v3/search";
+    const params = new URLSearchParams({
+        part: "snippet",
+        channelId: CHANNEL_ID,
+        maxResults: maxResults,
+        order: "date",
+        key: API_KEY,
+        pageToken: pageToken,
+    });
+
+
+
+    // Only add publishedAfter if it has a value
+    if (PublishedAfterDate) {
+        params.append("publishedAfter", PublishedAfterDate);
+    }
+
+    const url = `${baseUrl}?${params.toString()}`;
+
+
+    // const url = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=${maxResults}&order=date&key=${API_KEY}&pageToken=${pageToken}&publishedAfter=${PublishedAfterDate}`;
 
     const response = await fetch(url, { headers: { "Content-Type": "application/json" }, cache: "no-store" });
 
-    if (!response.ok) throw new Error(`YouTube API Error: ${response.statusText}`);
+    const errorText = `YouTube API Error - Status: ${response.status} ${response.statusText}, URL: ${url}`;
+    if (!response.ok) throw new Error(errorText);
 
     const data = await response.json();
     if (!data || !data.items) throw new Error("Invalid YouTube API response.");

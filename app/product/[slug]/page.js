@@ -2,7 +2,7 @@ import BodyDataParse from "@/app/components/elements/data-parse-content";
 import GroupProducts from "@/app/components/layout/group-products";
 import PaddingContainer from "@/app/components/layout/padding-container";
 import { geAllProductsSlug, geSingleProduct } from "@/app/data/loader";
-import { getFirstDescriptionText, getImageUrl } from "@/libs/helper";
+import { getBaseUrl, getFirstDescriptionText, getImageUrl } from "@/libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -10,6 +10,8 @@ import { cache } from 'react';
 import siteConfig from "@/config/site";
 import SEOSchema from "@/app/components/elements/seo-schema";
 import ProductCategoryMenuWrapper from "@/app/components/layout/ProductCategoryMenuWrapper";
+import Breadcrumbs from "@/app/components/elements/breadcrumbs";
+
 
 
 // Cache the geSingleProduct function
@@ -77,18 +79,29 @@ const SingleProductPage = async props => {
     notFound();
   }
 
-  /*console.log("-----------------single product data --------------");
-  console.log(productData.data[0].productSchema?.reviews.length);
+  //console.log("-----------------single product data --------------");
+  // console.log(productData.data[0].product_categories.data[0]);
+  //console.dir(productData.data[0], { depth: null });
+  // console.dir(productData.data[0].product_categories, { depth: null });
 
-  console.log("-----------------End------------");  */
+  //console.log("-----------------End------------");
 
   const content = productData.data[0].description;
   const productGroup = productData.data[0].related_products;
   const firstDescriptionText = getFirstDescriptionText(productData.data[0].description);
   const seoDescription = productData.data[0].seo?.seoDesctiption ? productData.data[0].seo?.seoDesctiption : firstDescriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  const category = productData.data[0].product_categories[0]?.title ? productData.data[0].product_categories[0]?.title : "product Category";
-  const categorySlug = productData.data[0].product_categories[0]?.slug ? productData.data[0].product_categories[0]?.slug : "#";
+  const category = productData.data[0].product_categories.data[0]?.title ? productData.data[0].product_categories.data[0]?.title : "product Category";
+  const categorySlug = productData.data[0].product_categories.data[0].slug ? productData.data[0].product_categories.data[0].slug : "#";
+
+
+  const breadcrumbsData = [
+    { title: "Home", url: "/" },
+    { title: `${category}`, url: `${getBaseUrl()}/product-category/${categorySlug}` },
+    { title: `${productData.data[0]?.title}` }
+  ];
+
+
 
   let ratingCounter = 0;
 
@@ -215,7 +228,12 @@ const SingleProductPage = async props => {
 
       <div className="w-full h-12 bg-textLightBlue"></div>
 
+
+
       <PaddingContainer>
+
+        <Breadcrumbs breadcrumbs={breadcrumbsData} />
+
         <div className="w-full h-auto flex flex-col md:flex-row topPadding">
           {/* Left Menu Column */}
           <div className="w-full md:w-3/12 lg:w-[22%]   p-6 md:pl-0 overflow-hidden">

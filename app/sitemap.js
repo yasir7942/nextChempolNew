@@ -78,6 +78,11 @@ export default async function sitemap() {
       changeFrequency: 'weekly',
       priority: 0.5,
     },
+    {
+      url: `${baseURL}/videos`,
+      changeFrequency: 'weekly',
+      priority: 0.5,
+    },
 
     ...dynamicLinks,
 

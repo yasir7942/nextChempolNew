@@ -4,11 +4,12 @@ import BlogContainer from "@/app/components/layout/blog-container";
 import PaddingContainer from "@/app/components/layout/padding-container";
 import { geAllPostSlug, geSinglePost } from "@/app/data/loader";
 import siteConfig from "@/config/site";
-import { getFirstDescriptionText, getImageUrl, validateCanonicalSlug } from "@/libs/helper";
+import { getBaseUrl, getFirstDescriptionText, getImageUrl, validateCanonicalSlug } from "@/libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
 import { cache } from 'react';
 import { notFound } from "next/navigation";
+import Breadcrumbs from "@/app/components/elements/breadcrumbs";
 
 
 // Cache the geSinglePost function
@@ -74,6 +75,14 @@ const SingleBlogPage = async props => {
   }
 
 
+
+  const breadcrumbsData = [
+    { title: "Home", url: "/" },
+    { title: `Blog`, url: `${getBaseUrl()}/blog` },
+    { title: `${postData.data[0]?.title}` }
+  ];
+
+
   // console.log("-----------------------single post page--------------------------------------------------");
   //  console.dir(postData, { depth: null });
   //  console.log("---------------------------End-----single post------------------end-----------------------");
@@ -99,7 +108,26 @@ const SingleBlogPage = async props => {
     }]
   };
 
-
+  // BreadcrumbList
+  const jsonLd2 = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": getBaseUrl(),
+    }, {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": getBaseUrl() + '/' + "blog"
+    }, {
+      "@type": "ListItem",
+      "position": 3,
+      "name": postData.data[0]?.title,
+    }]
+  };
 
   return (
 
@@ -110,6 +138,8 @@ const SingleBlogPage = async props => {
       {/*  JSON-LD of Page */}
       <script type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd2) }} />
 
       <SEOSchema schemaList={postData.data[0].seo?.schema} />
 
@@ -117,6 +147,8 @@ const SingleBlogPage = async props => {
       <div className="w-full  mt-5 h-[1px] bg-textBlue"></div>
 
       <PaddingContainer>
+
+        <Breadcrumbs breadcrumbs={breadcrumbsData} />
 
         {/*  Post Area   */}
         <div className=" w-full  flex flex-col mt-20  justify-center  md:p-10 pt-0 space-y-7   ">

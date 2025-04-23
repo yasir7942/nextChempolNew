@@ -111,7 +111,7 @@ export default async function Home() {
       <div className="bg-[#F2F2F2] w-full h-auto pt-14 pb-10">
 
         <PaddingContainer className=" ">
-          <h3 className=" text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize r   ml-5 z-20" >Videos</h3>
+          <h3 className=" text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize r   ml-5 z-20" >Latest Media Updates</h3>
           <FretchVideosWrapper />
         </PaddingContainer>
 
