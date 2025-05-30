@@ -75,24 +75,28 @@ const SingleProductPage = async props => {
   const params = await props.params;
   const productData = await cachedGeSingleProduct(params.slug);
 
+  //console.log("-----------------single product data --------------");
+
+  //console.log(productData.data[0].related_products);
+  // console.dir(productData.data, { depth: null });
+  // console.dir(productData.data[0].product_categories, { depth: null });
+
+  //console.log("-----------------End------------");
+
+
   if (!productData || !productData.data[0]) {
     notFound();
   }
 
-  //console.log("-----------------single product data --------------");
-  // console.log(productData.data[0].product_categories.data[0]);
-  //console.dir(productData.data[0], { depth: null });
-  // console.dir(productData.data[0].product_categories, { depth: null });
 
-  //console.log("-----------------End------------");
 
   const content = productData.data[0].description;
   const productGroup = productData.data[0].related_products;
   const firstDescriptionText = getFirstDescriptionText(productData.data[0].description);
   const seoDescription = productData.data[0].seo?.seoDesctiption ? productData.data[0].seo?.seoDesctiption : firstDescriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  const category = productData.data[0].product_categories.data[0]?.title ? productData.data[0].product_categories.data[0]?.title : "product Category";
-  const categorySlug = productData.data[0].product_categories.data[0].slug ? productData.data[0].product_categories.data[0].slug : "#";
+  const category = productData.data[0].product_categories[0]?.title ? productData.data[0].product_categories[0]?.title : "product Category";
+  const categorySlug = productData.data[0].product_categories[0].slug ? productData.data[0].product_categories[0].slug : "#";
 
 
   const breadcrumbsData = [

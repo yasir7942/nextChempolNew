@@ -124,10 +124,10 @@ const ProductCategory = async props => {
 
 
 
-  //  console.log("-----------------------products --------------------------------------------------");
-  // console.dir(productData, { depth:null}); 
-  // console.log("---------------------------End--------p category---------------end-----------------------");
-  //  console.log(productData.data);
+  //console.log("-----------------------products category--------------------------------------------------");
+  //console.dir(productData, { depth: null });
+  //console.log("---------------------------End--------p category---------------end-----------------------");
+  //console.log(productData?.data[0].product_categories[0]?.title);
   // if(productData.data.length === 0)  return  <NotFound />
 
 
@@ -138,7 +138,7 @@ const ProductCategory = async props => {
       <SEOSchema schemaList={categoryData.data[0].seo?.schema} />
 
       {/* title={productData?.data[0]?.product_categories.data[0]?.title}  */}
-      <TopBanner banner="/images/product-banner.jpg" title={productData?.data[0].product_categories.data[0].title} title2={categoryData.data[0].seo?.seoDesctiption ? categoryData.data[0].seo?.seoDesctiption : ""} />
+      <TopBanner banner="/images/product-banner.jpg" title={productData?.data[0].product_categories[0]?.title} title2={categoryData.data[0].seo?.seoDesctiption ? categoryData.data[0].seo?.seoDesctiption : ""} />
 
       <div className="w-full h-0 md:h-10 "></div>
       <PaddingContainer>

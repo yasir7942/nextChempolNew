@@ -36,9 +36,9 @@ export async function generateMetadata(props) {
   const metadataParams = {
     pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : pageData.title,
     pageSlug: "/",
-    pageDescription: siteConfig.description,
+    pageDescription: pageData.seo?.seoDesctiption ? pageData.seo?.seoDesctiption : siteConfig.description,
     seoTitle: pageData.seo?.seoTitle,
-    seoDescription: pageData.seo?.seoDesctiption,
+    seoDescription: pageData.seo?.seoDesctiption ? pageData.seo?.seoDesctiption : siteConfig.description,
     rebotStatus: pageData.seo?.preventIndexing,
     canonicalLinks: pageData.seo?.canonicalLinks ?? "/",
     dataPublishedTime: pageData.publishedAt,
@@ -56,6 +56,7 @@ export default async function Home() {
 
 
   const homeData = await cachedGetHomePage();
+
 
 
   return (

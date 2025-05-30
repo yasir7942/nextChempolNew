@@ -37,27 +37,17 @@ const Footer = async () => {
             <Link href="/" className="w-64">
               <Image
                 src="/images/chempol.png"
-                width={500}
-                height={300}
+                width={350}
+                height={150}
                 alt="Chempol Additives and chemical specialty"
               />
             </Link>
             <p className="text-base pt-3 text-gray-300 font-light max-w-sm md:max-w-60 lg:max-w-80">
               We remain true to the principles of our company: providing superior service to our clients, creating opportunities for our people.
             </p>
-            <div className="flex flex-wrap space-x-2 line pr-3">
-              {/**    {Object.keys(siteConfig.socialMedia).map((platform) => (
-                  <SocialIcons
-                    key={platform}
-                    plateform={platform}
-                    dark
-                    link={siteConfig.socialMedia[platform]}
-                  />
-                ))}
-            */}
 
+            <Link href={`/privacy-policy/`} className=" text-gray-300 font-light transition duration-300 ease-in-out hover:underline  hover:text-textBlue"   >Privacy Policy</Link>
 
-            </div>
 
 
 
@@ -117,6 +107,7 @@ const Footer = async () => {
               src="/images/map.png"
               width={280}
               height={150}
+              quality={75}
               alt="world map"
             />
             <p className="text-sm text-gray-300 font-light pt-10 max-w-60"> <span className="text-textBlue font-normal">Open:</span>  Monday - Saturday</p>

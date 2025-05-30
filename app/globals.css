@@ -76,15 +76,15 @@
   }
 
   .rich-text ol {
-    @apply list-decimal pl-5 space-y-0;
+    @apply list-decimal  pl-5 space-y-0;
   }
 
   .rich-text p {
-    @apply text-lg font-light mt-1;
+    @apply text-lg  font-light mt-2 text-black;
   }
   .rich-text h3,
   .rich-text h2 {
-    @apply text-lg font-medium mt-2;
+    @apply text-lg font-semibold mt-6  text-black;
   }
 
   .rich-text a {

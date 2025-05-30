@@ -61,6 +61,7 @@ const Topbar = () => {
               src="/images/chempol.png"
               width={350}
               height={150}
+              priority
               alt="Chempol A Leading Manufacturer of Lubricant Additives and Specialty Chemicals in UAE"
             />
           </Link>

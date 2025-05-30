@@ -7,11 +7,12 @@ import { useDebouncedCallback } from "use-debounce";
 import { useState, useRef, useEffect } from 'react';
 import { getImageUrl } from "@/libs/helper";
 import { LineWave } from 'react-loader-spinner';
+import moment from "moment/moment";
 
 
-const SearchBar = ({ dataType }) => {
+const SearchBarForPost = ({ dataType }) => {
 
-  const [productData, setProductData] = useState([]);
+  const [postData, setPostData] = useState([]);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,19 +22,14 @@ const SearchBar = ({ dataType }) => {
   const handleSearchQuery = async (query) => {
     const encodedString = encodeURIComponent(query);
 
-
     setSearchQuery(encodedString);
-
-
-
 
     if (query.length > 2) {
       setIsLoading(true); // Set loading to true
       try {
 
-
-        const result = await geProductsBySearch(query);
-        setProductData(result.data);
+        const result = await gePostBySearch(query);
+        setPostData(result.data);
         // console.log("****************serech****result***data*****************");
         //console.log(result.data);
 
@@ -43,7 +39,7 @@ const SearchBar = ({ dataType }) => {
         setIsLoading(false); // Set loading to false after data fetching completes
       }
     } else {
-      setProductData([]);
+      setPostData([]);
       setIsLoading(false); // Ensure loading is false if query length is not enough
     }
   };
@@ -56,7 +52,7 @@ const SearchBar = ({ dataType }) => {
   const clearSearch = (e) => {
     e.preventDefault();
     inputRef.current.value = '';
-    setProductData([]);
+    setPostData([]);
     setIsSearchVisible(false);
   };
 
@@ -114,33 +110,32 @@ const SearchBar = ({ dataType }) => {
 
       </form>
 
-
-
-      <div className={`${productData.length <= 0 || !isSearchVisible ? 'hidden' : ''} w-[89%] text-left h-auto absolute top-[67px] z-40 
-      left-5 bg-gray-50 backdrop-blur-md bg-opacity-80 border border-1 border-gray-700 mt-1 p-5`}>
+      <div className={`${postData.length <= 0 || !isSearchVisible ? 'hidden' : ''} w-[90%] text-left h-auto absolute top-[67px] z-40 left-5 bg-gray-500 backdrop-blur-md bg-opacity-80 border border-1 border-gray-700 mt-1 p-5`}>
         <div className="flex flex-col space-y-2 " >
-          {productData.length > 0 ? (
-            productData?.map((product, index) => (
-              <div key={product.id} className="flex flex-col space-y-3 ">
+          {postData.length > 0 ? (
+            postData.map((post, index) => (
+              <div key={post.id} className="flex flex-col space-y-3 ">
                 <div className="flex justify-start space-x-5 items-center pl-1">
-                  <Link href={`/product/${product.slug}`}>
+                  <Link href={`/post/${post.slug}`}>
                     <Image
-                      src={getImageUrl(product?.productImage?.formats?.thumbnail.url)}
-                      className="items-center w-9"
-                      width={100}
-                      height={100}
-                      alt={product?.productImage?.alternativeText ?? product.title}
+                      src={getImageUrl(post?.featureImage.formats.thumbnail.url)}
+                      className="items-center w-16"
+                      width={200}
+                      height={200}
+                      alt={post?.featureImage.alternativeText ?? post.title}
                     />
                   </Link>
-                  <Link href={`/product/${product.slug}`} className="flex flex-col items-start space-y-2">
-                    <div className="font-normal text-sm text-black tracking-widest">
-                      {product.product_categories[0]?.title}: {product.title}
+                  <Link href={`/blog/${post.slug}`} className="flex flex-col items-start space-y-2">
+                    <div className="  text-base font-normal    text-darkYellow">
+                      {post.title}  <span className="text-xs text-gray-50 ">- {moment(post.PostDate).format('MMMM D, YYYY')}</span>
                     </div>
-
+                    <div className="flex text-gray-50  justify-center items-center text-left font-light text-base space-x-2">
+                      <div>{post.seo?.seoDesctiption}</div>
+                    </div>
                   </Link>
                 </div>
-                {index !== productData.length - 1 && (
-                  <div className="w-full h-[1px] border border-b border-gray-400"></div>
+                {index !== postData.length - 1 && (
+                  <div className="w-full h-[1px] border border-b border-gray-500"></div>
                 )}
 
               </div>
@@ -151,11 +146,9 @@ const SearchBar = ({ dataType }) => {
           )}
         </div>
 
-        <Link href={`/search?s=${(searchQuery)}`} className="w-full block h-auto mt-5 py-1 text-base bg-slate-200 
-        font-normal tracking-wider text-center text-black   first-letter:uppercase">View More Search Results</Link>
       </div>
     </div>
   );
 };
 
-export default SearchBar;
+export default SearchBarForPost;

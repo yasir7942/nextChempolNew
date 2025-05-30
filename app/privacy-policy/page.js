@@ -11,9 +11,9 @@ export async function generateMetadata(props) {
     const metadataParams = {
         pageTitle: "Privacy Policy",
         pageSlug: "privacy-policy",
-        pageDescription: "Privacy Policy This Privacy Policy describes how “Chempol” collects, uses, and discloses your Personal Information when you visit or interact with our website. Collecting Personal Information When you visit our website, we may collect certain information about your device, your interaction with the website, and the information necessary to provide you with",
+        pageDescription: siteConfig.privicyPolicy,
         seoTitle: "Chempol Privacy Policy",
-        seoDescription: "Privacy Policy This Privacy Policy describes how “Chempol” collects, uses, and discloses your Personal Information when you visit or interact with our website. Collecting Personal Information When you visit our website, we may collect certain information about your device, your interaction with the website, and the information necessary to provide you with",
+        seoDescription: siteConfig.privicyPolicy,
         rebotStatus: false,
         canonicalLinks: "privacy-policy",
         dataPublishedTime: "15-8-2024",
@@ -32,10 +32,10 @@ const PolicyPage = () => {
     return (
         <div>
 
-            <PaddingContainer className="flex flex-col text-white " >
+            <PaddingContainer className="flex flex-col text-black " >
 
-                <h1 className="text-white pt-32 font-medium text-3xl ">Privacy Policy</h1>
-                <p className="text-white pt-3 font-light text-lg tracking-wider pb-10 ">
+                <h1 className="text-black pt-32 font-medium text-3xl ">Privacy Policy</h1>
+                <p className="text-black pt-3 font-light text-lg tracking-wider pb-10 ">
                     This Privacy Policy describes how “Chempol” collects, uses, and discloses your Personal Information when you visit or interact with our website.
 
                     <strong className="block pt-3">Collecting Personal Information</strong>
@@ -53,6 +53,7 @@ const PolicyPage = () => {
                     <strong className="block pt-3">Contact</strong>
                     After reviewing this policy, if you have additional questions, want more information about our privacy policy, or would like to make a complaint, please contact us by e-mail at info@chempol.co.uk
                 </p>
+                <div className="w-full h-10"></div>
 
             </PaddingContainer>
 

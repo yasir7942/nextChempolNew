@@ -14,6 +14,8 @@ const ReadProductReport = () => {
         const fetchData = async () => {
             try {
                 const productCategoryData = await getProductCategoryList();
+                console.log("------------------------product report page---------------------------------");
+                console.log(productCategoryData.data[0]);
                 setProductCategory(productCategoryData);
             } catch (e) {
                 setError(e);
@@ -60,7 +62,7 @@ const ReadProductReport = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {category.products?.data?.map((product) => (
+                            {category.products?.map((product) => (
                                 <tr key={product.id}>
                                     <td className="border text-sm font-light border-gray-200 text-center">
                                         {product.id || <div className="text-center text-red-500"> --- </div>}

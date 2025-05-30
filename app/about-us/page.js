@@ -29,10 +29,9 @@ export async function generateMetadata(props) {
         dataPublishedTime: pageData.publishedAt,
         category: "",
         image: siteConfig.ogImage,
-        imageAlternativeText: "",
+        imageAlternativeText: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : "",
         imageExt: siteConfig.ogImageExt,
     };
-
 
 
     return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
@@ -137,13 +136,14 @@ const AboutUsPage = async () => {
 
 
 
+
             {/*****
      *  <div className="relative w-full h-[200px] md:h-[300px] xl:h-[400px] mt-12 mb-10   overflow-hidden">
      * 
      */}
 
-            <div className="relative w-full h-[200px] md:h-[300px] xl:h-[400px] 2xl:[700px]     mt-12 mb-10   overflow-hidden bg-red-500">
-                <div className="absolute inset-0 md:-top-44 w-full  pb-[56.25%] h-full 2xl:-top-55 2xl:pb-[50]  ">
+            <div className="relative w-full h-[200px] md:h-[300px] xl:h-[400px] 2xl:[700px]     mt-12 mb-10   overflow-hidden  ">
+                <div className="absolute inset-0 md:-top-44 w-full  pb-[56.25%] h-full 2xl:-top-52 2xl:pb-[56.25%]  ">
                     <iframe className="video-bg absolute inset-0 w-full h-full"
                         src="https://www.youtube.com/embed/lMJXxhRFO1k?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=0&iv_load_policy=3&rel=0&playlist=lMJXxhRFO1k&t=16"
                         allow="autoplay; encrypted-media"
@@ -157,7 +157,7 @@ const AboutUsPage = async () => {
                     <h4 className="text-white   text-xl md:text-2xl xl:text-4xl font-semibold">CHEMPOL-Additives & Chemical Specialty</h4>
                     <p className="text-sm md:text-base xl:text-xl xl:mt-2 font-light ">Driven by the powerful blend of technology knowledge, innovation, and partnership we do in advance and look at future challenges and developments.</p>
                 </div>
-            </div>
+            </div >
 
 
 
@@ -166,12 +166,7 @@ const AboutUsPage = async () => {
 
 
 
-
-
-
-
-
-        </div>
+        </div >
     )
 }
 

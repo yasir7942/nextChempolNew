@@ -188,7 +188,7 @@ export async function geSingleProduct(slug) {
 
     },
     populate: ['productImage', 'seo', 'seo.schema', 'productSchema', 'productSchema.reviews',
-      'related_products.productImage', 'product_categories', 'TDSFile.url', 'MSDSFile.url',
+      'related_products.productImage', 'product_categories', 'TDSFile', 'MSDSFile',
       'table'],
   });
 
@@ -501,6 +501,30 @@ export async function getProductCategoryForHome() {
 
   });
   return await fetchData("product-categories", blogBlockQuery);
+}
+
+
+
+
+export async function gePostBySearch(query) {
+
+  const searchPostQuery = qs.stringify({
+    filters: {
+      $or: [
+        { title: { $containsi: query } },
+        { post_categories: { title: { $containsi: query } } },
+        { seo: { seoDesctiption: { $containsi: query } } }
+      ],
+    },
+    sort: 'PostDate:desc',
+    populate: ['seo', 'featureImage', 'post_categories', 'seo.schema'],
+    pagination: {
+      pageSize: 10,
+      page: 1,
+    },
+  });
+
+  return await fetchData("posts", searchPostQuery);
 }
 
 

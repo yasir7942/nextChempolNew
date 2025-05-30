@@ -7,13 +7,13 @@ const GroupProducts = ({ productGroup }) => {
 
   return (
     <div className="w-full    text-black md:pl-8  "   >
-      {productGroup && productGroup.data.length > 0 && (
+      {productGroup && productGroup?.data?.length > 0 && (
         <div className=" text-xl font-semibold mt-16   ">
           Related Products
         </div>
       )}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5 md:gap-5 lg:gap-5 mb-14 justify-center items-center mt-10  ">
-        {productGroup && productGroup.data.length > 0 && (productGroup.data.map((product) => (
+        {productGroup && productGroup.data?.length > 0 && (productGroup.data.map((product) => (
           <div
             key={product.id}
             className="flex flex-col w-full justify-center items-center space-y-0  "

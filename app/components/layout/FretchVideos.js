@@ -17,10 +17,11 @@ const FretchVideos = ({ limitedVideo = false }) => {
             const limitParam = limitedVideo ? "&pagination[pageSize]=4" : "";
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}videos?populate=*&sort=youtubePublishedAt:desc${limitParam}`);
             if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
-            console.log(".....................here is i am");
+
+
             const json = await response.json();
             const videos = json.data || [];
-            console.log(videos);
+
             setYoutubeData(videos);
         } catch (e) {
             setError(e);
@@ -57,12 +58,13 @@ const FretchVideos = ({ limitedVideo = false }) => {
         <div className="overflow-x-auto font-serif">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-7 mt-6">
                 {youtubeData.map((video) => {
-                    const { id, attributes } = video;
-                    const videoId = attributes.videoId;
-                    const thumbnailUrl = attributes.image?.data?.attributes?.url;
+
+                    console.log(video.title);
+                    const videoId = video.videoId;
+                    const thumbnailUrl = video.image?.url;
 
                     return (
-                        <div key={id} className="w-full flex flex-col text-white md:text-left pb-14">
+                        <div key={video.id} className="w-full flex flex-col text-white md:text-left pb-14">
                             <div className="relative cursor-pointer group" onClick={() => handleOpenPopup(videoId)}>
                                 <Image
                                     className="w-full opacity-75"
@@ -70,31 +72,31 @@ const FretchVideos = ({ limitedVideo = false }) => {
                                     width={800}
                                     height={600}
                                     quality={100}
-                                    alt={attributes.title || ""}
+                                    alt={video.title || ""}
                                 />
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <Image
                                         src="/images/youtube.png"
                                         width={120}
                                         height={80}
-                                        alt="Play Video"
+                                        alt="Video Play Button"
                                         className="w-20 h-12"
                                     />
                                 </div>
                             </div>
 
                             <h2 className="text-gray-900 font-semibold leading-6 text-lg md:text-base pt-3">
-                                {attributes.title}
+                                {video.title}
                             </h2>
 
                             <p className="text-sm text-gray-700 font-light">
-                                {moment(attributes.youtubeFullDate).format("MMMM D, YYYY")}
+                                {moment(video.youtubeFullDate).format("MMMM D, YYYY")}
                             </p>
 
                             <p className="text-lx md:text-sm text-justify text-gray-800">
-                                {attributes.description?.split(" ").length > 30
-                                    ? attributes.description.split(" ").slice(0, 30).join(" ") + " ..."
-                                    : attributes.description}
+                                {video.description?.split(" ").length > 30
+                                    ? video.description.split(" ").slice(0, 30).join(" ") + " ..."
+                                    : video.description}
                             </p>
                         </div>
                     );

@@ -21,6 +21,8 @@ const siteConfig = {
   vatId: "100312114000003",
   iso6523Code: "",
   postAuthor: "Dr. Jawad Haroon",
+  privicyPolicy: "Privacy Policy This Privacy Policy describes how “Chempol” collects, uses, and discloses your Personal Information when you visit or interact with our website. Collecting Personal Information When you visit our website, we may collect certain information about your device, your interaction with the website, and the information necessary to provide you with",
+
 
 
   socialMedia: {

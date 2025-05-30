@@ -65,6 +65,7 @@ const MobileNavigation = () => {
                 src="/images/chempol.png"
                 width={332}
                 height={88}
+                priority
                 alt="Chempol Additives and Chemical logo"
               />
             </Link>

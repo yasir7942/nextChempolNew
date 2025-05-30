@@ -28,6 +28,7 @@ export async function generateMetadata({ type, path, params }) {
   const finalImageText = imageAlternativeText ? imageAlternativeText : finalSeoTitle;
 
 
+
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL),
     title: finalSeoTitle,

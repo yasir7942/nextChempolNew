@@ -32,7 +32,7 @@ export async function generateMetadata(props) {
     rebotStatus: postData.data[0].seo?.preventIndexing,
     canonicalLinks: postData.data[0].seo?.canonicalLinks,
     dataPublishedTime: postData.data[0].publishedAt,
-    category: postData.data[0].post_categories.data[0].title,
+    category: postData.data[0].post_categories[0].title,
     image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + postData.data[0].featureImage.url,
     imageAlternativeText: postData.data[0].featureImage?.alternativeText,
     imageExt: postData.data[0].featureImage?.mime,
@@ -83,9 +83,9 @@ const SingleBlogPage = async props => {
   ];
 
 
-  // console.log("-----------------------single post page--------------------------------------------------");
-  //  console.dir(postData, { depth: null });
-  //  console.log("---------------------------End-----single post------------------end-----------------------");
+  //console.log("-----------------------single post page--------------------------------------------------");
+  // console.dir(postData, { depth: null });
+  //console.log("---------------------------End-----single post------------------end-----------------------");
 
   const firstDescriptionText = getFirstDescriptionText(postData.data[0].description);
   const seoDesctiption = postData.data[0]?.seo?.seoDesctiption?.trim() ? postData.data[0]?.seo?.seoDesctiption?.trim() : firstDescriptionText;
@@ -129,6 +129,7 @@ const SingleBlogPage = async props => {
     }]
   };
 
+
   return (
 
 
@@ -150,11 +151,11 @@ const SingleBlogPage = async props => {
 
         <Breadcrumbs breadcrumbs={breadcrumbsData} />
 
-        {/*  Post Area   */}
+        {/*  Post Area   2xl:w-3/4  */}
         <div className=" w-full  flex flex-col mt-20  justify-center  md:p-10 pt-0 space-y-7   ">
 
-          <div className="W-full h-auto 2xl:w-3/4  " >
-            <Image className="w-full h-auto " src={getImageUrl(postData.data[0].featureImage.url)} height={1400} width={1400} alt={postData.data[0].title} />
+          <div className="W-full h-auto   " >
+            <Image className="w-full h-auto " quality={100} src={getImageUrl(postData.data[0].featureImage.url)} height={1400} width={1400} alt={postData.data[0].title} />
           </div>
           <h1 className="   text-2xl md:text-3xl text-gray-900 " >{postData.data[0].title}</h1>
           <div className="text-gray-800 font-light text-base mt-5   pr-5 md:pr-2 rich-text" >
