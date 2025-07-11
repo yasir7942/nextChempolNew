@@ -7,11 +7,12 @@ import PaddingContainer from '../components/layout/padding-container';
 import Image from 'next/image';
 import { getImageUrl } from '@/libs/helper';
 import { Suspense } from 'react'
-import SearchBarForPost from '../components/layout/search-bar-post';
+
 import { cache } from 'react';
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import SEOSchema from '../components/elements/seo-schema';
 import siteConfig from '@/config/site';
+import SearchBarForPost from '../components/layout/search-bar-post';
 
 const cachedGetBlogPage = cache(getBlogPage);
 

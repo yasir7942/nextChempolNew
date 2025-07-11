@@ -7,6 +7,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { useState, useRef, useEffect } from 'react';
 import { getImageUrl } from "@/libs/helper";
 import { LineWave } from 'react-loader-spinner';
+import moment from "moment/moment";
 
 
 const SearchBar = () => {
@@ -21,11 +22,7 @@ const SearchBar = () => {
   const handleSearchQuery = async (query) => {
     const encodedString = encodeURIComponent(query);
 
-
     setSearchQuery(encodedString);
-
-
-
 
     if (query.length > 2) {
       setIsLoading(true); // Set loading to true
@@ -144,7 +141,6 @@ const SearchBar = () => {
                         : post.seo.seoDesctiption
                         : ""}
                     </div>
-
                   </Link>
                 </div>
                 {index !== postData.length - 1 && (
@@ -166,4 +162,4 @@ const SearchBar = () => {
   );
 };
 
-export default SearchBar;
+export default SearchBarForPost;
