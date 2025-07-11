@@ -1,0 +1,84 @@
+{
+    "topbar": {
+        "customerSupport": {
+            "title": "Customer Support & Sales",
+            "button": {
+                "getQuote": "Get a Quote"
+            }
+        }
+    },
+    "navigation": {
+        "home": "Home",
+        "category": "Category",
+        "company": "Company",
+        "aboutus": "About Us",
+        "faqs": "FAQs",
+        "lubricantAdditives": "Lubricant Additives Manufacturers in UAE",
+        "chempol": "Chempol",
+        "chempolDescription": "Choose the top-quality lubricant additives, polymers, and specialty chemicals for maximizing your Petrochemical performance with Chempol.co.uk",
+        "contact": "Contact",
+        "blog": "Blog",
+        "faq": "FAQs",
+        "about": "About",
+        "privacyPolicy": "Privacy Policy",
+        "termsOfService": "Terms of Service",
+        "productCategory":"Product Category",
+        "menu":"Menu"
+
+    },
+            "slider": {
+                "slider1": {
+            "title1": "High Quality Guaranteed",
+            "title2": "Our Viscosity Index Improvers",
+             "title3": "Chempol provides a wide range of Viscosity Engine Improvers <strong>OCP Viscosity Index Improver , and Ethylene – Propylene – Copolymer</strong>"
+
+        },
+        "slider2": {
+            "title1": "High Quality Guaranteed",
+            "title2": "Best Chemical <br /> Specialty Providers",
+            "title3": "Chempol specializes in delivering one-window chemical solutions tailored to your specific needs. Our commitment to quality and innovation has earned us the reputation of being the best chemical specialty providers in the industry."
+        },
+
+        "button": {
+            "ourProduct": "Our Product",
+            "getInTouch": "Get In Touch"
+        }
+    },
+    "homePage": {
+        "title": "Powering Progress with Innovative Chemical Solutions",
+        "description": "We are petrochemical experts specializing in the evolution and manufacturing of chemical additives for engine oils, Viscosity Index Improvers, Special Additives, Gasoline Engine Oil Additives, and Speciality Chemical Additives. Trust us for providing high-quality formulations and exceptional service.",
+        "categories": "Categories",
+        "exploreOurProducts": "Explore Our Wide Range Of Products!",
+        "latestInsights": "Latest Insights",
+        "latestMediaUpdate": "Latest Media Update",
+        "aboutChempol": "About Chempol",
+        "aboutChempolDescription": "Chempol is a top-tier manufacturer of Lubricant raw materials, additives, and other chemical specialities, catering to multiple industries’ needs...",
+        "realibility": "Reliability Solutions",
+        "realibilityDescription": "At Chempol, we’re your go-to partner for all your lubrication Polymer Applications, Polymer Additives, and speciality polymer needs. Our team...",
+        "coreValues": "Core Values",
+        "coreValuesDescription": "At Chempol, we are committed to delivering exceptional results to our customters. We believe that our success is driven by our ability to inspire...",
+        "readMore": "Read More....",
+        "latestRelease": "Latest Release"
+    },
+    "cta":{
+        "workWithUs":"Work With Us",
+        "grobalNerk":"WE ARE A GLOBAL <br />  NETWORK OF EXPERTS",
+        "contactus":"Contact Us"
+    },
+    "footer": {
+        "description": "We remain true to the principles of our company: providing superior service to our clients, creating opportunities for our people.",
+        "privacyPolicy": "Privacy Policy",
+        "categories": "Categories",
+        "contactInfo": "Contact Info",
+        "contactDescription": "You can always contact us via email or phone. Get a quote now!.",
+        "companySupport": "Company support",
+        "open": "Open",
+        "days": "Monday - Saturday",
+        "time": "Time",
+        "closed": "closed",
+        "allCopyRights": "All Copyrights Received By",
+        "sunday": "Sunday",
+         "clock": "9:00 AM - 6:00 PM"
+
+    }
+}

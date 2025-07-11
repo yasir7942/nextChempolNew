@@ -51,6 +51,26 @@ export const validateCanonicalSlug = (link) => {
 }
 
 
+export function convertToLocalizedDate(pdate, lang) {
+  // Ensure it's a Date object, even if input is ISO string from Strapi
+  const date = new Date(pdate);
+
+  const localeMap = {
+    ar: 'ar',
+    es: 'es',
+    en: 'en',
+  };
+
+  const locale = localeMap[lang] || 'en';
+
+  return new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+}
+
+
 /*
 
 export const  addMonths=(date, months) => {

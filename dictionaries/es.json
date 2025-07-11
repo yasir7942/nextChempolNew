@@ -1,0 +1,81 @@
+{
+    "topbar": {
+        "customerSupport": {
+            "title": "Soporte al Cliente y Ventas",
+            "button": {
+                "getQuote": "Obtener una Cotización"
+            }
+        }
+    },
+    "navigation": {
+        "home": "Inicio",
+        "category": "Categoría",
+        "company": "Compañía",
+        "aboutus": "Acerca de Nosotros",
+        "faqs": "Preguntas Frecuentes",
+        "lubricantAdditives": "Fabricantes de Aditivos para Lubricantes en los EAU",
+        "chempol": "Chempol",
+        "chempolDescription": "Elija los aditivos para lubricantes, polímeros y productos químicos especializados de la mejor calidad para maximizar el rendimiento petroquímico con Chempol.co.uk",
+        "contact": "Contacto",
+        "blog": "Blog",
+        "faq": "FAQ",
+        "about": "Acerca de",
+        "privacyPolicy": "Política de Privacidad",
+        "termsOfService": "Términos del Servicio",
+        "productCategory": "Categoría de producto",
+        "menu": "Menú"
+    },
+    "slider": {
+        "slider1": {
+            "title1": "Alta Calidad Garantizada",
+            "title2": "Nuestros Mejores Mejoradores del Índice de Viscosidad",
+             "title3": "Chempol ofrece una amplia gama de mejoradores de viscosidad para motores <strong> Mejorador del índice de viscosidad OCP </strong> y <strong> Copolímero de etileno-propileno </strong>"
+        },
+        "slider2": {
+            "title1": "Alta Calidad Garantizada",
+            "title2": "Mejores Proveedores de Productos Químicos <br /> Especializados",
+            "title3": "Chempol se especializa en ofrecer soluciones químicas integrales adaptadas a sus necesidades específicas. Nuestro compromiso con la calidad y la innovación nos ha ganado la reputación de ser los mejores proveedores de productos químicos especializados en la industria."
+        },
+        "button": {
+            "ourProduct": "Nuestro Producto",
+            "getInTouch": "Ponerse en Contacto"
+        }
+    },
+    "homePage": {
+        "title": "Impulsando el Progreso con Soluciones Químicas Innovadoras",
+        "description": "Somos expertos petroquímicos especializados en la evolución y fabricación de aditivos químicos para aceites de motor, Mejoradores del Índice de Viscosidad, Aditivos Especiales, Aditivos para Aceites de Motor de Gasolina, y Aditivos Químicos Especializados. Confíe en nosotros para proporcionar formulaciones de alta calidad y un servicio excepcional.",
+        "categories": "Categorías",
+        "exploreOurProducts": "¡Explore Nuestra Amplia Gama de Productos!",
+        "latestInsights": "Últimas Perspectivas",
+        "latestMediaUpdate": "Última Actualización de Medios",
+        "aboutChempol": "Acerca de Chempol",
+        "aboutChempolDescription": "Chempol es un fabricante de primer nivel de materias primas para lubricantes, aditivos y productos químicos especiales, atendiendo a las necesidades de múltiples industrias...",
+        "realibility": "Soluciones de Fiabilidad",
+        "realibilityDescription": "En Chempol, somos tu socio de confianza para todas tus aplicaciones de polímeros lubricantes, aditivos de polímeros y necesidades de polímeros especiales. Nuestro equipo...",
+        "coreValues": "Valores Fundamentales",
+        "coreValuesDescription": "En Chempol, estamos comprometidos a ofrecer resultados excepcionales a nuestros clientes. Creemos que nuestro éxito se basa en nuestra capacidad de inspirar...",
+        "readMore": "Leer más....",
+        "latestRelease": "Último lanzamiento"
+    },
+        "cta": {
+            "workWithUs": "Trabaja con nosotros",
+            "grobalNerk": "SOMOS UNA RED GLOBAL <br />  DE EXPERTOS",
+            "contactus": "Contáctanos"
+        },
+    "footer": {
+        "description": "Permanecemos fieles a los principios de nuestra empresa: brindar un servicio superior a nuestros clientes, creando oportunidades para nuestra gente.",
+        "privacyPolicy": "Política de Privacidad",
+        "categories": "Categorías",
+        "contactInfo": "Información de Contacto",
+        "contactDescription": "Siempre puede contactarnos por correo electrónico o teléfono. ¡Obtenga una cotización ahora!",
+        "companySupport": "Soporte de la Compañía",
+        "open": "Abierto",
+        "days": "Lunes - Sábado",
+        "time": "Hora",
+        "closed": "cerrado",
+       "allCopyRights": "Todos los derechos reservados por",
+       "sunday": "domingo",
+       "clock": "9:00 a. m. - 6:00 p. m."
+        
+    }
+}

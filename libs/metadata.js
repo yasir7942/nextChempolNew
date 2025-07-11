@@ -3,6 +3,7 @@ import { getFirstDescriptionText, validateCanonicalSlug, getImageUrl } from "@/l
 
 export async function generateMetadata({ type, path, params }) {
 
+  // langaue need to add in metadata
 
   const {
     pageTitle,
@@ -17,6 +18,7 @@ export async function generateMetadata({ type, path, params }) {
     image,
     imageAlternativeText,
     imageExt,
+
   } = params;
 
   const finalSeoTitle = seoTitle?.trim() ? seoTitle : pageTitle;
@@ -26,6 +28,7 @@ export async function generateMetadata({ type, path, params }) {
   const manualCanonicalSlug = validateCanonicalSlug(canonicalLinks?.trim());
   const canonicalLink = process.env.NEXT_PUBLIC_BASE_URL + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug);
   const finalImageText = imageAlternativeText ? imageAlternativeText : finalSeoTitle;
+
 
 
   return {
@@ -40,11 +43,9 @@ export async function generateMetadata({ type, path, params }) {
     alternates: {
       canonical: canonicalLink,
       languages: {
-        'en-US': canonicalLink,
-        'en-UK': canonicalLink,
-        'ar-AR': canonicalLink,
-        'fr-FR': canonicalLink,
-        'es-ES': canonicalLink,
+        'en': canonicalLink,
+        'ar': canonicalLink,
+        'es': canonicalLink,
       },
     },
     openGraph: {
@@ -55,7 +56,7 @@ export async function generateMetadata({ type, path, params }) {
           "type": imageExt
         }
       ],
-      locale: 'en_US',
+      locale: 'en',
       url: process.env.NEXT_PUBLIC_BASE_URL + canonicalLink,
       type: 'website',
       publishedTime: dataPublishedTime,
