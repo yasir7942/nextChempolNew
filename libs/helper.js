@@ -71,6 +71,20 @@ export function convertToLocalizedDate(pdate, lang) {
 }
 
 
+export function localizeNumber(lang, number) {
+  if (lang === 'ar') {
+    // Convert to Arabic-Indic numerals
+    return number
+      .toString()
+      .replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  }
+
+  // For English, Spanish, or any other Latin-based languages
+  return number.toString();
+}
+
+
+
 /*
 
 export const  addMonths=(date, months) => {

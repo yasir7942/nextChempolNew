@@ -4,6 +4,7 @@ import { convertToLocalizedDate, getImageUrl } from "@/libs/helper"
 import PaddingContainer from "./padding-container";
 import { getPostLimitedData } from "../../data/loader";
 import { getDictionary } from "@/libs/getDictionary";
+import Link from "next/link";
 
 
 
@@ -16,7 +17,7 @@ const BlogContainer = async ({ locale }) => {
 
 
   return (
-    <div className="bg-[#F2F2F2] mt-5 pt-14 w-full h-auto">
+    <div className="bg-[#F2F2F2]    pt-16 w-full h-auto">
 
 
       <PaddingContainer>
@@ -36,17 +37,17 @@ const BlogContainer = async ({ locale }) => {
               postData.data.map(post => (
 
                 <div key={post.id} className="w-full flex flex-col text-white  md:text-left  ">
-                  <a href={`/blog/${post.slug}`} >
+                  <Link href={`/${locale}/blog/${post.slug}`} >
                     <Image className="w-full rounded-lg " src={getImageUrl(post.featureImage.url)} width={500} height={350} alt={post.title} />
-                    <h2 className="text-textBlue font-semibold  leading-6 text-base md:text-base pt-3  text-justify headline">
+                    <h2 className="text-textBlue font-semibold  leading-6 text-base md:text-base pt-3  text-justify headline rtl:text-right">
                       {post.title}
                     </h2>
-                    <p className='text-sm text-gray-800 font-light'> {convertToLocalizedDate(post.PostDate, locale)}</p>
-                    <p className="text-base md:text-sm  text-justify text-darkGary summary">{post.seo?.seoDesctiption ? post.seo.seoDesctiption.split(" ").length > 25
+                    <p className='text-sm text-gray-800 font-light  rtl:text-right'> {convertToLocalizedDate(post.PostDate, locale)}</p>
+                    <p className="text-base md:text-sm    text-darkGary summary  rtl:text-right">{post.seo?.seoDesctiption ? post.seo.seoDesctiption.split(" ").length > 25
                       ? post.seo.seoDesctiption.split(" ").slice(0, 25).join(" ") + "..."
                       : post.seo.seoDesctiption
                       : ""}</p>
-                  </a>
+                  </Link>
 
                 </div>
 

@@ -35,7 +35,7 @@ export async function fetchData(path, filter) {
   url.search = filter;
 
   // show API links
-  //console.log(url.href);
+  console.warn(url.href);
 
   try {
 
@@ -96,10 +96,10 @@ export async function getPostPage() {
   return blogPage
 }
 
-export async function getSearchPage() {
+export async function getSearchPage(lang) {
 
   const blogBlockQuery = qs.stringify({
-
+    locale: lang,
     populate: ['banner.webBanner', 'banner.mobileBanner', 'seo.schema'],
 
   });
@@ -132,19 +132,19 @@ export async function geProductCategoryLeftMenu(lang) {
   const blogBlockQuery = qs.stringify({
     locale: lang,
     sort: ['index'],
-    populate: ['products', 'seo.schema', 'image'],
+    populate: ['image', 'products', 'seo.schema'],
   });
   return await fetchData("product-categories", blogBlockQuery);
 
 }
 
 
-export async function geProductsByCategory(category, currentPage, pageSize) {
+export async function getProductsByCategory(lang, category, currentPage, pageSize) {
 
   const PAGE_SIZE = pageSize;
 
   const blogBlockQuery = qs.stringify({
-
+    locale: lang,
     filters: {
       product_categories: {
         slug: {
@@ -153,18 +153,14 @@ export async function geProductsByCategory(category, currentPage, pageSize) {
       },
     },
     populate: ['productImage', 'product_categories', 'product_categories.banner.webBanner', 'product_categories.faq', 'product_categories.banner.mobileBanner', 'seo.schema'],
-
-
     pagination: {
       pageSize: PAGE_SIZE,
       page: currentPage,
     },
-
   });
 
 
   return await fetchData("products", blogBlockQuery);
-
 }
 
 export async function geGridCategoybyProduct() {
@@ -179,9 +175,11 @@ export async function geGridCategoybyProduct() {
 }
 
 
-export async function geSingleProduct(slug) {
+export async function getSingleProduct(lang, slug) {
 
   const blogBlockQuery = qs.stringify({
+
+    locale: lang,
     filters: {
 
       slug: {
@@ -238,10 +236,11 @@ export async function geProductsByGroup(productSlug, groupSlug) {
 }
 
 
-export async function geProductsBySearch(query) {
+export async function geProductsBySearch(lang, query) {
 
 
   const searchProductQuery = qs.stringify({
+    locale: lang,
     filters: {
       $or: [
         { title: { $containsi: query } },
@@ -263,10 +262,11 @@ export async function geProductsBySearch(query) {
 
 
 
-export async function geProductsBySearchAdvance(query) {
+export async function geProductsBySearchAdvance(lang, query) {
 
 
   const searchProductQuery = qs.stringify({
+    locale: lang,
     filters: {
       $or: [
         { title: { $containsi: query } }, // product_categories
@@ -283,10 +283,10 @@ export async function geProductsBySearchAdvance(query) {
   return await fetchData("products", searchProductQuery);
 }
 
-export async function getBlogPage() {
+export async function getBlogPage(lang) {
 
   const blogBlockQuery = qs.stringify({
-
+    locale: lang,
     populate: ['banner.webBanner', 'banner.mobileBanner', 'seo.schema'],
 
   });
@@ -297,11 +297,11 @@ export async function getBlogPage() {
   return blogPage
 }
 
-export async function gePosts(currentPage, pageSize) {
+export async function getPosts(lang, currentPage, pageSize) {
 
   const PAGE_SIZE = pageSize;
   const blogBlockQuery = qs.stringify({
-
+    locale: lang,
     sort: 'PostDate:desc',
     filters: {},
     populate: ['featureImage', 'seo.schema'],
@@ -320,11 +320,11 @@ export async function gePosts(currentPage, pageSize) {
 }
 
 
-export async function geSinglePost(slug) {
+export async function geSinglePost(lang, slug) {
 
   const blogBlockQuery = qs.stringify({
+    locale: lang,
     filters: {
-
       slug: {
         $eq: slug,
       },
@@ -378,9 +378,10 @@ export async function getFaqPage(lang) {
 
 
 
-export async function getContactUsPageData() {
+export async function getContactUsPageData(lang) {
 
   const conatcBlockQuery = qs.stringify({
+    locale: lang,
     populate: ['addressBook', 'seo', 'seo.schema'],
   });
   return await fetchData("contact", conatcBlockQuery);
@@ -415,9 +416,12 @@ export async function geAllProductCategorySlug() {
 }
 
 
-export async function getProductCategory(slug) {
+export async function getProductCategory(lang, slug) {
+
+
 
   const blogBlockQuery = qs.stringify({
+    locale: lang,
     filters: {
 
       slug: {
@@ -496,9 +500,10 @@ export async function getProductCategoryForHome(lang) {
 }
 
 
-export async function getPostBySearch(query) {
+export async function getPostBySearch(lang, query) {
 
   const searchPostQuery = qs.stringify({
+    locale: lang,
     filters: {
       $or: [
         { title: { $containsi: query } },

@@ -8,6 +8,7 @@ import { getFaqPage } from "../data/loader";
 import FAQs from "../components/layout/Faqs";
 import PaddingContainer from "../components/layout/padding-container";
 import siteConfig from "@/config/site";
+import { getDictionary } from "@/libs/getDictionary";
 
 
 const cachedGetFAQPage = cache(getFaqPage);
@@ -41,6 +42,7 @@ export async function generateMetadata(props) {
 
 const FAQPage = async ({ params }) => {
     const { lang } = await params || {};
+    const dictionary = await getDictionary(lang);
     const pageData = await cachedGetFAQPage(lang);
 
 
@@ -57,7 +59,7 @@ const FAQPage = async ({ params }) => {
             <TopBanner banner="/images/chempol-banner.jpg" title={pageData?.title} title2="" />
 
             <PaddingContainer>
-                <FAQs faqList={pageData.faq} heading={pageData.heading} text={pageData.text} />
+                <FAQs dictionary={dictionary} faqList={pageData.faq} heading={pageData.heading} text={pageData.text} />
             </PaddingContainer>
 
 

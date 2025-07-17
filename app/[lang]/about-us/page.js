@@ -117,7 +117,7 @@ const AboutUsPage = async ({ params }) => {
 
             <PaddingContainer className="">
 
-                <div className="flex flex-wrap mt-10 ">
+                <div className="flex flex-wrap mt-10 "  >
 
                     {pageData.qualities.map((val) => (
 
@@ -125,10 +125,10 @@ const AboutUsPage = async ({ params }) => {
                         <div key={val.id} className=" w-full md:w-1/2 mt-6 space-y-0 space-x-0   ">
                             <div className="flex flex-col md:px-14 py-0    items-start   text-black text-lg tracking-wider font-light flex-grow justify-start   ">
                                 <div className="w-full   overflow-hidden rounded-lg before:">
-                                    <Image className="w-full 2xl:w-[80%]  h-auto object-cover" width={1000} height={1000} src={getImageUrl(val.image.url)} alt={val.image?.alternativeText ? val.image?.alternativeText : val.title} />
+                                    <Image className="w-full 2xl:w-[80%]  h-auto object-cover " width={1000} height={1000} src={getImageUrl(val.image.url)} alt={val.image?.alternativeText ? val.image?.alternativeText : val.title} />
                                 </div>
-                                <h1 className="text-xl mt-5 text-left w-full    items-start capitalize font-normal text-textBlue">{val.title}</h1>
-                                <div className="text-black md:text-justify items-start text-base 2xl:text-left w-full 2xl:w-[80%]   ">
+                                <h1 className="text-xl mt-5 text-left w-full 2xl:w-[80%]   items-start capitalize font-normal text-textBlue rtl:text-right">{val.title}</h1>
+                                <div className="text-black md:text-justify items-start text-base 2xl:text-left w-full 2xl:w-[80%]  rtl:text-right ">
                                     <BodyDataParse content={val.description} />
                                 </div>
                             </div>
@@ -152,7 +152,7 @@ const AboutUsPage = async ({ params }) => {
      * 
      */}
 
-            <div className="relative w-full h-[200px] md:h-[300px] xl:h-[400px] 2xl:[700px]     mt-12 mb-10   overflow-hidden  ">
+            <div className="relative w-full h-[200px] md:h-[300px] xl:h-[400px] 2xl:[700px]     mt-12 mb-0  overflow-hidden  ">
                 <div className="absolute inset-0 md:-top-44 w-full  pb-[56.25%] h-full 2xl:-top-52 2xl:pb-[56.25%]  ">
                     <iframe className="video-bg absolute inset-0 w-full h-full"
                         src="https://www.youtube.com/embed/lMJXxhRFO1k?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&modestbranding=0&iv_load_policy=3&rel=0&playlist=lMJXxhRFO1k&t=16"

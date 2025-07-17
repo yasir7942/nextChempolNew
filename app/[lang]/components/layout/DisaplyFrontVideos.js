@@ -51,13 +51,13 @@ const DisaplyFrontVideos = ({ VideoData, latestRelasetext }) => {
                                     />
                                 </div>
                             </div>
-                            <h2 className="text-gray-900 font-semibold leading-6 text-sm md:text-base pt-3">
+                            <h2 className=" font-medium md:font-semibold leading-4 md:leading-6 text-sm md:text-base pt-3 text-textBlue w-[95%]">
                                 {video.title || ""}
                             </h2>
                             <p className="text-sm text-gray-700 font-light">
                                 {moment(video.youtubePublishedAt).format("MMMM D, YYYY")}
                             </p>
-                            <p className="text-sm md:text-sm text-justify text-gray-800">
+                            <p className="text-sm  text-gray-800">
                                 {video.description
                                     ? video.description.split(" ").length > 25
                                         ? video.description.split(" ").slice(0, 25).join(" ") + " ..."

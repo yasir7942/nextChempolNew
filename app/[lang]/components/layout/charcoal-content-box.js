@@ -8,7 +8,7 @@ const CharcoalContentBox = ({ title, description, image, url = "", button }) => 
 
 
       {/* <!--card--> */}
-      <div className=" overflow-hidden   block rounded-lg    shadow-secondary-1 h-full  lg:flex-1 lg:max-w-md  ">
+      <div className=" overflow-hidden   block rounded-lg    shadow-secondary-1 h-full  lg:flex-1 lg:max-w-md rtl rtl:text-right " dir="">
         <div
           className="relative overflow-hidden  bg-no-repeat"
           data-twe-ripple-init

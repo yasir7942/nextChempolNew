@@ -1,8 +1,8 @@
-import PaddingContainer from "@/app/components/layout/padding-container"
+import PaddingContainer from "../components/layout/padding-container"
 
 
 import Image from "next/image";
-import { geProductsBySearchAdvance, getSearchPage } from "@/app/data/loader"
+import { geProductsBySearchAdvance, getSearchPage } from "../data/loader";
 
 
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
@@ -12,15 +12,18 @@ import { cache } from 'react';
 import SEOSchema from "../components/elements/seo-schema";
 import siteConfig from "@/config/site";
 import ProductCategoryMenuWrapper from "../components/layout/ProductCategoryMenuWrapper";
+import Link from "next/link";
+import { getDictionary } from "@/libs/getDictionary";
 
 
 const cachedGetSearchPage = cache(getSearchPage);
 
 export async function generateMetadata(props) {
   const params = await props.params;
+  const lang = params?.lang || 'en';
 
 
-  const pageData = await cachedGetSearchPage();
+  const pageData = await cachedGetSearchPage(lang);
 
   const metadataParams = {
     pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : "Chempol Search Page",
@@ -48,14 +51,17 @@ export async function generateMetadata(props) {
 
 const searchPage = async props => {
   const searchParams = await props.searchParams;
+  const params = await props.params;
+  const { lang } = await params || {};
+  const dictionary = await getDictionary(lang);
 
-  const pageData = await cachedGetSearchPage();
+  const pageData = await cachedGetSearchPage(lang);
 
   const query = searchParams?.s ?? "";
 
   // product show by category
 
-  const productData = await geProductsBySearchAdvance(query);
+  const productData = await geProductsBySearchAdvance(lang, query);
 
 
 
@@ -81,13 +87,13 @@ const searchPage = async props => {
           {/*  Left Menu Column  */}
           <div className="w-full md:w-3/12 lg:w-1/6  p-6 md:pl-0  overflow-hidden">
             {/* <!-- Menu content goes here   */}
-            <ProductCategoryMenuWrapper />
+            <ProductCategoryMenuWrapper locale={lang} dictionary={dictionary} />
           </div>
 
           {/*  Content Area   */}
           <div className=" w-full md:w-9/12 lg:w-5/6  flex flex-col  p-3 md:p-4 pb-3  relative  ">
             {/*   Content area content goes here  */}
-            <SearchComponenet />
+            <SearchComponenet locale={lang} dictionary={dictionary} />
 
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 mt-3    p-3  ">
@@ -96,10 +102,10 @@ const searchPage = async props => {
                 <div key={product.id} className=" pt-0 mt-10 relative text-center flex flex-col  justify-center">
 
                   <div className="w-full      flex justify-center  ">
-                    <a href={`/product/${product.slug}/`} > <Image className="relative w-24 text-center" src={getImageUrl(product?.productImage.url)} height={500} width={500} alt={product.title} /> </a>
+                    <Link href={`/${lang}/product/${product.slug}/`} > <Image className="relative w-24 text-center" src={getImageUrl(product?.productImage.url)} height={500} width={500} alt={product.title} /> </Link>
                   </div>
                   <div className="flex flex-col w-full h-full " >
-                    <h2 className="uppercase text-sm text-textBlue mt-3 leading-1"> <a href={`/product/${product.slug}/`}  >{product.title}</a> </h2>
+                    <h2 className="uppercase text-sm text-textBlue mt-3 leading-1"> <Link href={`/${lang}/product/${product.slug}/`}  >{product.title}</Link> </h2>
 
                   </div>
 

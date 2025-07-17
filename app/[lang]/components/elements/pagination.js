@@ -4,6 +4,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
+import { localizeNumber } from "@/libs/helper";
 
 
 const PaginationArrow = ({ direction, page, isDisabled }) => {
@@ -30,7 +31,7 @@ const PaginationArrow = ({ direction, page, isDisabled }) => {
   );
 };
 
-export function PaginationComponent({ pageCount, totalPage, pageSize = 12 }) {
+export function PaginationComponent({ locale, dictionary, pageCount, totalPage, pageSize = 12 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page")) || 1;
@@ -52,7 +53,7 @@ export function PaginationComponent({ pageCount, totalPage, pageSize = 12 }) {
           />
         </PaginationItem>
         <PaginationItem>
-          <span className="p-8 font-normal tracking-widest text-gray-800">Page {currentPage} / {Math.ceil(totalPage / pageSize)}</span>
+          <span className="p-8 font-normal tracking-widest text-gray-800"> {dictionary.navigation.page} {localizeNumber(locale, currentPage)} / {localizeNumber(locale, Math.ceil(totalPage / pageSize))}</span>
         </PaginationItem>
         <PaginationItem>
           <PaginationArrow

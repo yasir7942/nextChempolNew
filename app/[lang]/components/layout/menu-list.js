@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FaAngleRight } from "react-icons/fa";
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -16,7 +16,7 @@ import siteConfig from "@/config/site";
 
 export default function MenuList({ locale, productCategory, dictionary }) {
   return (
-    <NavigationMenu className="hidden md:block z-50">
+    <NavigationMenu className="hidden md:block z-50" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <NavigationMenuList>
         <NavigationMenuItem>
           <Link href={`/${locale}`} legacyBehavior passHref>
@@ -32,10 +32,11 @@ export default function MenuList({ locale, productCategory, dictionary }) {
             {dictionary.navigation.category}
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-4 p-6 md:w-[500px] md:grid-cols-2 lg:w-[600px] font-light">
+            <ul className="grid w-[400px] gap-4 p-6 md:w-[500px] md:grid-cols-2 lg:w-[600px] font-light "  >
               {productCategory?.data?.map((component, index) => (
                 <li key={index} className="flex items-center">
-                  <FaAngleRight className="pr-2 text-textBlue" />
+                  <FaAngleRight className="pr-2 text-textBlue rtl:hidden" />
+                  <FaAngleLeft className="pl-2 text-textBlue ltr:hidden " />
                   <Link className="transition duration-300 ease-in-out hover:text-textBlue" href={`/${locale}/product-category/${component.slug}`}>
                     {component.title}
                   </Link>
@@ -62,13 +63,13 @@ export default function MenuList({ locale, productCategory, dictionary }) {
                   </Link>
                 </NavigationMenuLink>
               </li>
-              <Link href={`/${locale}/about-us`} className="font-light hover:text-textBlue ml-3">
+              <Link href={`/${locale}/about-us`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">
                 {dictionary.navigation.about}
               </Link>
-              <Link href={`/${locale}/faq`} className="font-light hover:text-textBlue ml-3">
+              <Link href={`/${locale}/faq`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">
                 {dictionary.navigation.faq}
               </Link>
-              <Link href={`/${locale}/lubricant-additives-manufacturers-in-uae`} className="font-light hover:text-textBlue ml-3">
+              <Link href={`/${locale}/lubricant-additives-manufacturers-in-uae`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">
                 {dictionary.navigation.lubricantAdditives}
               </Link>
             </ul>

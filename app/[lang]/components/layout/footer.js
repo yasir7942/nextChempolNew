@@ -4,7 +4,7 @@ import PaddingContainer from "./padding-container";
 import siteConfig from "@/config/site";
 import SocialIcons from "../elements/social-icons";
 import { MdEmail } from "react-icons/md";
-import { FaPhoneAlt } from "react-icons/fa";
+import { FaAngleLeft, FaPhoneAlt } from "react-icons/fa";
 
 import { FaAngleRight } from "react-icons/fa";
 import WhatsAppButton from "../elements/WhatsAppButton";
@@ -22,7 +22,7 @@ const Footer = async ({ locale }) => {
 
   const dictionary = await getDictionary(locale);
 
-  const categoryData = await getProductCategoryForHome();
+  const categoryData = await getProductCategoryForHome(locale);
   // console.log("-----------------------product category  data--------------------------------------------------");
   //    console.dir(categoryData, { depth:null});
   //  console.log("---------------------------End-----------------------end-----------------------");
@@ -41,11 +41,12 @@ const Footer = async ({ locale }) => {
 
             <Link href={`/${locale}/`} className="w-64">
               <Image
-                src="/images/chempol.png"
+                src={locale === 'ar' ? "/images/chempol-ar.png" : "/images/chempol.png"}
                 width={350}
                 height={150}
                 alt="Chempol Additives and chemical specialty"
               />
+
             </Link>
             <p className="text-base pt-3 text-gray-300 font-light max-w-sm md:max-w-60 lg:max-w-80">
               {dictionary.footer.description}
@@ -69,17 +70,16 @@ const Footer = async ({ locale }) => {
 
           {/* Quick Links */}
           <div className="flex flex-col space-y-3">
-            <div className="capitalize text-textBlue font-medium py-4 text-xl">Categories</div>
+            <div className="capitalize text-textBlue font-medium py-4 text-xl  rtl:pr-4">{dictionary.footer.categories}</div>
             {/* <MenuFooterList /> */}
-
-
 
             <ul className="text-gray-300  space-y-1 font-light">
 
               {categoryData.data.map(cat => (
 
                 <li key={cat.id} className="flex  items-center">
-                  <FaAngleRight className="pr-2 text-textBlue" />
+                  <FaAngleRight className="pr-2 text-textBlue rtl:hidden " />
+                  <FaAngleLeft className="pl-2 text-textBlue ltr:hidden   " />
                   <Link href={`/${locale}/product-category/${cat.slug}/`} className="transition duration-300 ease-in-out hover:underline  hover:text-textBlue"   >{cat.title}</Link>
                 </li>
               ))}
@@ -93,9 +93,9 @@ const Footer = async ({ locale }) => {
           <div className="flex flex-col space-y-1   ">
             <div className="capitalize text-textBlue font-medium py-4 text-xl">{dictionary.footer.contactInfo}</div>
             <p className="text-base text-gray-300 font-light max-w-60">{dictionary.footer.contactDescription}</p>
-            <p className="text-base text-gray-300 font-light max-w-60 flex  items-center "><FaPhoneAlt className="text-textBlue mr-2" /> +971-(06)-5264688</p>
+            <p className="text-base text-gray-300 font-light max-w-60 flex  items-center "><FaPhoneAlt className="text-textBlue mr-2 rtl:ml-2 text-right " /> +971-(06)-5264688</p>
             <p className="text-base text-gray-300 font-light max-w-60 flex  items-center transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
-              <MdEmail className="text-textBlue mr-2" /> <Link href="mailto:info@chempol.co.uk">info@chempol.co.uk</Link>
+              <MdEmail className="text-textBlue mr-2 rtl:ml-2 " /> <Link href="mailto:info@chempol.co.uk">info@chempol.co.uk</Link>
             </p>
 
 
@@ -130,7 +130,7 @@ const Footer = async ({ locale }) => {
       </PaddingContainer>
 
       <div className="w-full mt-10 pt-5 border-0 border-t-[1px] border-textBlue font-light text-sm  text-white   bg-[#2D2D2D] text-center">
-        {dictionary.footer.allCopyRights} <Link href={`${locale}/`} className="text-textBlue text-base" >chempol.co.uk</Link>
+        {dictionary.footer.allCopyRights} <Link href={`${locale}/`} className="text-textBlue text-base rtl:pr-2" >chempol.co.uk</Link>
       </div>
     </footer>
 

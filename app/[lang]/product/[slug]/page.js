@@ -1,21 +1,22 @@
-import BodyDataParse from "@/app/components/elements/data-parse-content";
-import GroupProducts from "@/app/components/layout/group-products";
-import PaddingContainer from "@/app/components/layout/padding-container";
-import { geAllProductsSlug, geSingleProduct } from "@/app/data/loader";
-import { getBaseUrl, getFirstDescriptionText, getImageUrl } from "@/libs/helper";
+import BodyDataParse from "../../components/elements/data-parse-content";
+import GroupProducts from "../../components/layout/group-products";
+import PaddingContainer from "../../components/layout/padding-container";
+import { geAllProductsSlug, getSingleProduct } from "../../data/loader";
+import { getBaseUrl, getFirstDescriptionText, getImageUrl } from "../../../../libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { cache } from 'react';
 import siteConfig from "@/config/site";
-import SEOSchema from "@/app/components/elements/seo-schema";
-import ProductCategoryMenuWrapper from "@/app/components/layout/ProductCategoryMenuWrapper";
-import Breadcrumbs from "@/app/components/elements/breadcrumbs";
+import SEOSchema from "../../components/elements/seo-schema";
+import ProductCategoryMenuWrapper from "../../components/layout/ProductCategoryMenuWrapper";
+import Breadcrumbs from "../../components/elements/breadcrumbs";
+import { getDictionary } from "@/libs/getDictionary";
 
 
 
-// Cache the geSingleProduct function
-const cachedGeSingleProduct = cache(geSingleProduct);
+// Cache the getSingleProduct function
+const cachedgetSingleProduct = cache(getSingleProduct);
 
 
 
@@ -40,7 +41,11 @@ export const generateStaticParams = async () => {
 
 export async function generateMetadata(props) {
   const params = await props.params;
-  const productData = await geSingleProduct(params.slug);
+  const locale = params?.lang || 'en';
+
+  const productData = await getSingleProduct(locale, params.slug);
+
+
 
   if (!productData || !productData.data[0]) {
     notFound();
@@ -73,18 +78,20 @@ export async function generateMetadata(props) {
 
 const SingleProductPage = async props => {
   const params = await props.params;
-  const productData = await cachedGeSingleProduct(params.slug);
+  const { lang } = await params || {};
+  const dictionary = await getDictionary(lang);
+  const productData = await cachedgetSingleProduct(lang, params.slug);
+  //console.log("********************SingleProductPage locale: ", lang);
+  // console.log("-----------------single product data --------------");
 
-  //console.log("-----------------single product data --------------");
-
-  //console.log(productData.data[0].related_products);
+  // console.log(productData.data[0].related_products);
   // console.dir(productData.data, { depth: null });
-  // console.dir(productData.data[0].product_categories, { depth: null });
+  //console.dir(productData.data[0].product_categories, { depth: null });
 
   //console.log("-----------------End------------");
 
 
-  if (!productData || !productData.data[0]) {
+  if (!productData || !productData.data[0] || !productData.data[0].product_categories[0]) {
     notFound();
   }
 
@@ -95,12 +102,12 @@ const SingleProductPage = async props => {
   const firstDescriptionText = getFirstDescriptionText(productData.data[0].description);
   const seoDescription = productData.data[0].seo?.seoDesctiption ? productData.data[0].seo?.seoDesctiption : firstDescriptionText;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  const category = productData.data[0].product_categories[0]?.title ? productData.data[0].product_categories[0]?.title : "product Category";
+  const category = productData.data[0].product_categories[0]?.title ? productData.data[0].product_categories[0]?.title : dictionary.navigation.productCategory;
   const categorySlug = productData.data[0].product_categories[0].slug ? productData.data[0].product_categories[0].slug : "#";
 
 
   const breadcrumbsData = [
-    { title: "Home", url: "/" },
+    { title: dictionary.navigation.home, url: "/" },
     { title: `${category}`, url: `${getBaseUrl()}/product-category/${categorySlug}` },
     { title: `${productData.data[0]?.title}` }
   ];
@@ -242,7 +249,7 @@ const SingleProductPage = async props => {
           {/* Left Menu Column */}
           <div className="w-full md:w-3/12 lg:w-[22%]   p-6 md:pl-0 overflow-hidden">
             {/* Menu content goes here  */}
-            <ProductCategoryMenuWrapper />
+            <ProductCategoryMenuWrapper locale={lang} dictionary={dictionary} />
           </div>
 
           {/* Content Area */}
@@ -281,7 +288,7 @@ const SingleProductPage = async props => {
 
 
                 <div className="font-light text-black text-base mt-5 max-w-xl pr-5 md:pr-2 rich-text">
-                  <div className="text-xl font-semibold py-2">Application</div>
+                  <div className="text-xl font-semibold py-2">{dictionary.productPage.application}</div>
                   {productData.data[0].application}
                 </div>
 
@@ -301,7 +308,7 @@ const SingleProductPage = async props => {
                         download
                       >
                         <div className="py-3 bg-white text-black border-[3px] px-4 border-textLightBlue flex  items-center  font-light text-left">
-                          <div>Technical Data Sheet (TDS)
+                          <div>{dictionary.productPage.tds}
                             <span className="text-gray-500 pl-3">PDF</span></div>
 
                         </div>
@@ -318,7 +325,7 @@ const SingleProductPage = async props => {
                         download
                       >
                         <div className="py-3  bg-white text-black border-[3px] px-4 border-textLightBlue flex  items-center  font-light text-left">
-                          <div>Material Safety Data Sheet <span className="text-gray-500 pl-3">PDF</span></div>
+                          <div>{dictionary.productPage.msds} <span className="text-gray-500 pl-3">PDF</span></div>
 
                         </div>
                       </a>
@@ -331,7 +338,7 @@ const SingleProductPage = async props => {
             </div>
 
             <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full lg:w-[90%]     pr-5 md:pr-2 rich-text">
-              <div className="text-xl font-semibold py-2">Description</div>
+              <div className="text-xl font-semibold py-2">{dictionary.productPage.description}</div>
               <BodyDataParse content={content} />
             </div>
 
@@ -345,9 +352,9 @@ const SingleProductPage = async props => {
                     {/* Table Header */}
                     <thead>
                       <tr className="bg-[#F7F7F7]">
-                        <th className="p-4 font-normal border">Property</th>
-                        <th className="p-4 font-normal border">Method</th>
-                        <th className="p-4 font-normal border">Value</th>
+                        <th className="p-4 font-normal border">{dictionary.productPage.property}</th>
+                        <th className="p-4 font-normal border">{dictionary.productPage.method}</th>
+                        <th className="p-4 font-normal border">{dictionary.productPage.value}</th>
                       </tr>
                     </thead>
 

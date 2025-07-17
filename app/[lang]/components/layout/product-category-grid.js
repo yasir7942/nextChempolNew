@@ -4,13 +4,19 @@ import Image from "next/image"
 import PaddingContainer from "./padding-container";
 import { geProductCategoryLeftMenu } from "../../data/loader";
 import { getDictionary } from "@/libs/getDictionary";
+import Link from "next/link";
 
 
 
 const ProductCategoryGrid = async ({ locale }) => {
 
+
+
+
   const dictionary = await getDictionary(locale);
   const categoryData = await geProductCategoryLeftMenu(locale);
+
+
 
 
   return (
@@ -33,12 +39,12 @@ const ProductCategoryGrid = async ({ locale }) => {
 
 
               <div key={category.id} className="flex flex-col space-y-2 text-center justify-center relative group rounded-lg" >
-                <a href={`/product-category/${category.slug}/`}  >
+                <Link href={`/${locale}/product-category/${category.slug}/`}  >
                   <Image className="z-2 rounded-xl"
                     src={getImageUrl(category.image.url)}
                     width={500} height={300} alt={category.title} />
-                </a>
-                <a href={`/product-category/${category.slug}/`} className="text-center transition duration-300 ease-in-out hover:text-textBlue text-xl text-darkGary font-normal" >{category.title}</a>
+                </Link>
+                <Link href={`/${locale}/product-category/${category.slug}/`} className="text-center transition duration-300 ease-in-out hover:text-textBlue text-base md:text-xl text-darkGary font-normal" >{category.title}</Link>
               </div>
 
             ))}

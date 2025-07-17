@@ -3,7 +3,7 @@ import { useState } from 'react';
 import React from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 
-const ContactForm = () => {
+const ContactForm = ({ locale, dictionary }) => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -33,7 +33,7 @@ const ContactForm = () => {
 
 
       if (response.ok) {
-        setStatus('Email sent successfully!');
+        setStatus(dictionary.contactPage.sucessSend);
         // Reset form fields only on success
         setFullName('');
         setPhoneNumber('');
@@ -44,7 +44,7 @@ const ContactForm = () => {
         recaptchaRef.current.reset(); // Reset the reCAPTCHA
       } else {
         const result = await response.json();
-        setStatus('Failed to send email: System Error Email Us');
+        setStatus(dictionary.contactPage.failSend);
       }
     } catch (error) {
       console.error(error);
@@ -64,26 +64,26 @@ const ContactForm = () => {
       <form onSubmit={handleSubmit}>
         <div className="flex mb-4">
           <div className="w-1/2 mr-2">
-            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="name">Name</label>
+            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="name">{dictionary.contactPage.yourName}</label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
               id="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               type="text"
-              placeholder="Your name"
+              placeholder={dictionary.contactPage.yourName}
               required
             />
           </div>
           <div className="w-1/2 ml-2">
-            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="phoneNumber">Phone</label>
+            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="phoneNumber">{dictionary.contactPage.phonelable}</label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
               id="phoneNumber"
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="Valid phone number"
+              placeholder={dictionary.contactPage.phone}
               required
             />
           </div>
@@ -91,43 +91,43 @@ const ContactForm = () => {
 
         <div className="flex mb-4">
           <div className="w-1/2 mr-2">
-            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="email">Email</label>
+            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="email">{dictionary.contactPage.emailLable}</label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email"
+              placeholder={dictionary.contactPage.email}
               required
             />
           </div>
           <div className="w-1/2 ml-2">
-            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="country">Country</label>
+            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="country">{dictionary.contactPage.countryLable}</label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
               id="country"
               type="text"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              placeholder="Your country"
+              placeholder={dictionary.contactPage.country}
               required
             />
           </div>
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="message">Message</label>
+          <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="message">{dictionary.contactPage.messageLable}</label>
           <textarea
             className="shadow appearance-none border rounded w-full py-2 px-3 tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
             id="message"
             rows="4"
-            placeholder="Your message"
+            placeholder={dictionary.contactPage.message}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             required
           ></textarea>
-          <small className="error text-gray-500 font-light">Please avoid including hyperlinks or URLs in your message.</small>
+          <small className="error text-gray-500 font-light">{dictionary.contactPage.notice}</small>
         </div>
 
         <div className="mb-4">
@@ -135,6 +135,7 @@ const ContactForm = () => {
             ref={recaptchaRef}
             sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
             onChange={onReCAPTCHAChange}
+            hl={locale}
           />
         </div>
 
@@ -144,7 +145,7 @@ const ContactForm = () => {
             className="font-medium text-lg border border-spacing-1 border-white bg-textBlue hover:bg-textLightBlue transition duration-150 text-white hover:text-gray-800 py-2 px-12 focus:outline-none focus:shadow-outline"
             type="submit"
           >
-            Send
+            {dictionary.contactPage.send}
           </button>
 
           {/* Spinner next to the button */}

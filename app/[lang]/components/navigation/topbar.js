@@ -28,17 +28,17 @@ const Topbar = async ({ locale }) => {
         <div className="flex flex-col md:flex-row justify-center md:justify-end h-full   ">
 
 
-          <div className="w-full md:w-1/2 h-full  flex space-x-3 items-center  justify-center md:justify-end    ">
-            <SearchBar dataType="products" topBar={true} />
+          <div className="w-full md:w-1/2 h-full  flex space-x-3 items-center  justify-center md:justify-end ">
+            <SearchBar locale={locale} dictionary={dictionary} dataType="products" topBar={true} />
           </div>
 
-          <div className="w-full md:w-1/2 h-full  flex space-x-6 items-center  justify-center md:justify-end mb-3 md:mb-0    ">
+          <div className="w-full md:w-1/2 h-full  flex space-x-6 rtl:space-x-5   items-center  justify-center md:justify-end mb-3 md:mb-0   first-letter: ">
 
-            <Link href={`/contact`} className=" border border-textBlue rounded-sm text-sm px-3 py-1 text-textBlue hover:text-lightColorHover" > {dictionary.topbar.customerSupport.button.getQuote}</Link>
+            <Link href={`/contact`} className=" border border-textBlue rounded-sm text-sm px-3 py-1 text-textBlue hover:text-lightColorHover     " > {dictionary.topbar.customerSupport.button.getQuote}</Link>
 
 
-            <div className='flex flex-row'>
-              <div className="flex items-center justify-center pr-3 ">
+            <div className='flex flex-row    '>
+              <div className="flex items-center justify-center pr-3 rtl:pl-3   ">
                 <TfiHeadphoneAlt size="25" className='text-textBlue' />
               </div>
               <div className='text-sm font-light'>
@@ -62,7 +62,7 @@ const Topbar = async ({ locale }) => {
           <Link href={`/${locale}`} className="    ">
 
             <Image className='w-72 md:w-72'
-              src="/images/chempol.png"
+              src={locale === 'ar' ? "/images/chempol-ar.png" : "/images/chempol.png"}
               width={350}
               height={150}
               priority

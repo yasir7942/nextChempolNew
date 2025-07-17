@@ -8,9 +8,15 @@ import { useState, useRef, useEffect } from 'react';
 import { getImageUrl } from "@/libs/helper";
 import { LineWave } from 'react-loader-spinner';
 import moment from "moment/moment";
+import { getDictionary } from "@/libs/getDictionary";
 
 
-const SearchBar = () => {
+const SearchBarForPost = ({ locale, dictionary }) => {
+
+
+
+
+
 
   const [postData, setPostData] = useState([]);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -31,7 +37,7 @@ const SearchBar = () => {
 
         //console.log("****************query send*****************");
         //console.log(query);
-        const result = await getPostBySearch(query);
+        const result = await getPostBySearch(locale, query);
         setPostData(result.data);
         console.log("****************serech****result***data*****************");
         console.log(result.data);
@@ -80,7 +86,7 @@ const SearchBar = () => {
     <div className="flex flex-col relative z-[100] w-full p-2 md:p-6  text-gray-800 text-center justify-center" ref={searchContainerRef}>
       <form className="flex item bg-center w-full gap-2 font-light text-gray-900">
         <input
-          placeholder={'Search  Posts'}
+          placeholder={dictionary.topbar.searchBlogs}
           name="searchbar"
           ref={inputRef}
           onChange={(e) => handleSearch(e.target.value)}
@@ -108,7 +114,7 @@ const SearchBar = () => {
           </div>
         ) : (<span></span>)}
         <button onClick={clearSearch} className="px-5 py-2 whitespace-nowrap bg-white border text-gray-800 border-gray-500 border-solid">
-          Clear
+          {dictionary.topbar.clear}
         </button>
 
       </form>
@@ -122,7 +128,7 @@ const SearchBar = () => {
             postData?.map((post, index) => (
               <div key={post.id} className="flex flex-col space-y-3 ">
                 <div className="flex justify-start space-x-5 items-center pl-1">
-                  <Link href={`/blog/${post.slug}`}>
+                  <Link href={`/${locale}/blog/${post.slug}`}>
                     <Image
                       src={getImageUrl(post?.featureImage?.formats?.thumbnail.url)}
                       className="items-center w-16"
@@ -131,7 +137,7 @@ const SearchBar = () => {
                       alt={post?.featureImage?.alternativeText ?? post.title}
                     />
                   </Link>
-                  <Link href={`/blog/${post.slug}`} className="flex flex-col items-start space-y-2">
+                  <Link href={`/${locale}/blog/${post.slug}`} className="flex flex-col items-start space-y-2">
                     <div className="font-normal text-sm text-black tracking-widest">
                       {post.title}
                     </div>
@@ -155,7 +161,7 @@ const SearchBar = () => {
           )}
         </div>
 
-        <Link href={`/search?s=${(searchQuery)}`} className=" hidden w-full  h-auto mt-5 py-1 text-base bg-slate-200 
+        <Link href={`/${locale}/search?s=${(searchQuery)}`} className=" hidden w-full  h-auto mt-5 py-1 text-base bg-slate-200 
         font-normal tracking-wider text-center text-black   first-letter:uppercase">View More Search Results</Link>
       </div>
     </div>

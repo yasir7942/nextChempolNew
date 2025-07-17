@@ -145,7 +145,7 @@ export default async function RootLayout({ children, params }) {
 
 
   return (
-    <html lang={lang}>
+    <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} >
 
 
 

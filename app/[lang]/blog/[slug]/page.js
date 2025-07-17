@@ -1,15 +1,16 @@
-import BodyDataParse from "@/app/components/elements/data-parse-content";
-import SEOSchema from "@/app/components/elements/seo-schema";
-import BlogContainer from "@/app/components/layout/blog-container";
-import PaddingContainer from "@/app/components/layout/padding-container";
-import { geAllPostSlug, geSinglePost } from "@/app/data/loader";
+import BodyDataParse from "../../components/elements/data-parse-content";
+import SEOSchema from "../../components/elements/seo-schema";
+import BlogContainer from "../../components/layout/blog-container";
+import PaddingContainer from "../../components/layout/padding-container";
+import { geAllPostSlug, geSinglePost } from "../../data/loader";
 import siteConfig from "@/config/site";
 import { getBaseUrl, getFirstDescriptionText, getImageUrl, validateCanonicalSlug } from "@/libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
 import { cache } from 'react';
 import { notFound } from "next/navigation";
-import Breadcrumbs from "@/app/components/elements/breadcrumbs";
+import Breadcrumbs from "../../components/elements/breadcrumbs";
+import { getDictionary } from "@/libs/getDictionary";
 
 
 // Cache the geSinglePost function
@@ -17,7 +18,10 @@ const cachedGeSinglePost = cache(geSinglePost);
 
 export async function generateMetadata(props) {
   const params = await props.params;
-  const postData = await cachedGeSinglePost(params.slug);
+  const lang = params?.lang || 'en';
+  const postData = await cachedGeSinglePost(lang, params.slug);
+
+
 
   if (!postData || !postData.data[0]) {
     notFound();
@@ -32,7 +36,7 @@ export async function generateMetadata(props) {
     rebotStatus: postData.data[0].seo?.preventIndexing,
     canonicalLinks: postData.data[0].seo?.canonicalLinks,
     dataPublishedTime: postData.data[0].publishedAt,
-    category: postData.data[0].post_categories[0].title,
+    category: postData.data[0]?.post_categories[0]?.title,
     image: process.env.NEXT_PUBLIC_ADMIN_BASE_URL + postData.data[0].featureImage.url,
     imageAlternativeText: postData.data[0].featureImage?.alternativeText,
     imageExt: postData.data[0].featureImage?.mime,
@@ -67,8 +71,14 @@ export const generateStaticParams = async () => {
 
 const SingleBlogPage = async props => {
   const params = await props.params;
+  const { lang } = await params || {};
+  const dictionary = await getDictionary(lang);
 
-  const postData = await cachedGeSinglePost(params.slug);
+
+  const postData = await cachedGeSinglePost(lang, params.slug);
+
+
+
 
   if (!postData || !postData.data[0]) {
     notFound();
@@ -77,8 +87,8 @@ const SingleBlogPage = async props => {
 
 
   const breadcrumbsData = [
-    { title: "Home", url: "/" },
-    { title: `Blog`, url: `${getBaseUrl()}/blog` },
+    { title: dictionary.navigation.home, url: "/" },
+    { title: dictionary.navigation.blog, url: `${getBaseUrl()}/${lang}/blog` },
     { title: `${postData.data[0]?.title}` }
   ];
 
@@ -168,7 +178,7 @@ const SingleBlogPage = async props => {
 
       </PaddingContainer>
 
-      <BlogContainer />
+      <BlogContainer locale={lang} />
 
     </div>
   );

@@ -1,5 +1,11 @@
 {
     "topbar": {
+        "searchProducts": "Search Products",
+        "searchBlogs": "Search Blogs",
+        "search": "Search",
+        "viewMoreSearch": "View More Search Results",
+
+        "clear": "Clear",
         "customerSupport": {
             "title": "Customer Support & Sales",
             "button": {
@@ -18,12 +24,17 @@
         "chempolDescription": "Choose the top-quality lubricant additives, polymers, and specialty chemicals for maximizing your Petrochemical performance with Chempol.co.uk",
         "contact": "Contact",
         "blog": "Blog",
+        "blogs": "Blogs",
         "faq": "FAQs",
         "about": "About",
         "privacyPolicy": "Privacy Policy",
         "termsOfService": "Terms of Service",
         "productCategory":"Product Category",
-        "menu":"Menu"
+        "menu":"Menu",
+        "readMore": "Read More",
+        "page": "Page",
+        "q": "Q:",
+        "a": "A:"
 
     },
             "slider": {
@@ -62,7 +73,7 @@
     },
     "cta":{
         "workWithUs":"Work With Us",
-        "grobalNerk":"WE ARE A GLOBAL <br />  NETWORK OF EXPERTS",
+        "grobalNerk":"WE ARE A GLOBAL    NETWORK OF EXPERTS",
         "contactus":"Contact Us"
     },
     "footer": {
@@ -80,5 +91,36 @@
         "sunday": "Sunday",
          "clock": "9:00 AM - 6:00 PM"
 
+    },
+     "contactPage": {
+        "yourName": "Your Name",
+        "phonelable": "Phone",
+        "phone": "Valid Phone",
+         "emailLable": "Email",
+        "email": "Your Email",
+        "countryLable": "Country",
+        "country": "Your Country",
+        "messageLable": "Message",
+        "message": "Your Message",
+        "notice": "Please avoid including hyperlinks or URLs in your message.",
+        "send": "Send",
+        "ourDetails1": "Our Contact Details",
+        "ourDetails2": "It is a long Established fact that a reader will be distract readable contect of a page",
+        "map":"Open in Google Map",
+        "sucessSend":"Email sent successfully",
+        "failSend":"Failed to send email: System Error Email Us"
+    },
+
+    "productPage": {
+        "application": "Application",
+        "description": "Description",
+        "tds": "Technical Data Sheet (TDS)",
+        "msds": "Material Safety Data Sheet ",
+        "productCategories": "Products Categories",
+        "property": "Property",
+        "method": "Method", 
+        "value": "Value"
+        
     }
+
 }

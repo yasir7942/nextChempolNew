@@ -5,7 +5,7 @@ import { useRef } from "react";
 
 
 
-export function SearchComponenet() {
+export function SearchComponenet({ locale, dictionary }) {
 
 
   const inputRef = useRef(null);
@@ -52,7 +52,7 @@ export function SearchComponenet() {
 
       <div className="flex item bg-center w-full gap-2 font-light text-gray-900">
         <input
-          placeholder={'Search'}
+          placeholder={dictionary.topbar.search}
           name="searchbar"
           ref={inputRef}
           onChange={(e) => handleSearch(e.target.value)}
@@ -60,7 +60,7 @@ export function SearchComponenet() {
           className="w-full px-5 py-2 text-gray-700 text-base bg-transparent outline-none border border-gray-300 border-solid"
         />
         <button onClick={clearSearch} className="px-5 py-2 whitespace-nowrap bg-white border border-gray-300 border-solid">
-          Clear
+          {dictionary.topbar.clear}
         </button>
       </div>
 

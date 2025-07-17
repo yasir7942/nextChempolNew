@@ -26,8 +26,7 @@ export async function generateMetadata(props) {
   // const lang = await props.lang;
   // const { lang } = await props.params;
   const { lang } = await props.params || {};
-
-
+  //const { lang } = props.params;
   const pageData = await cachedGetHomePage(lang);
 
   const metadataParams = {
@@ -55,7 +54,7 @@ export async function generateMetadata(props) {
 
 export default async function Home({ params }) {
 
-  //console.log(await params);
+
   const { lang } = await params || {};
 
   const dictionary = await getDictionary(lang);
@@ -73,11 +72,11 @@ export default async function Home({ params }) {
       <SpeakableSchema pageTitle={homeData.title} pageUrl={homeData.seo?.canonicalLinks ?? "/"} />
       <SEOSchema schemaList={homeData.seo?.schema} />
 
-      {/* <!--powering progress--> */}
+      {/* <!--powering progress--> {`${lang === 'ar' ? 'rtl' : 'ltr'}` */}
 
-      <div className=" flex flex-col h-auto md:flex-row  w-full md:space-x-2  px-4 md:px-20 mt-10 justify-center" >
+      <div className=" flex flex-col h-auto md:flex-row  w-full md:space-x-2  px-4 md:px-20 mt-10 justify-center " >
         {/* <!--text--> */}
-        <div className="flex flex-col text-left ">
+        <div className="flex flex-col  ">
           <h2 className=" *:first-letter: text-2xl md:text-3xl text-center font-semibold text-textBlue">{dictionary.homePage.title}</h2>
           <p className="text-darkGary mt-3 text-justify text-sm font-normal  pr-5  max-w-6xl ">{dictionary.homePage.description}</p>
         </div>
@@ -88,7 +87,7 @@ export default async function Home({ params }) {
       {/* <!--Cards container--> */}
 
       <PaddingContainer  >
-        <div className="flex flex-col md:flex-row  justify-center h-auto space-y-5 md:space-y-0 md:space-x-2 lg:space-x-6  md:pb-5      mt-2 md:mt-10">
+        <div className="flex flex-col md:flex-row  justify-center h-auto space-y-5 md:space-y-0 md:space-x-2 lg:space-x-6  md:pb-5      mt-2 md:mt-10 rtl:gap-3  rtl:md:gap-2  rtl:lg:gap-6 ">
 
           <CharcoalContentBox title={dictionary.homePage.aboutChempol}
             description={dictionary.homePage.aboutChempolDescription}
@@ -114,7 +113,7 @@ export default async function Home({ params }) {
 
       <BlogContainer locale={lang} />
 
-      <div className="bg-[#F2F2F2] w-full h-auto pt-14 pb-10">
+      <div className="bg-[#F2F2F2] w-full h-auto pt-14 pb-10" dir="ltr">
 
         <PaddingContainer className=" ">
           <h3 className=" text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize r   ml-5 z-20" >{dictionary.homePage.latestMediaUpdate} </h3>

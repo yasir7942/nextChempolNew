@@ -12,20 +12,20 @@ const CTAcard = async ({ locale }) => {
 
 
       {/* overlay */}
-      <div className="absolute  inset-0 z-10 bg-gray-400/10"></div>
+      <div className="absolute  inset-0 z-10 bg-gray-400/20"></div>
       {/* Image */}
       <Image
         fill
         src="/images/Chempol-CTA-BANNER.webp"
-        className="w-full object-cover object-center "
+        className="w-full object-cover object-center  "
         alt="Work with Us WE ARE A GLOBAL NETWORK OF EXPERTS "
       />
 
       <PaddingContainer>
         {/* Text */}
-        <div className="relative z-30 ">
-          <div className="uppercase text-lg text-gray-700 font-light ">{dictionary.cta.workWithUs}</div>
-          <h3 className="text-2xl uppercase tracking-wider text-gray-800 mt-5">{dictionary.cta.grobalNerk}</h3>
+        <div className="relative z-30 bg-[#023b6873] rounded-sm w-fit p-6 ">
+          <div className="uppercase text-xl   font-light  text-white ">{dictionary.cta.workWithUs}</div>
+          <h3 className="text-3xl uppercase tracking-wider   mt-4   text-white ">{dictionary.cta.grobalNerk}</h3>
 
           {/* <!--button--> */}
           <div className=" flex  items-center text-center pt-5 pl-3 w-52 md:pl-0" >
