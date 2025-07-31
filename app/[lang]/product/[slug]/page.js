@@ -309,7 +309,7 @@ const SingleProductPage = async props => {
                       >
                         <div className="py-3 bg-white text-black border-[3px] px-4 border-textLightBlue flex  items-center  font-light text-left">
                           <div>{dictionary.productPage.tds}
-                            <span className="text-gray-500 pl-3">PDF</span></div>
+                            <span className="text-gray-500 pl-3 rtl:pr-3">PDF</span></div>
 
                         </div>
                       </a>
@@ -325,7 +325,7 @@ const SingleProductPage = async props => {
                         download
                       >
                         <div className="py-3  bg-white text-black border-[3px] px-4 border-textLightBlue flex  items-center  font-light text-left">
-                          <div>{dictionary.productPage.msds} <span className="text-gray-500 pl-3">PDF</span></div>
+                          <div>{dictionary.productPage.msds} <span className="text-gray-500 pl-3 rtl:pr-3">PDF</span></div>
 
                         </div>
                       </a>
@@ -348,7 +348,7 @@ const SingleProductPage = async props => {
               {productData.data[0].table && productData.data[0].table.length > 0 && (
                 <div className=" mt-4 ">
 
-                  <table className="w-full lg:w-[80%] xl:w-[60%] 2xl:w-[60%] text-left border-collapse">
+                  <table className="w-full lg:w-[80%] xl:w-[60%] 2xl:w-[60%] text-left border-collapse rtl:text-right" >
                     {/* Table Header */}
                     <thead>
                       <tr className="bg-[#F7F7F7]">

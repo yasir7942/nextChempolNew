@@ -78,12 +78,12 @@ const ContactUs = async ({ params }) => {
 
         <div className="flex flex-col md:flex-row justify-center items-start md:space-x-20 2xl:space-x-28 mt-20">
           {/* contact form */}
-          <div className=" w-full text-gray-800">
+          <div className=" w-full text-gray-800  ">
             <ContactForm locale={lang} dictionary={dictionary} />
           </div>
 
           {/* map */}
-          <div className=" w-full   text-gray-800 mt-28 md:mt-10    ">
+          <div className=" w-full   text-gray-800 mt-28 md:mt-10  rtl:mt-0 rtl:pr-12   ">
             <h1 className="text-textBlue text-2xl font-semibold capitalize">{dictionary.contactPage.ourDetails1}</h1>
             <p className="text-gray-800 font-light " >{dictionary.contactPage.ourDetails2}</p>
 

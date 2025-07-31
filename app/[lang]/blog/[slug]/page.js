@@ -2,7 +2,7 @@ import BodyDataParse from "../../components/elements/data-parse-content";
 import SEOSchema from "../../components/elements/seo-schema";
 import BlogContainer from "../../components/layout/blog-container";
 import PaddingContainer from "../../components/layout/padding-container";
-import { geAllPostSlug, geSinglePost } from "../../data/loader";
+import { geSinglePost, getAllPostSlug } from "../../data/loader";
 import siteConfig from "@/config/site";
 import { getBaseUrl, getFirstDescriptionText, getImageUrl, validateCanonicalSlug } from "@/libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
@@ -11,7 +11,7 @@ import { cache } from 'react';
 import { notFound } from "next/navigation";
 import Breadcrumbs from "../../components/elements/breadcrumbs";
 import { getDictionary } from "@/libs/getDictionary";
-
+import { i18n } from "@/i18n.config";
 
 // Cache the geSinglePost function
 const cachedGeSinglePost = cache(geSinglePost);
@@ -49,24 +49,33 @@ export async function generateMetadata(props) {
 }
 
 
+// app/[lang]/blog/[slug]/page.js
 
-export const generateStaticParams = async () => {
+export async function generateStaticParams() {
+  console.log("🔍 generateStaticParams starting…", i18n.locales);
 
   try {
-    const postSlugs = await geAllPostSlug();
-    const paramsSlugs = postSlugs?.data?.map((post) => {
-      // console.log("*******Post slug: "+ post.slug);
-      return {
-        slug: post.slug
-      };
-    })
-    return paramsSlugs || [];
-  } catch (error) {
-    console.log(error);
-    throw new Error("Error Fetching generateStaticParams");
+    const locales = i18n.locales;   // ["en","ar","es"]
+    const params = [];
+
+    for (const locale of locales) {
+      console.log(`→ fetching slugs for locale="${locale}"`);
+      const response = await getAllPostSlug(locale);
+      const posts = response.data || [];
+      console.log(`   ↳ got ${posts.length} posts for ${locale}`);
+
+      for (const post of posts) {
+        params.push({ lang: locale, slug: post.slug });
+      }
+    }
+
+    console.log(`✅ generateStaticParams done, total pages: ${params.length}`);
+    return params;
+  } catch (err) {
+    console.error("❌ Error in generateStaticParams:", err);
+    return [];
   }
 }
-
 
 
 const SingleBlogPage = async props => {

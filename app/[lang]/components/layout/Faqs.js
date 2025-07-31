@@ -39,9 +39,9 @@ const FAQs = ({ dictionary, faqList, heading = "", text = "" }) => {
                 <Accordion type="single" collapsible>
                     {faqList.map((data) => (
                         <AccordionItem key={data.id} value={data.id}>
-                            <AccordionTrigger className="  text-black text-left  text-base font-normal rtl:text-right" >{dictionary.navigation.q} {data.question}</AccordionTrigger>
+                            <AccordionTrigger className="  text-black text-left  text-base font-normal rtl:text-right" >{dictionary.navigation.q}: {data.question}</AccordionTrigger>
                             <AccordionContent className="  text-black text-left  text-base font-light rtl:text-right" >
-                                {dictionary.navigation.a} {data.answer}
+                                {dictionary.navigation.a}: {data.answer}
                             </AccordionContent>
                         </AccordionItem>
                     ))}

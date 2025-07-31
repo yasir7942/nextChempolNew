@@ -47,7 +47,7 @@ export function PaginationComponent({ locale, dictionary, pageCount, totalPage, 
       <PaginationContent>
         <PaginationItem>
           <PaginationArrow
-            direction="left"
+            direction={locale == "ar" ? "right" : "left"}
             page={createPageURL(currentPage - 1)}
             isDisabled={currentPage <= 1}
           />
@@ -57,7 +57,7 @@ export function PaginationComponent({ locale, dictionary, pageCount, totalPage, 
         </PaginationItem>
         <PaginationItem>
           <PaginationArrow
-            direction="right"
+            direction={locale == "ar" ? "left" : "right"}
             page={createPageURL(currentPage + 1)}
             isDisabled={currentPage >= pageCount}
           />

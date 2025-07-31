@@ -51,8 +51,6 @@ const AboutUsPage = async ({ params }) => {
     const pageData = await cachedGetAboutPage(lang);
 
 
-
-
     return (
         <div>
             <SpeakableSchema pageTitle={pageData.title} pageUrl={pageData.seo?.canonicalLinks ?? "/about-us"} />
@@ -64,9 +62,7 @@ const AboutUsPage = async ({ params }) => {
 
             <PaddingContainer className="flex flex-col   " >
 
-
                 <div className="text-gray-700 font-light py-10 summary text-lg descriptionSpace"><BodyDataParse content={pageData.aboutus.description} /></div>
-
 
 
             </PaddingContainer>

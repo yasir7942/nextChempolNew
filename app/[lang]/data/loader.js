@@ -389,21 +389,74 @@ export async function getContactUsPageData(lang) {
 }
 
 
-export async function geAllProductsSlug() {
+export async function geAllProductsSlug(lang = 'en') {
+  const pageSize = 100;
+  let page = 1;
+  let allData = [];
+  let hasNextPage = true;
 
-  const productBlockQuery = qs.stringify({
+  while (hasNextPage) {
+    // Build the query string with pagination params
+    const query = qs.stringify(
+      {
+        locale: lang,
+        fields: ['slug', 'updatedAt'],
+        'pagination[page]': page,
+        'pagination[pageSize]': pageSize,
+      },
+      { encodeValuesOnly: true, arrayFormat: 'repeat' }
+    );
 
-    fields: ['slug', 'updatedAt']
-  });
-  return await fetchData("products", productBlockQuery);
+    // Fetch one batch of products
+    const response = await fetchData('products', query);
+    const { data, meta } = response;
+
+    // Accumulate the slugs
+    allData = allData.concat(data);
+
+    // Determine if there’s another page
+    const pagination = meta?.pagination;
+    hasNextPage = pagination && pagination.page < pagination.pageCount;
+    page++;
+  }
+
+  // Return in the same shape as your original helper
+  return { data: allData };
 }
 
-export async function geAllPostSlug() {
 
-  const blogBlockQuery = qs.stringify({
-    fields: ['slug', 'updatedAt']
-  });
-  return await fetchData("posts", blogBlockQuery);
+export async function getAllPostSlug(lang = 'en') {
+  const pageSize = 100;
+  let page = 1;
+  let allData = [];
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    // build Strapi query string
+    const query = qs.stringify(
+      {
+        locale: lang,
+        fields: ['slug', 'updatedAt'],
+        'pagination[page]': page,
+        'pagination[pageSize]': pageSize,
+      },
+      { encodeValuesOnly: true, arrayFormat: 'repeat' }
+    );
+
+    // fetch one “page” of posts
+    const response = await fetchData('posts', query);
+    const { data, meta } = response;
+
+    // add them to our accumulator
+    allData = allData.concat(data);
+
+    // check if there are more pages
+    const pagination = meta?.pagination;
+    hasNextPage = pagination && pagination.page < pagination.pageCount;
+    page++;
+  }
+
+  return { data: allData };
 }
 
 

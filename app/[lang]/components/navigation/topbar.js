@@ -9,6 +9,7 @@ import PaddingContainer from '../layout/padding-container';
 import SearchBar from '../layout/search-bar';
 import HomneCategoryMenuWrapper from '../layout/HomeCategoryMenuWrapper';
 import { getDictionary } from '@/libs/getDictionary';
+import LangSwitcher from './lang-switcher';
 
 
 
@@ -22,7 +23,7 @@ const Topbar = async ({ locale }) => {
     <div className='flex flex-col w-full   '>
 
       {/* <!--top bar--> */}
-      <section className="  w-full  h-32 md:h-12   px-4 md:px-20  bg-[#f2f2f2] ">
+      <section className="  w-full  h-32 md:h-16   px-4 md:px-20  bg-[#f2f2f2] ">
 
 
         <div className="flex flex-col md:flex-row justify-center md:justify-end h-full   ">
@@ -34,7 +35,9 @@ const Topbar = async ({ locale }) => {
 
           <div className="w-full md:w-1/2 h-full  flex space-x-6 rtl:space-x-5   items-center  justify-center md:justify-end mb-3 md:mb-0   first-letter: ">
 
-            <Link href={`/contact`} className=" border border-textBlue rounded-sm text-sm px-3 py-1 text-textBlue hover:text-lightColorHover     " > {dictionary.topbar.customerSupport.button.getQuote}</Link>
+            <LangSwitcher Locale={locale} />
+
+            <Link href={`/contact`} className=" border border-textBlue rounded-sm text-sm px-3 py-2 text-textBlue hover:text-lightColorHover  hidden md:block   " > {dictionary.topbar.customerSupport.button.getQuote}</Link>
 
 
             <div className='flex flex-row    '>

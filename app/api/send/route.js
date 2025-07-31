@@ -1,4 +1,5 @@
-import { EmailTemplate } from '@/app/components/elements/email-template';
+
+import { EmailTemplate } from "@/app/[lang]/components/elements/email-template";
 import fetch from "node-fetch";
 
 import { Resend } from 'resend';

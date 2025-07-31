@@ -12,28 +12,29 @@ const FretchVideos = ({ limitedVideo = false }) => {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [selectedVideoId, setSelectedVideoId] = useState(null);
 
-    const fetchVideos = async () => {
-        try {
-            const limitParam = limitedVideo ? "&pagination[pageSize]=4" : "";
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}videos?populate=*&sort=youtubePublishedAt:desc${limitParam}`);
-            if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
-
-
-            const json = await response.json();
-            const videos = json.data || [];
-
-            setYoutubeData(videos);
-        } catch (e) {
-            setError(e);
-            console.error("Error fetching Strapi video data:", e);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
+        const fetchVideos = async () => {
+            try {
+                const limitParam = limitedVideo ? "&pagination[pageSize]=50" : "";
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}videos?populate=*&sort=youtubePublishedAt:desc${limitParam}`
+                );
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch: ${response.statusText}`);
+                }
+
+                const json = await response.json();
+                setYoutubeData(json.data || []);
+            } catch (e) {
+                setError(e);
+                console.error("Error fetching Strapi video data:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchVideos();
-    }, []);
+    }, [limitedVideo]);
 
     const handleOpenPopup = (videoId) => {
         setSelectedVideoId(videoId);
@@ -45,27 +46,31 @@ const FretchVideos = ({ limitedVideo = false }) => {
         setIsPopupOpen(false);
     };
 
-    if (loading)
+    if (loading) {
         return (
             <div className="flex items-center justify-center mt-5 pb-16">
                 <div className="w-10 h-10 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
             </div>
         );
+    }
 
-    if (error) return <p>Error: {error.message}</p>;
+    if (error) {
+        return <p>Error: {error.message}</p>;
+    }
 
     return (
         <div className="overflow-x-auto font-serif">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-7 mt-6">
                 {youtubeData.map((video) => {
-
-                    console.log(video.title);
                     const videoId = video.videoId;
                     const thumbnailUrl = video.image?.url;
 
                     return (
                         <div key={video.id} className="w-full flex flex-col text-white md:text-left pb-14">
-                            <div className="relative cursor-pointer group" onClick={() => handleOpenPopup(videoId)}>
+                            <div
+                                className="relative cursor-pointer group"
+                                onClick={() => handleOpenPopup(videoId)}
+                            >
                                 <Image
                                     className="w-full opacity-75"
                                     src={getImageUrl(thumbnailUrl) || "/placeholder.jpg"}

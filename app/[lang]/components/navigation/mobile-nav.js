@@ -40,7 +40,7 @@ const MobileNavigation = ({ locale }) => {
     };
 
     fetchData();
-  }, []);
+  }, [locale]);
 
   // Fetch dictionary data on the client side using useEffect
   useEffect(() => {

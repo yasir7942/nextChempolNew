@@ -15,6 +15,7 @@ import Image from "next/image";
 
 import { Rings } from "react-loader-spinner";
 import React from "react";
+import Link from "next/link";
 
 function Slider({ locale, diction }) {
 
@@ -100,20 +101,20 @@ function Slider({ locale, diction }) {
 
               <div className="flex mt-6 text-white items-center justify-center space-x-4 rtl:gap-4">
                 <div>
-                  <a
+                  <Link
                     href="#our-products"
                     className="bg-textLightBlue border border-textLightBlue hover:bg-[#001a35] hover:text-textLightBlue text-[#001a35] uppercase px-5 py-2 font-semibold text-sm rounded-md transition duration-300 ease-in-out  "
                   >
                     {diction.slider.button.ourProduct}
-                  </a>
+                  </Link>
                 </div>
                 <div>
-                  <a
+                  <Link
                     href="/contact/"
                     className="bg-[#001a35] border border-textLightBlue hover:bg-textLightBlue hover:text-[#001a35] text-textLightBlue uppercase px-5 py-2   font-semibold text-sm rounded-md transition duration-300 ease-in-out"
                   >
                     {diction.slider.button.getInTouch}
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
