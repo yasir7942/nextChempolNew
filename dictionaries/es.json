@@ -114,5 +114,13 @@
   "property": "Propiedad",
   "method": "Método",
   "value": "Valor"
+},
+"imageObject": {
+    "creditText": "Chempol Aditivos y Especialidades Químicas",
+    "creatorName": "Chempol Aditivos y Especialidades Químicas",
+    "organization": "Organización",
+    "copyrightNoticeProduct": "Todas las imágenes de los productos de Chempol Aditivos y Especialidades Químicas son propiedad exclusiva de Chempol Aditivos y Especialidades Químicas. Estas imágenes fueron creadas por nuestra empresa, presentando nuestros productos diseñados de manera única. Cualquier uso, reproducción, distribución o modificación no autorizada de estas imágenes está estrictamente prohibida sin el consentimiento expreso por escrito de Chempol Aditivos y Especialidades Químicas. Para consultas sobre el uso de estas imágenes, por favor contáctenos.",
+    "copyrightNoticeBanner": "Los banners mostrados en este sitio web han sido creados mediante la modificación y mejora de imágenes obtenidas de Internet. Si bien hemos alterado significativamente estas imágenes, los derechos de autor originales pueden pertenecer a los creadores originales. Cualquier uso, reproducción, distribución o modificación no autorizada de estos banners sin el consentimiento expreso por escrito de Chempol Aditivos y Especialidades Químicas está prohibido. Para consultas sobre el uso de estos banners, por favor contáctenos."
 }
+
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Breadcrumbs({ breadcrumbs = [] }) {
 
-    console.log("---breadcrumbsData---");
+
 
     return (
         <nav aria-label="Breadcrumb" className="text-sm text-gray-600 mb-4">

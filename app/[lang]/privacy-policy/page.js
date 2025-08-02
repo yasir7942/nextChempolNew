@@ -5,7 +5,11 @@ import siteConfig from "@/config/site";
 
 
 export async function generateMetadata(props) {
+
+
     const params = await props.params;
+    const locale = params?.lang || 'en';
+
 
 
     const metadataParams = {

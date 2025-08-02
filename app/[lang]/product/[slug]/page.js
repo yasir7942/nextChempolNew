@@ -1,7 +1,7 @@
 import BodyDataParse from "../../components/elements/data-parse-content";
 import GroupProducts from "../../components/layout/group-products";
 import PaddingContainer from "../../components/layout/padding-container";
-import { geAllProductsSlug, getSingleProduct } from "../../data/loader";
+import { geAllProductsSlug, getAllProductsSlug, getSingleProduct } from "../../data/loader";
 import { getBaseUrl, getFirstDescriptionText, getImageUrl } from "../../../../libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
@@ -12,6 +12,8 @@ import SEOSchema from "../../components/elements/seo-schema";
 import ProductCategoryMenuWrapper from "../../components/layout/ProductCategoryMenuWrapper";
 import Breadcrumbs from "../../components/elements/breadcrumbs";
 import { getDictionary } from "@/libs/getDictionary";
+import { i18n } from "@/i18n.config";
+
 
 
 
@@ -21,20 +23,31 @@ const cachedgetSingleProduct = cache(getSingleProduct);
 
 
 
-export const generateStaticParams = async () => {
+
+export async function generateStaticParams() {
+
   try {
-    const productSlugs = await geAllProductsSlug();
+    const locales = i18n.locales;   // ["en","ar","es"]
+    const params = [];
 
-    const paramsSlugs = productSlugs?.data?.map((product) => {
-      return {
-        slug: product.slug
-      };
-    });
+    for (const locale of locales) {
+      console.log(`→ fetching slugs for locale="${locale}"`);
+      const response = await getAllProductsSlug(locale);
+      const products = response.data || [];
 
-    return paramsSlugs || [];
-  } catch (error) {
-    console.log(error);
-    throw new Error("Error Fetching generateStaticParams");
+      // console.log("product list", products);
+      console.log(`   ↳ got ${products.length} products for ${locale}`);
+
+      for (const product of products) {
+        params.push({ lang: locale, slug: product.slug });
+      }
+    }
+
+    console.log(`✅ generateStaticParams done, total pages: ${params.length}`);
+    return params;
+  } catch (err) {
+    console.error("❌ Error in generateStaticParams:", err);
+    return [];
   }
 }
 
@@ -68,9 +81,11 @@ export async function generateMetadata(props) {
   };
 
 
+  const metaData = await generatePageMetadata({ type: "product", path: "/product/", params: metadataParams, lang: locale, });
 
 
-  return await generatePageMetadata({ type: "product", path: "/product/", params: metadataParams });
+
+  return metaData
 }
 
 
@@ -108,7 +123,7 @@ const SingleProductPage = async props => {
 
   const breadcrumbsData = [
     { title: dictionary.navigation.home, url: "/" },
-    { title: `${category}`, url: `${getBaseUrl()}/product-category/${categorySlug}` },
+    { title: `${category}`, url: `${getBaseUrl()}/${lang}/product-category/${categorySlug}` },
     { title: `${productData.data[0]?.title}` }
   ];
 
@@ -226,6 +241,8 @@ const SingleProductPage = async props => {
     },
     "copyrightNotice": siteConfig.imageObject.copyrightNoticeProduct
   };
+
+
 
 
   return (

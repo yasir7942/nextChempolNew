@@ -90,7 +90,12 @@ export async function generateMetadata(props) {
     imageExt: categoryData.data[0].image?.mime,
   };
 
-  return await generatePageMetadata({ type: "category", path: "/product-category/", params: metadataParams });
+  const metaData = await generatePageMetadata({ type: "category", path: "/product-category/", params: metadataParams, lang: lang });
+
+  console.log("-------------------------Product Country--------------------------------");
+  console.log(metaData);
+
+  return metaData;
 }
 
 
@@ -116,13 +121,9 @@ const ProductCategory = async props => {
   }
 
   const currentPage = Number(searchParams.page) || 1;
-
   // product show by category
-
   const productData = await getProductsByCategory(lang, params.pcategory, currentPage, pageSize);
   //const productData = await cachedGetingleProductCategory(params.pcategory, currentPage, pageSize);
-
-
 
   const PageCount = productData.meta.pagination.pageCount;
   const totalPage = productData.meta.pagination.total;
@@ -139,8 +140,8 @@ const ProductCategory = async props => {
   /****issue is some time arabic category not lin with arabic product that issue  hand this issue with conditions and reoslve it ** */
 
 
-  console.log("-----------------------products category--------------------------------------------------");
-  console.dir(productData, { depth: null });
+  // console.log("-----------------------products category--------------------------------------------------");
+  //  console.dir(productData, { depth: null });
   //console.log(productData);
   //console.log("---------------------------End--------p category---------------end-----------------------");
   // console.log(productData);
@@ -156,7 +157,10 @@ const ProductCategory = async props => {
       {/* title={productData?.data[0]?.product_categories.data[0]?.title}  */}
 
 
-      <TopBanner banner="/images/product-banner.jpg" title={productData?.data[0]?.product_categories[0]?.title} title2={categoryData.data[0]?.seo?.seoDesctiption ? categoryData.data[0]?.seo?.seoDesctiption : ""} />
+      <TopBanner banner="/images/product-banner.jpg"
+        title={productData?.data[0]?.product_categories[0]?.title}
+        title2={categoryData.data[0]?.seo?.seoDesctiption ? categoryData.data[0]?.seo?.seoDesctiption : ""}
+        dictionary={dictionary} />
 
 
 
@@ -221,8 +225,6 @@ const ProductCategory = async props => {
           {faqs && faqs.length > 0 && <SingleTab heading={dictionary.navigation.faq} faqList={faqs} />}
 
         </div>
-
-
 
       </PaddingContainer>
 

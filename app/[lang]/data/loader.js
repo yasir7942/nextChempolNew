@@ -35,7 +35,7 @@ export async function fetchData(path, filter) {
   url.search = filter;
 
   // show API links
-  console.warn(url.href);
+  // console.warn(url.href);
 
   try {
 
@@ -389,7 +389,7 @@ export async function getContactUsPageData(lang) {
 }
 
 
-export async function geAllProductsSlug(lang = 'en') {
+export async function getAllProductsSlug(lang = 'en') {
   const pageSize = 100;
   let page = 1;
   let allData = [];

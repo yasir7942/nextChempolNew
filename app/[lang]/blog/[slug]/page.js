@@ -43,33 +43,32 @@ export async function generateMetadata(props) {
   };
 
 
+  const metaData = await generatePageMetadata({ type: "blog", path: "/blog/", params: metadataParams, lang: lang });
 
-
-  return await generatePageMetadata({ type: "blog", path: "/blog/", params: metadataParams });
+  return metaData;
 }
 
 
 // app/[lang]/blog/[slug]/page.js
 
 export async function generateStaticParams() {
-  console.log("🔍 generateStaticParams starting…", i18n.locales);
 
   try {
     const locales = i18n.locales;   // ["en","ar","es"]
     const params = [];
 
     for (const locale of locales) {
-      console.log(`→ fetching slugs for locale="${locale}"`);
+      //console.log(`→ fetching slugs for locale="${locale}"`);
       const response = await getAllPostSlug(locale);
       const posts = response.data || [];
-      console.log(`   ↳ got ${posts.length} posts for ${locale}`);
+      // console.log(`   ↳ got ${posts.length} posts for ${locale}`);
 
       for (const post of posts) {
         params.push({ lang: locale, slug: post.slug });
       }
     }
 
-    console.log(`✅ generateStaticParams done, total pages: ${params.length}`);
+    // console.log(`✅ generateStaticParams done, total pages: ${params.length}`);
     return params;
   } catch (err) {
     console.error("❌ Error in generateStaticParams:", err);

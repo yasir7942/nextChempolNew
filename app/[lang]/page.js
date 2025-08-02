@@ -22,11 +22,13 @@ import { getDictionary } from "@/libs/getDictionary";
 
 const cachedGetHomePage = cache(getHomePage);
 
-export async function generateMetadata(props) {
+export async function generateMetadata({ params }) {
   // const lang = await props.lang;
   // const { lang } = await props.params;
-  const { lang } = await props.params || {};
+  //const { lang } = await props.params || {};
   //const { lang } = props.params;
+
+  const { lang } = await params;
   const pageData = await cachedGetHomePage(lang);
 
   const metadataParams = {
@@ -45,7 +47,9 @@ export async function generateMetadata(props) {
     //lang: lang,
   };
 
-  return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+  const metaData = await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+
+  return metaData
 }
 
 
@@ -56,6 +60,7 @@ export default async function Home({ params }) {
 
 
   const { lang } = await params || {};
+
 
   const dictionary = await getDictionary(lang);
   const homeData = await cachedGetHomePage(lang);

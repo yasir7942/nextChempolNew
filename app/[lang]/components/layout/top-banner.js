@@ -4,7 +4,8 @@ import { getImageUrl } from "@/libs/helper";
 import siteConfig from "@/config/site";
 
 
-const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "" }) => {
+
+const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", dictionary = "" }) => {
 
 
 
@@ -18,16 +19,17 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "" }) 
     "contentUrl": getImageUrl(banner),
     "license": siteConfig.imageObject.license,
     "acquireLicensePage": siteConfig.imageObject.acquireLicensePage,
-    "creditText": siteConfig.imageObject.creditText,
+    "creditText": dictionary?.imageObject.creditText,
     "creator": {
-      "@type": "Organization",
-      "name": siteConfig.imageObject.creatorName,
+      "@type": dictionary?.imageObject.organization,
+      "name": dictionary?.imageObject.creatorName,
     },
-    "copyrightNotice": siteConfig.imageObject.copyrightNoticeBanner
+    "copyrightNotice": dictionary?.imageObject.copyrightNoticeBanner
   };
 
 
-
+  console.log("--------------------------------banner Schema------------------------------------");
+  console.log(jsonLd);
 
 
   return (

@@ -1,6 +1,6 @@
 
 
-import { geAllProductsSlug, geProductCategoryLeftMenu, getAllPostSlug } from "./data/loader";
+import { geProductCategoryLeftMenu, getAllPostSlug, getAllProductsSlug } from "./data/loader";
 
 export default async function sitemap() {
 
@@ -19,7 +19,7 @@ export default async function sitemap() {
   })
 
   //products
-  const products = await geAllProductsSlug();
+  const products = await getAllProductsSlug();
   const productsMap = products?.data?.map((product) => {
     return {
       url: `${baseURL}/product/${product.slug}`,

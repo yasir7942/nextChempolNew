@@ -43,8 +43,8 @@ export const metadata = {
 export default async function RootLayout({ children, params }) {
 
   const { lang } = await params || {};
-
-
+  // const p = await params;
+  //const { lang } = p;
 
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;

@@ -1,7 +1,7 @@
 // utils/metadata.js
 import { getFirstDescriptionText, validateCanonicalSlug, getImageUrl } from "@/libs/helper";
 
-export async function generateMetadata({ type, path, params }) {
+export async function generateMetadata({ type, path, params, lang = "en" }) {
 
   // langaue need to add in metadata
 
@@ -26,7 +26,7 @@ export async function generateMetadata({ type, path, params }) {
   const finalRebotStatus = rebotStatus !== true;  // rebotStatus ture means prevent Indexing
   const autoCanonicalSlug = path + pageSlug + "/";
   const manualCanonicalSlug = validateCanonicalSlug(canonicalLinks?.trim());
-  const canonicalLink = process.env.NEXT_PUBLIC_BASE_URL + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug);
+  const canonicalLink = process.env.NEXT_PUBLIC_BASE_URL + `/${lang}` + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug);
   const finalImageText = imageAlternativeText ? imageAlternativeText : finalSeoTitle;
 
 
@@ -43,9 +43,9 @@ export async function generateMetadata({ type, path, params }) {
     alternates: {
       canonical: canonicalLink,
       languages: {
-        'en': canonicalLink,
-        'ar': canonicalLink,
-        'es': canonicalLink,
+        'en': process.env.NEXT_PUBLIC_BASE_URL + `/en` + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug),
+        'ar': process.env.NEXT_PUBLIC_BASE_URL + `/ar` + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug),
+        'es': process.env.NEXT_PUBLIC_BASE_URL + `/es` + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug)
       },
     },
     openGraph: {
@@ -56,8 +56,8 @@ export async function generateMetadata({ type, path, params }) {
           "type": imageExt
         }
       ],
-      locale: 'en',
-      url: process.env.NEXT_PUBLIC_BASE_URL + canonicalLink,
+      locale: lang,
+      url: image,
       type: 'website',
       publishedTime: dataPublishedTime,
     },
