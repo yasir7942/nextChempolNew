@@ -92,8 +92,8 @@ export async function generateMetadata(props) {
 
   const metaData = await generatePageMetadata({ type: "category", path: "/product-category/", params: metadataParams, lang: lang });
 
-  console.log("-------------------------Product Country--------------------------------");
-  console.log(metaData);
+  // console.log("-------------------------Product Country--------------------------------");
+  //console.log(metaData);
 
   return metaData;
 }

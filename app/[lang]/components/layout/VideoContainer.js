@@ -8,8 +8,6 @@ import TopBanner from "../components/layout/top-banner";
 
 
 
-
-
 export async function generateMetadata(props) {
     const params = await props.params;
 
@@ -29,16 +27,14 @@ export async function generateMetadata(props) {
     };
 
     return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+
 }
-
-
-
 
 
 const ProductReport = () => {
     return (
         <div>
-            <TopBanner banner="/images/product-banner.jpg" title="Youtube Chempol podcasts" />
+            {/**  <TopBanner banner="/images/product-banner.jpg" title="Youtube Chempol podcasts" />*/}
 
             <div className="mt-5 bg-white w-full h-auto p-5">
 

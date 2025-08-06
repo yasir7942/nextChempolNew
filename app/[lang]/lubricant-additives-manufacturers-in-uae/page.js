@@ -50,7 +50,7 @@ export async function generateMetadata(props) {
         imageExt: siteConfig.ogImageExt,
     };
 
-    return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+    return await generatePageMetadata({ type: "page", path: "", params: metadataParams, lang: locale });
 }
 
 
@@ -74,7 +74,7 @@ const Company = async ({ params }) => {
             <SEOSchema schemaList={pageData.seo?.schema} />
 
 
-            <TopBanner banner="/images/product-banner.jpg" title={pageData.topBanner1} title2={pageData.topBanner2} />
+            <TopBanner banner="/images/product-banner.jpg" title={pageData.topBanner1} title2={pageData.topBanner2} dictionary={dictionary} />
 
 
             <div className="  w-full h-auto py-10 bg-gray-200">

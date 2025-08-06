@@ -5,13 +5,16 @@ import PaddingContainer from "../components/layout/padding-container";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import FretchVideos from "../components/layout/FretchVideos";
 import TopBanner from "../components/layout/top-banner";
+import { getDictionary } from "@/libs/getDictionary";
 
 
 
 
 
 export async function generateMetadata(props) {
+
     const params = await props.params;
+    const locale = params?.lang || 'en';
 
     const metadataParams = {
         pageTitle: "Chempol Videos",
@@ -28,26 +31,23 @@ export async function generateMetadata(props) {
         imageExt: "",
     };
 
-    return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+    return await generatePageMetadata({ type: "page", path: "", params: metadataParams, lang: locale });
 }
 
 
 
+const Videos = async ({ params }) => {
 
 
-const ProductReport = () => {
+    const { lang } = await params || {};
+    const dictionary = await getDictionary(lang);
+
     return (
         <div>
-            <TopBanner banner="/images/product-banner.jpg" title="Latest Videos and Podcasts" />
-
+            <TopBanner banner="/images/product-banner.jpg" title="Latest Videos and Podcasts" dictionary={dictionary} />
             <div className="mt-5 bg-white w-full h-auto p-5">
-
-
                 <PaddingContainer>
-
                     <h3 className="*:first-letter: text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize r -mt-3 ml-5 z-20" >New Releases and Events</h3>
-
-
                     <FretchVideos />
                 </PaddingContainer>
 
@@ -58,4 +58,4 @@ const ProductReport = () => {
     )
 }
 
-export default ProductReport
+export default Videos

@@ -8,7 +8,6 @@ import siteConfig from "@/config/site";
 const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", dictionary = "" }) => {
 
 
-
   if (!banner || banner == null || banner.length == 0) return <div className=" mt-32"></div>
 
   // image schema for seo
@@ -28,18 +27,14 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", di
   };
 
 
-  console.log("--------------------------------banner Schema------------------------------------");
-  console.log(jsonLd);
+
 
 
   return (
     // <!--Top Banner-->
-
     <>
       <script type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
-
 
       <section className=" relative hidden md:block  z-20 w-full h-[270px]  " >
 
@@ -50,7 +45,7 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", di
             <div className="text-textLightBlue capitalize font-semibold text-xl md:text-2xl mx-auto">
               {title}
             </div>
-            <div className="w-full   text-white font-light max-w-screen-md xl:max-w-screen-lg 2xl:max-w-screen-2xl text-center text-sm md:text-xl mx-auto overflow-hidden">
+            <div className="w-full text-white font-light max-w-screen-md xl:max-w-screen-lg 2xl:max-w-screen-2xl text-center text-sm md:text-xl mx-auto overflow-hidden">
               {title2}
             </div>
           </div>

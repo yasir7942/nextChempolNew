@@ -47,7 +47,7 @@ export async function generateMetadata({ params }) {
     //lang: lang,
   };
 
-  const metaData = await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+  const metaData = await generatePageMetadata({ type: "page", path: "", params: metadataParams, lang: lang });
 
   return metaData
 }

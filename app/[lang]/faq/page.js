@@ -16,7 +16,6 @@ export async function generateMetadata(props) {
     const params = await props.params;
     const locale = params?.lang || 'en';
 
-
     const pageData = await cachedGetFAQPage(locale);
 
     const metadataParams = {
@@ -34,9 +33,7 @@ export async function generateMetadata(props) {
         imageExt: siteConfig.ogImageExt,
     };
 
-
-
-    return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+    return await generatePageMetadata({ type: "page", path: "", params: metadataParams, lang: locale });
 }
 
 
@@ -56,7 +53,7 @@ const FAQPage = async ({ params }) => {
             <SpeakableSchema pageTitle={pageData.title} pageUrl={pageData.seo?.canonicalLinks ?? "/faq"} />
             <SEOSchema schemaList={pageData.seo?.schema} />
 
-            <TopBanner banner="/images/chempol-banner.jpg" title={pageData?.title} title2="" />
+            <TopBanner banner="/images/chempol-banner.jpg" title={pageData?.title} title2="" dictionary={dictionary} />
 
             <PaddingContainer>
                 <FAQs dictionary={dictionary} faqList={pageData.faq} heading={pageData.heading} text={pageData.text} />

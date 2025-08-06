@@ -40,7 +40,7 @@ export async function generateMetadata(props) {
     imageExt: siteConfig.ogImageExt,
   };
 
-  return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+  return await generatePageMetadata({ type: "page", path: "", params: metadataParams, lang: lang });
 }
 
 

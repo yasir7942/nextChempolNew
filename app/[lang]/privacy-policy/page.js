@@ -27,7 +27,7 @@ export async function generateMetadata(props) {
         imageExt: ".png",
     };
 
-    return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+    return await generatePageMetadata({ type: "page", path: "", params: metadataParams, lang: locale });
 }
 
 

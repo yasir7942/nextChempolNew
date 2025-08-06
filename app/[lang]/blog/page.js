@@ -42,7 +42,7 @@ export async function generateMetadata(props) {
     imageExt: siteConfig.ogImageExt,
   };
 
-  return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+  return await generatePageMetadata({ type: "page", path: "", params: metadataParams, lang: lang });
 }
 
 
@@ -79,7 +79,7 @@ const Blog = async props => {
       <SEOSchema schemaList={pageData.seo?.schema} />
 
 
-      <TopBanner banner="/images/blog-banner.jpg" title={dictionary.navigation.blogs} title2="" />
+      <TopBanner banner="/images/blog-banner.jpg" title={dictionary.navigation.blogs} title2="" dictionary={dictionary} />
 
       <div className=' -mt-44  block  ' >
         <PaddingContainer  >

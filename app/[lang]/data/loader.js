@@ -126,8 +126,8 @@ export async function getPostLimitedData(lang) {
 
 }
 
-
-export async function geProductCategoryLeftMenu(lang) {
+/*
+export async function geProductCategdddddddddoryLeftMenu(lang) {  //delete
 
   const blogBlockQuery = qs.stringify({
     locale: lang,
@@ -136,6 +136,43 @@ export async function geProductCategoryLeftMenu(lang) {
   });
   return await fetchData("product-categories", blogBlockQuery);
 
+}
+
+*/
+
+
+export async function geProductCategoryLeftMenu(lang) {
+  const pageSize = 100;
+  let page = 1;
+  let allCategories = [];
+
+  while (true) {
+    // build a paginated query
+    const query = qs.stringify({
+      locale: lang,
+      sort: ['index'],
+      populate: ['image', 'products', 'seo.schema'],
+      pagination: {
+        page,
+        pageSize,
+      },
+    }, { encodeValuesOnly: true });
+
+    // fetch this page
+    const res = await fetchData('product-categories', query);
+    const { data = [], meta } = res;
+
+    allCategories.push(...data);
+
+    // stop when we've fetched every page
+    if (!meta?.pagination || page >= meta.pagination.pageCount) {
+      break;
+    }
+
+    page++;
+  }
+
+  return { data: allCategories };
 }
 
 

@@ -36,20 +36,16 @@ export async function generateMetadata(props) {
     };
 
 
-    return await generatePageMetadata({ type: "page", path: "", params: metadataParams });
+    return await generatePageMetadata({ type: "page", path: "", params: metadataParams, lang: locale });
 }
 
 
 const AboutUsPage = async ({ params }) => {
 
     const { lang } = await params || {};
-
-    //const { lang } = await locale || {};
-
-    // const dictionary = await getDictionary(locale);
+    const dictionary = await getDictionary(locale);
 
     const pageData = await cachedGetAboutPage(lang);
-
 
     return (
         <div>
@@ -57,7 +53,7 @@ const AboutUsPage = async ({ params }) => {
             <SEOSchema schemaList={pageData.seo?.schema} />
 
 
-            <TopBanner banner="/images/product-banner.jpg" title={pageData.aboutus.title ? pageData.aboutus.title : pageData.seo?.seoTitle} />
+            <TopBanner banner="/images/product-banner.jpg" title={pageData.aboutus.title ? pageData.aboutus.title : pageData.seo?.seoTitle} dictionary={dictionary} />
 
 
             <PaddingContainer className="flex flex-col   " >

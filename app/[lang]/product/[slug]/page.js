@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import BodyDataParse from "../../components/elements/data-parse-content";
 import GroupProducts from "../../components/layout/group-products";
 import PaddingContainer from "../../components/layout/padding-container";
@@ -53,12 +55,14 @@ export async function generateStaticParams() {
 
 
 export async function generateMetadata(props) {
-  const params = await props.params;
+  //const params = await props.params;
+  //const locale = params?.lang || 'en';
+
+  const params = await Promise.resolve(props.params);
   const locale = params?.lang || 'en';
+  const slug = params?.slug;
 
-  const productData = await getSingleProduct(locale, params.slug);
-
-
+  const productData = await getSingleProduct(locale, slug);
 
   if (!productData || !productData.data[0]) {
     notFound();
@@ -91,13 +95,19 @@ export async function generateMetadata(props) {
 
 
 
-const SingleProductPage = async props => {
-  const params = await props.params;
-  const { lang } = await params || {};
-  const dictionary = await getDictionary(lang);
-  const productData = await cachedgetSingleProduct(lang, params.slug);
+const SingleProductPage = async (props) => {
+
+  // const { lang, slug } = params;
+  //const params = await props.params;
+  //const { lang } = await params || {};
+  const params = await Promise.resolve(props.params); // ✅ Safe async resolve
+  const { lang, slug } = params;
   //console.log("********************SingleProductPage locale: ", lang);
   // console.log("-----------------single product data --------------");
+
+
+  const dictionary = await getDictionary(lang);
+  const productData = await cachedgetSingleProduct(lang, slug);
 
   // console.log(productData.data[0].related_products);
   // console.dir(productData.data, { depth: null });
@@ -169,7 +179,7 @@ const SingleProductPage = async props => {
     "description": seoDescription,
     "brand": {
       "@type": "Brand",
-      "name": "Chempol Additives & Chemical Speciality"
+      "name": dictionary.imageObject.creditText    //"creditText": "Chempol Additives & Chemical Speciality",
     },
     "sku": productData.data[0].productSchema?.sku,
     "gtin8": productData.data[0].productSchema?.gtin8,
@@ -192,7 +202,7 @@ const SingleProductPage = async props => {
       "availability": "http://schema.org/InStock",
       "seller": {
         "@type": "Organization",
-        "name": "Chempol Additives & Chemical Speciality"
+        "name": dictionary.imageObject.creditText  //"creditText": "Chempol Additives & Chemical Speciality",
       }
     },
     "hasMerchantReturnPolicy": {
