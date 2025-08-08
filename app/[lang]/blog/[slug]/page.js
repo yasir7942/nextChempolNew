@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import Breadcrumbs from "../../components/elements/breadcrumbs";
 import { getDictionary } from "@/libs/getDictionary";
 import { i18n } from "@/i18n.config";
+import { cookies } from "next/headers";
 
 // Cache the geSinglePost function
 const cachedGeSinglePost = cache(geSinglePost);
@@ -25,6 +26,7 @@ export async function generateMetadata(props) {
 
   if (!postData || !postData.data[0]) {
     notFound();
+
   }
 
   const metadataParams = {
@@ -81,6 +83,7 @@ const SingleBlogPage = async props => {
   const params = await props.params;
   const { lang } = await params || {};
   const dictionary = await getDictionary(lang);
+
 
 
   const postData = await cachedGeSinglePost(lang, params.slug);

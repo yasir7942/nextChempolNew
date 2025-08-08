@@ -62,6 +62,7 @@ export async function generateMetadata(props) {
   const locale = params?.lang || 'en';
   const slug = params?.slug;
 
+
   const productData = await getSingleProduct(locale, slug);
 
   if (!productData || !productData.data[0]) {
@@ -323,7 +324,7 @@ const SingleProductPage = async (props) => {
                 <div>
                   {/* Check if either MSDSFile or TDSFile exists */}
 
-                  <div className=" flex flex-col w-full h-auto space-y-2 mt-5 pr-0 md:pr-5 lg:pr-16 ">
+                  <div className=" flex flex-col w-full h-auto space-y-2 mt-5 pr-0 md:pr-5 lg:pr-16   ">
 
                     {/* Check if TDSFile exists */}
                     {productData.data[0].TDSFile?.url && (
@@ -331,7 +332,7 @@ const SingleProductPage = async (props) => {
                         href={`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}${productData.data[0].TDSFile.url}`}
                         target="_blank"
                         rel="nofollow"
-                        className="w-1/2"
+                        className=" w-full md:w-3/4 2xl:w-3/6"
                         download
                       >
                         <div className="py-3 bg-white text-black border-[3px] px-4 border-textLightBlue flex  items-center  font-light text-left">
@@ -348,7 +349,7 @@ const SingleProductPage = async (props) => {
                         href={`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}${productData.data[0].MSDSFile.url}`}
                         target="_blank"
                         rel="nofollow"
-                        className="w-1/2"
+                        className=" w-full md:w-3/4 2xl:w-3/6"
                         download
                       >
                         <div className="py-3  bg-white text-black border-[3px] px-4 border-textLightBlue flex  items-center  font-light text-left">
@@ -370,12 +371,12 @@ const SingleProductPage = async (props) => {
             </div>
 
             {/* table of product */}
-            <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full   pr-5 md:pr-2 ">
+            <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full    md:pr-2 ">
 
               {productData.data[0].table && productData.data[0].table.length > 0 && (
                 <div className=" mt-4 ">
 
-                  <table className="w-full lg:w-[80%] xl:w-[60%] 2xl:w-[60%] text-left border-collapse rtl:text-right" >
+                  <table className="w-full lg:w-[80%] xl:w-[60%] 2xl:w-[60%] text-left border-collapse rtl:text-right " >
                     {/* Table Header */}
                     <thead>
                       <tr className="bg-[#F7F7F7]">

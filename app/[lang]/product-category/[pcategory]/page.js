@@ -20,6 +20,7 @@ import { cache } from 'react';
 import ProductCategoryMenuWrapper from "../../components/layout/ProductCategoryMenuWrapper";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/libs/getDictionary";
+import { cookies } from "next/headers";
 
 const pageSize = 12;
 
@@ -65,6 +66,7 @@ const cachedGetProductCategory = cache(getProductCategory);
 export async function generateMetadata(props) {
   const params = await props.params;
   const lang = params?.lang || 'en';
+
 
 
 
@@ -117,6 +119,7 @@ const ProductCategory = async props => {
   const categoryData = await cachedGetProductCategory(lang, params.pcategory);  // use cache
 
   if (!categoryData || !categoryData.data[0]) {
+
     notFound();
   }
 

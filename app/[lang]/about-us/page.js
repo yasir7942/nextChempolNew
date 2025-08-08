@@ -9,6 +9,7 @@ import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import SEOSchema from "../components/elements/seo-schema";
 import SpeakableSchema from "../components/elements/speakable-schema";
 import siteConfig from "@/config/site";
+import { getDictionary } from "@/libs/getDictionary";
 
 
 const cachedGetAboutPage = cache(getAboutPage);
@@ -43,7 +44,7 @@ export async function generateMetadata(props) {
 const AboutUsPage = async ({ params }) => {
 
     const { lang } = await params || {};
-    const dictionary = await getDictionary(locale);
+    const dictionary = await getDictionary(lang);
 
     const pageData = await cachedGetAboutPage(lang);
 

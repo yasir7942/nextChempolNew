@@ -129,6 +129,12 @@
         "organization" :"Organization",
         "copyrightNoticeProduct": "All images of Chempol Additives & Chemical Speciality products are the exclusive property of Chempol Additives & Chemical Speciality. These images were created by our company, featuring our uniquely designed products. Any unauthorized use, reproduction, distribution, or modification of these images is strictly prohibited without the express written consent of Chempol Additives & Chemical Speciality.For inquiries regarding the use of these images, please contact us.",
         "copyrightNoticeBanner": "The banners displayed on this website have been created by modifying and enhancing images sourced from the internet. While we have significantly altered these images, the original copyrights may belong to the original creators. Any unauthorized use, reproduction, distribution, or modification of these banners without the express written consent of Chempol Additives & Chemical Speciality is prohibited. For inquiries regarding the use of these banners, please contact us."
+    },
+    "fourOfour":
+    {
+        "heading": "Oops! Page Not Found",
+         "text": "The page you’re looking for doesn’t exist or has been moved.",
+         "button": "Go Home"
     }
     
 }
