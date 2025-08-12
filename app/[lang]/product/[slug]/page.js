@@ -33,19 +33,19 @@ export async function generateStaticParams() {
     const params = [];
 
     for (const locale of locales) {
-      console.log(`→ fetching slugs for locale="${locale}"`);
+      // console.log(`→ fetching slugs for locale="${locale}"`);
       const response = await getAllProductsSlug(locale);
       const products = response.data || [];
 
       // console.log("product list", products);
-      console.log(`   ↳ got ${products.length} products for ${locale}`);
+      //  console.log(`   ↳ got ${products.length} products for ${locale}`);
 
       for (const product of products) {
         params.push({ lang: locale, slug: product.slug });
       }
     }
 
-    console.log(`✅ generateStaticParams done, total pages: ${params.length}`);
+    //console.log(`✅ generateStaticParams done, total pages: ${params.length}`);
     return params;
   } catch (err) {
     console.error("❌ Error in generateStaticParams:", err);

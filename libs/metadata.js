@@ -1,5 +1,5 @@
 // utils/metadata.js
-import { getFirstDescriptionText, validateCanonicalSlug, getImageUrl } from "@/libs/helper";
+import { validateCanonicalSlug } from "@/libs/helper";
 
 export async function generateMetadata({ type, path, params, lang = "en" }) {
 

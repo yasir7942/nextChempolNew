@@ -8,6 +8,8 @@
 .env
 .env-server
 
+*.zip
+
 desktop.ini
 
 # testing

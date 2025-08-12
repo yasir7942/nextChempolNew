@@ -22,7 +22,7 @@ export async function generateMetadata(props) {
 
 
   const pageData = await cachedGetContactPage(lang);
-  console.log("****************contact us***data********ss*********");
+  //console.log("****************contact us***data********ss*********");
 
 
 
