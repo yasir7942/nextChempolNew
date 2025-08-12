@@ -28,11 +28,11 @@ export default function MenuList({ locale, productCategory, dictionary }) {
 
         {/* Category Dropdown */}
         <NavigationMenuItem>
-          <NavigationMenuTrigger className="text-textBlue font-normal uppercase hover:text-darkGary">
+          <NavigationMenuTrigger className="text-textBlue font-normal uppercase hover:text-darkGary ">
             {dictionary.navigation.category}
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-4 p-6 md:w-[500px] md:grid-cols-2 lg:w-[600px] font-light "  >
+            <ul className="grid w-[400px] gap-4 p-6 md:w-[500px] md:grid-cols-2 lg:w-[600px] font-light bg-white"  >
               {productCategory?.data?.map((component, index) => (
                 <li key={index} className="flex items-center">
                   <FaAngleRight className="pr-2 text-textBlue rtl:hidden" />
@@ -52,15 +52,15 @@ export default function MenuList({ locale, productCategory, dictionary }) {
             {dictionary.navigation.company}
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid gap-2 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[1.2fr_1fr]">
+            <ul className="grid gap-2 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[1.2fr_1fr] bg-white">
               <li className="row-span-3">
                 <NavigationMenuLink asChild>
-                  <Link className="flex h-full w-full select-none flex-col justify-center rounded-md bg-blue-50 p-3 no-underline outline-none focus:shadow-md" href="/">
+                  <div className="flex h-full w-full select-none flex-col justify-center rounded-md bg-blue-50 p-3  focus:shadow-md" >
                     <div className="mb-2 mt-2 text-lg font-medium text-textBlue">{dictionary.navigation.chempol}</div>
-                    <p className="text-sm leading-tight text-muted-foreground text-gray-800 font-light">
+                    <p className="text-sm leading-tight  text-gray-800 font-light">
                       {dictionary.navigation.chempolDescription}
                     </p>
-                  </Link>
+                  </div>
                 </NavigationMenuLink>
               </li>
               <Link href={`/${locale}/about-us`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">

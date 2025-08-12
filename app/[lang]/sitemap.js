@@ -23,14 +23,12 @@ export default async function sitemap() {
     links.push(
       { url: `${baseURL}${prefix}`, changeFrequency: "weekly", priority: 1 },
       { url: `${baseURL}${prefix}/blog`, changeFrequency: "weekly", priority: 0.8 },
-
       { url: `${baseURL}${prefix}/contact`, changeFrequency: "weekly", priority: 0.5 },
       { url: `${baseURL}${prefix}/faq`, changeFrequency: "weekly", priority: 0.5 },
       { url: `${baseURL}${prefix}/about-us`, changeFrequency: "weekly", priority: 0.5 },
       { url: `${baseURL}${prefix}/videos`, changeFrequency: "weekly", priority: 0.5 },
       { url: `${baseURL}${prefix}/lubricant-additives-manufacturers-in-uae`, changeFrequency: "weekly", priority: 0.9 }
     );
-
     // ── PRODUCT CATEGORIES ────────────────────────────────────────
     const catRes = await geProductCategoryLeftMenu(lang);
     catRes?.data?.forEach((category) => {

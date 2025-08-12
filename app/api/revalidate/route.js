@@ -11,6 +11,9 @@ const VALID_TOKEN = process.env.ADMIN_TOKEN;
 
 const logFilePath = join(process.cwd(), "strapi-webhooks.log");
 
+const locales = ["en", "ar", "es"];
+
+
 
 
 
@@ -25,27 +28,40 @@ async function logRequest(message) {
 }
 
 
-async function getProductCategoryBySlug(slug) {
+async function getProductCategoryBySlug(locale, slug) {
     try {
         // Fetch product data by slug (populate category relation)
-        const response = await fetch(`${STRAPI_API_URL}/api/products?filters[slug][$eq]=${slug}&populate=product_categories`, {
+        /*  const response = await fetch(`${STRAPI_API_URL}/api/products?filters[slug][$eq]=${slug}&populate=product_categories`, {
+              headers: { "Content-Type": "application/json" },
+              cache: "no-store", // Ensure fresh data
+          });  */
+
+        const url = `${STRAPI_API_URL}/api/products` +
+            `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+            `&locale=${encodeURIComponent(locale)}` +
+            `&populate[product_categories][fields][0]=slug`;
+
+        console.log("Fetching product category by slug:", url);
+
+
+
+        const res = await fetch(url, {
             headers: { "Content-Type": "application/json" },
-            cache: "no-store", // Ensure fresh data
+            cache: "no-store",
         });
+        if (!res.ok) throw new Error("Failed to fetch product");
 
+        const { data } = await res.json();
+        if (!data?.length) throw new Error("Product not found");
 
-        if (!response.ok) throw new Error("Failed to fetch product data from Strapi");
+        // If you use flattenAttributes:
+        const prod = flattenAttributes(data)[0];
 
-        const { data } = await response.json();
-        const flattenedData = flattenAttributes(data);
-
-        if (data.length === 0) throw new Error("Product not found");
-
-
-
-        return flattenedData[0].product_categories.data[0].slug;
-    } catch (error) {
-        console.error("Error fetching category title:", error);
+        // prod.product_categories.data[0] -> { attributes.slug } when not flattened
+        // With flattenAttributes, you likely have slug on the object already:
+        return prod.product_categories.data?.[0]?.slug ?? null;
+    } catch (e) {
+        console.error(e);
         return null;
     }
 }
@@ -54,11 +70,7 @@ async function getProductCategoryBySlug(slug) {
 // Function to log requests
 async function revalidate(req, model, slug) {
 
-
-
     try {
-
-
 
         const url = new URL(req.url);
         const token = url.searchParams.get("token"); // Extract token from URL
@@ -83,38 +95,50 @@ async function revalidate(req, model, slug) {
         }
 
         if (model == 'all') {
-            revalidatePath('/', 'layout');
+            // revalidatePath('/', 'layout');
+            for (const loc of locales) revalidatePath(`/${loc}`, 'layout');
 
         }
         else if (model == 'post') {
             console.log("revalidate post");
-            revalidatePath(`/`); // for home page need to test
-            revalidatePath(`/blog/`);
-            revalidatePath(`/blog/${slug}/`);
+            for (const loc of locales) {
+                revalidatePath(`/${loc}`); // for homepage
+                revalidatePath(`/${loc}/blog/`);
+                revalidatePath(`/${loc}/blog/${slug}/`);
+            }
         }
         else if (model == 'product') {
-
-            revalidatePath(`/product/${slug}/`);
-            const categorySlug = await getProductCategoryBySlug(slug);
-            revalidatePath(`/product-category/${categorySlug?.toString()}`);
-
+            for (const loc of locales) {
+                revalidatePath(`/${loc}/product/${slug}/`);
+                let categorySlug = await getProductCategoryBySlug(loc, slug);
+                revalidatePath(`/${loc}/product-category/${categorySlug?.toString()}`);
+            }
         }
         else if (model == 'video') {
             console.log("revalidate video");
-            revalidatePath(`/`); // for home page need to test
-            revalidatePath(`/videos/`);
+            for (const loc of locales) {
+                revalidatePath(`/${loc}`); // for homepage
+                revalidatePath(`/${loc}/videos/`);
+            }
 
         }
 
         else if (model == 'product-category') {
 
-            revalidatePath(`/`); // for home page need to test
-            revalidatePath(`/product-category/${slug}/`);
+
+
+            for (const loc of locales) {
+                revalidatePath(`/${loc}`); // for homepage
+                revalidatePath(`/${loc}/product-category/${slug}/`);
+            }
+
 
         }
         else {
-            revalidatePath(`/${slug}/`);
 
+            for (const loc of locales) {
+                revalidatePath(`/loc/${slug}/`);
+            }
         }
 
 
