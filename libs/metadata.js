@@ -57,16 +57,17 @@ export async function generateMetadata({ type, path, params, lang = "en" }) {
         }
       ],
       locale: lang,
-      url: image,
-      type: 'website',
+      url: canonicalLink,    //here shoud be page url
+      type: type === 'blog' ? 'article' : 'website',     // for blog show  article
       publishedTime: dataPublishedTime,
     },
-    other: {
-      'og:type': "ImageObject",
-    },
+
   };
 
 
 
 
 }
+
+
+

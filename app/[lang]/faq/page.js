@@ -50,7 +50,7 @@ const FAQPage = async ({ params }) => {
 
     return (
         <div>
-            <SpeakableSchema pageTitle={pageData.title} pageUrl={pageData.seo?.canonicalLinks ?? "/faq"} />
+            <SpeakableSchema pageTitle={pageData.title} locale={lang} pageUrl={pageData.seo?.canonicalLinks ?? "/faq"} />
             <SEOSchema schemaList={pageData.seo?.schema} />
 
             <TopBanner banner="/images/chempol-banner.jpg" title={pageData?.title} title2="" dictionary={dictionary} />

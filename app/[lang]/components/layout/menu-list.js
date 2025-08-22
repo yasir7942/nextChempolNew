@@ -36,13 +36,13 @@ export default function MenuList({ locale, productCategory, dictionary }) {
             {dictionary.navigation.category}
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-4 p-6 md:w-[500px] md:grid-cols-2 lg:w-[600px] font-light bg-white">
+            <ul className="grid w-[400px] gap-4 p-6 md:w-[500px] md:grid-cols-2 lg:w-[600px]  font-light bg-white">
               {productCategory?.data?.map((component, index) => (
                 <li key={index} className="flex items-center">
                   <FaAngleRight className="pr-2 text-textBlue rtl:hidden" />
                   <FaAngleLeft className="pl-2 text-textBlue ltr:hidden" />
                   <Link
-                    className="transition duration-300 ease-in-out hover:text-textBlue"
+                    className="transition duration-300 ease-in-out hover:text-textBlue capitalize"
                     href={`/${locale}/product-category/${component.slug}`}
                   >
                     {component.title}

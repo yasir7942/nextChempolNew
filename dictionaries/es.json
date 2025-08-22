@@ -113,7 +113,8 @@
   "productCategories": "Categorías de Productos",
   "property": "Propiedad",
   "method": "Método",
-  "value": "Valor"
+  "value": "Valor",
+  "table": "Características del producto"
 },
 "imageObject": {
     "creditText": "Chempol Aditivos y Especialidades Químicas",

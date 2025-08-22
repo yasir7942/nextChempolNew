@@ -4,7 +4,7 @@ const siteConfig = {
   organizatioName: "Chempol Additives & Chemical Speciality",
   description: "Choose the top-quality lubricant additives, polymers, and special chemicals for maximizing your Petrochemical performance with Chempol.co.uk",
   baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
-  ogImage: `${process.env.NEXT_PUBLIC_BASE_URL}/opengraph-image.jpg`,
+  ogImage: `${process.env.NEXT_PUBLIC_BASE_URL}/en/opengraph-image.jpg`,
   ogImageExt: "jpg",
   logoImage: `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo-486x124px.png`,
   mobileLogo: `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo-332x88px.png`,

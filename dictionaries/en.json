@@ -119,7 +119,8 @@
         "productCategories": "Products Categories",
         "property": "Property",
         "method": "Method", 
-        "value": "Value"
+        "value": "Value",
+        "table":"Product Characteristics"
         
     },
     "imageObject":

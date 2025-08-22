@@ -50,7 +50,7 @@ const AboutUsPage = async ({ params }) => {
 
     return (
         <div>
-            <SpeakableSchema pageTitle={pageData.title} pageUrl={pageData.seo?.canonicalLinks ?? "/about-us"} />
+            <SpeakableSchema pageTitle={pageData.aboutus.title} locale={lang} pageUrl={pageData.seo?.canonicalLinks ?? "/about-us"} />
             <SEOSchema schemaList={pageData.seo?.schema} />
 
 

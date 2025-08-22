@@ -70,7 +70,7 @@ const Company = async ({ params }) => {
 
     return (
         <div>
-            <SpeakableSchema pageTitle={pageData.title} pageUrl={pageData.seo?.canonicalLinks ?? "/lubricant-additives-manufacturers-in-uae"} />
+            <SpeakableSchema pageTitle={pageData.title} locale={lang} pageUrl={pageData.seo?.canonicalLinks ?? "/lubricant-additives-manufacturers-in-uae"} />
             <SEOSchema schemaList={pageData.seo?.schema} />
 
 
@@ -81,8 +81,8 @@ const Company = async ({ params }) => {
                 <PaddingContainer>
                     <div className="flex flex-col md:flex-row w-full items-center justify-center ">
                         <div className=" w-full md:w-[80%] ">
-                            <h1 className="w-full text-textBlue text-xl font-semibold ">{pageData.contactText1}</h1>
-                            <p className="font-light font-xl md:max-w-[90%]">{pageData.contactText2}</p>
+                            <h1 className="w-full text-textBlue text-xl font-semibold  headline">{pageData.contactText1}</h1>
+                            <p className="font-light font-xl md:max-w-[90%] summary">{pageData.contactText2}</p>
 
                         </div>
                         <div className="w-full mt-5 md:mt-0 md:w-[20%]  "><Link href={`/contact-us`}
@@ -96,8 +96,8 @@ const Company = async ({ params }) => {
 
                 <div>
 
-                    <h2 className="w-full text-textBlue mt-10 text-xl font-semibold ">{pageData.text1?.title}</h2>
-                    <div className="text-black font-light py-0 summary text-lg  rich-text">
+                    <h2 className="w-full text-textBlue mt-10 text-xl font-semibold headline ">{pageData.text1?.title}</h2>
+                    <div className="text-black font-light py-0 summary text-lg  rich-text ">
                         <BodyDataParse content={pageData.text1?.description} />
                     </div>
                 </div>

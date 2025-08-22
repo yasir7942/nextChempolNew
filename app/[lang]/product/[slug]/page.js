@@ -295,14 +295,18 @@ const SingleProductPage = async (props) => {
               {/* image section */}
               <div className="w-full md:w-2/6 items-center  ">
                 <div className="w-full flex flex-col justify-center  items-center text-center">
-                  <Image
-                    priority
-                    className="relative w-[100%] h-auto text-center "
-                    src={getImageUrl(productData.data[0].productImage.url)}
-                    height={1000}
-                    width={1000}
-                    alt={productData.data[0]?.title}
-                  />
+                  {productData?.data?.[0]?.productImage?.url && (
+                    <Image
+                      priority
+                      className="relative w-[100%] h-auto text-center"
+                      src={getImageUrl(productData.data[0].productImage.url)}
+                      height={1000}
+                      width={1000}
+                      quality={100}
+                      alt={productData?.data?.[0]?.title || "Product"}
+                    />
+                  )}
+
 
                 </div>
               </div>
@@ -316,7 +320,7 @@ const SingleProductPage = async (props) => {
 
 
                 <div className="font-light text-black text-base mt-5 max-w-xl pr-5 md:pr-2 rich-text">
-                  <div className="text-xl font-semibold py-2">{dictionary.productPage.application}</div>
+                  <div className="text-xl font-semibold py-2 hidden">{dictionary.productPage.application}</div>
                   {productData.data[0].application}
                 </div>
 
@@ -374,8 +378,9 @@ const SingleProductPage = async (props) => {
             <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full    md:pr-2 ">
 
               {productData.data[0].table && productData.data[0].table.length > 0 && (
-                <div className=" mt-4 ">
 
+                <div className=" mt-4 ">
+                  <div className="text-xl font-semibold py-2">{dictionary.productPage.table}</div>
                   <table className="w-full lg:w-[80%] xl:w-[60%] 2xl:w-[60%] text-left border-collapse rtl:text-right " >
                     {/* Table Header */}
                     <thead>

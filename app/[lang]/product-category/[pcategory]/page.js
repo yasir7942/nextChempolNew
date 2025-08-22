@@ -21,6 +21,7 @@ import ProductCategoryMenuWrapper from "../../components/layout/ProductCategoryM
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/libs/getDictionary";
 import { cookies } from "next/headers";
+import Link from "next/link";
 
 const pageSize = 12;
 
@@ -193,11 +194,23 @@ const ProductCategory = async props => {
                 <div key={product.id} className=" pt-0 mt-10 relative text-center flex flex-col  justify-center">
 
                   <div className="w-full flex justify-center  ">
-                    <a href={`/product/${product.slug}/`} > <Image className="relative w-28 text-center" src={getImageUrl(product?.productImage.url)} priority height={400} width={400} alt={product.title} /> </a>
+                    {product?.productImage?.url && (
+                      <Link href={`/${lang}/product/${product.slug}/`}>
+                        <Image
+                          className="relative w-28 text-center"
+                          src={getImageUrl(product.productImage.url)}
+                          priority
+                          height={400}
+                          width={400}
+                          alt={product?.title || "Product"}
+                        />
+                      </Link>
+                    )}
+
                   </div>
                   <div className="flex flex-col w-full h-full " >
-                    <h2 className="uppercase text-base text-gray-700 mt-3 font-light "> <a href={`/${lang}/product/${product.slug}/`} >
-                      {product.title}</a> </h2>
+                    <h2 className="uppercase text-base text-gray-700 mt-3 font-light "> <Link href={`/${lang}/product/${product.slug}/`} >
+                      {product.title}</Link> </h2>
 
                   </div>
 
@@ -211,10 +224,7 @@ const ProductCategory = async props => {
               <PaginationComponent locale={lang} dictionary={dictionary} pageCount={PageCount} totalPage={totalPage} pageSize={pageSize} />
             </Suspense>
           </div>
-
-
         </div>
-
 
         <div className="flex flex-col w-full h-auto text-center my-20 2xl:px-[18%]">
 
@@ -233,7 +243,6 @@ const ProductCategory = async props => {
 
 
       <CTAcard locale={lang} />
-
       <BlogContainer locale={lang} />
 
 

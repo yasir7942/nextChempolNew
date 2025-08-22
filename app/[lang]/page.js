@@ -74,7 +74,7 @@ export default async function Home({ params }) {
 
       <Slider locale={lang} diction={dictionary} />
 
-      <SpeakableSchema pageTitle={homeData.title} pageUrl={homeData.seo?.canonicalLinks ?? "/"} />
+      <SpeakableSchema pageTitle={dictionary.homePage.title} locale={lang} pageUrl={homeData.seo?.canonicalLinks ?? "/"} />
       <SEOSchema schemaList={homeData.seo?.schema} />
 
       {/* <!--powering progress--> {`${lang === 'ar' ? 'rtl' : 'ltr'}` */}
@@ -82,8 +82,8 @@ export default async function Home({ params }) {
       <div className=" flex flex-col h-auto md:flex-row  w-full md:space-x-2  px-4 md:px-20 mt-10 justify-center " >
         {/* <!--text--> */}
         <div className="flex flex-col  ">
-          <h2 className=" *:first-letter: text-2xl md:text-3xl text-center font-semibold text-textBlue">{dictionary.homePage.title}</h2>
-          <p className="text-darkGary mt-3 text-justify text-sm font-normal  pr-5  max-w-6xl ">{dictionary.homePage.description}</p>
+          <h1 className=" *:first-letter: text-2xl md:text-3xl text-center font-semibold text-textBlue headline">{dictionary.homePage.title}</h1>
+          <p className="text-darkGary mt-3 text-justify text-sm font-normal  pr-5  max-w-6xl summary">{dictionary.homePage.description}</p>
         </div>
 
       </div>
@@ -92,7 +92,7 @@ export default async function Home({ params }) {
       {/* <!--Cards container--> */}
 
       <PaddingContainer  >
-        <div className="flex flex-col md:flex-row  justify-center h-auto space-y-5 md:space-y-0 md:space-x-2 lg:space-x-6  md:pb-5      mt-2 md:mt-10 rtl:gap-3  rtl:md:gap-2  rtl:lg:gap-6 ">
+        <div className="flex flex-col md:flex-row  justify-center h-auto space-y-5 md:space-y-0 md:space-x-2 lg:space-x-6  md:pb-5  mt-2 md:mt-10 rtl:gap-3  rtl:md:gap-2  rtl:lg:gap-6 ">
 
           <CharcoalContentBox title={dictionary.homePage.aboutChempol}
             description={dictionary.homePage.aboutChempolDescription}
