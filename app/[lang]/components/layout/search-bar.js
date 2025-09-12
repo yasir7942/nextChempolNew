@@ -131,7 +131,14 @@ const SearchBar = ({ locale, dictionary, dataType, topBar = false }) => {
             productData?.map((product, index) => (
               <div key={product.id} className="flex flex-col space-y-3 ">
                 <div className="flex justify-start space-x-5 items-center pl-1">
-                  <Link href={`/${locale}/product/${product.slug}`}>
+                  <Link href={`/${locale}/product/${product.slug}`}
+
+                    onClick={() => {
+                      setTimeout(() => {
+                        setIsSearchVisible(false);
+                      }, 1000); // 2 seconds
+                    }}
+                  >
                     <Image
                       src={getImageUrl(product?.productImage?.formats?.thumbnail.url)}
                       className="items-center w-9"
@@ -140,7 +147,15 @@ const SearchBar = ({ locale, dictionary, dataType, topBar = false }) => {
                       alt={product?.productImage?.alternativeText ?? product.title}
                     />
                   </Link>
-                  <Link href={`/${locale}/product/${product.slug}`} className="flex flex-col items-start space-y-2 rtl:pr-2">
+                  <Link href={`/${locale}/product/${product.slug}`} className="flex flex-col items-start space-y-2 rtl:pr-2"
+
+                    onClick={() => {
+                      setTimeout(() => {
+                        setIsSearchVisible(false);
+                      }, 1000); // 2 seconds
+                    }}
+
+                  >
                     <div className="font-normal text-sm text-black tracking-widest">
                       {product.product_categories[0]?.title}: {product.title}
                     </div>
