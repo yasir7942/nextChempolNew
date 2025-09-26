@@ -15,6 +15,7 @@ import ProductCategoryMenuWrapper from "../../components/layout/ProductCategoryM
 import Breadcrumbs from "../../components/elements/breadcrumbs";
 import { getDictionary } from "@/libs/getDictionary";
 import { i18n } from "@/i18n.config";
+import FAQs from "../../components/layout/Faqs";
 
 
 
@@ -130,6 +131,12 @@ const SingleProductPage = async (props) => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   const category = productData.data[0].product_categories[0]?.title ? productData.data[0].product_categories[0]?.title : dictionary.navigation.productCategory;
   const categorySlug = productData.data[0].product_categories[0].slug ? productData.data[0].product_categories[0].slug : "#";
+  const faqs = productData.data[0].faq ? productData.data[0].faq : [];
+
+
+
+
+
 
 
   const breadcrumbsData = [
@@ -286,9 +293,9 @@ const SingleProductPage = async (props) => {
             <div className="flex flex-col md:flex-row w-full h-auto p-0 lg:p-8">
 
               {/* title just for mobile */}
-              <div className="capitalize font-semibold text-2xl pb-5 md:hidden ">
+              <h1 className="capitalize font-semibold text-2xl pb-5 md:hidden ">
                 {productData.data[0].title}
-              </div>
+              </h1>
 
 
 
@@ -314,9 +321,9 @@ const SingleProductPage = async (props) => {
 
               {/* text section */}
               <div className="w-full md:w-4/6 flex flex-col text-gray-800 ">
-                <div className="capitalize font-semibold text-2xl hidden md:block  ">
+                <h1 className="capitalize font-semibold text-2xl hidden md:block  ">
                   {productData.data[0].title}
-                </div>
+                </h1>
 
 
                 <div className="font-light text-black text-base mt-5 max-w-xl pr-5 md:pr-2 rich-text">
@@ -408,6 +415,12 @@ const SingleProductPage = async (props) => {
                 </div>
               )}
             </div>
+
+
+            {faqs && faqs.length > 0 && <div className="p-10"><FAQs faqList={faqs} heading={dictionary.navigation.faq} text="" page="product" />
+            </div>}
+
+
 
             {/* Related Product section */}
             <div className="w-full flex flex-col justify-center items-center text-gray-300 mt-5  ">

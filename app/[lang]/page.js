@@ -13,6 +13,7 @@ import Slider from "./components/layout/slider";
 import FretchVideosWrapper from "./components/elements/FretchVideosWrapper";
 import { getHomePage } from "./data/loader";
 import { getDictionary } from "@/libs/getDictionary";
+import FAQs from "./components/layout/Faqs";
 
 
 
@@ -64,6 +65,7 @@ export default async function Home({ params }) {
 
   const dictionary = await getDictionary(lang);
   const homeData = await cachedGetHomePage(lang);
+  const faqs = homeData.faq ? homeData.faq : [];
 
 
 
@@ -94,17 +96,11 @@ export default async function Home({ params }) {
       <PaddingContainer  >
         <div className="flex flex-col md:flex-row  justify-center h-auto space-y-5 md:space-y-0 md:space-x-2 lg:space-x-6  md:pb-5  mt-2 md:mt-10 rtl:gap-3  rtl:md:gap-2  rtl:lg:gap-6 ">
 
-          <CharcoalContentBox title={dictionary.homePage.aboutChempol}
-            description={dictionary.homePage.aboutChempolDescription}
-            image="/images/about-chempol.jpg" url="about-us" button={dictionary.homePage.readMore} />
 
-          <CharcoalContentBox title={dictionary.homePage.realibility}
-            description={dictionary.homePage.realibilityDescription}
-            image="/images/relaibility.jpg" url="about-us" button={dictionary.homePage.readMore} />
 
-          <CharcoalContentBox title={dictionary.homePage.coreValues}
-            description={dictionary.homePage.coreValuesDescription}
-            image="/images/caore-value.jpg" url="about-us" button={dictionary.homePage.readMore} />
+          {homeData.homeBlock.map((data) => (
+            <CharcoalContentBox key={data.id} BlockData={data} />
+          ))}
 
 
         </div>
@@ -115,6 +111,10 @@ export default async function Home({ params }) {
       <ProductCategoryGrid locale={lang} />
 
       <CTAcard locale={lang} />
+
+
+      {faqs && faqs.length > 0 && <PaddingContainer> <div className="p-7"><FAQs faqList={faqs} heading={dictionary.navigation.faq} text="" page="product" />
+      </div> </PaddingContainer>}
 
       <BlogContainer locale={lang} />
 

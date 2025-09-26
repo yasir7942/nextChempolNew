@@ -7,7 +7,7 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 
-const FAQs = ({ dictionary, faqList = [], heading = "", text = "" }) => {
+const FAQs = ({ dictionary, faqList = [], heading = "", text = "", page = "category" }) => {
     // Safe access + fallbacks
     const nav = dictionary?.navigation || {};
     const labelQ = nav.q ?? "Q";
@@ -41,8 +41,12 @@ const FAQs = ({ dictionary, faqList = [], heading = "", text = "" }) => {
             )}
 
             <div className="w-full mt-10 mb-10 text-center h-auto">
-                <h4 className="w-full text-textBlue text-left rtl:text-center md:text-center text-xl font-semibold">
+                <h4
+                    className={`w-full text-left  text-xl font-semibold ${page == "product" ? "text-gray-800 rtl:text-right " : "text-textBlue rtl:text-center md:text-center "
+                        }`}
+                >
                     {heading || nav.faq || "FAQs"}
+
                 </h4>
 
                 {text ? (
@@ -72,9 +76,7 @@ const FAQs = ({ dictionary, faqList = [], heading = "", text = "" }) => {
                         })}
                     </Accordion>
                 ) : (
-                    <p className="text-sm text-gray-500 text-left rtl:text-center md:text-center">
-                        {nav.noFaqs ?? "No FAQs available."}
-                    </p>
+                    ""
                 )}
             </div>
         </>

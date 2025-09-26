@@ -57,7 +57,7 @@ export async function getHomePage(lang) {
 
   const blogBlockQuery = qs.stringify({
     locale: lang,
-    populate: ['banner.webBanner', 'banner.mobileBanner', 'seo.schema'],
+    populate: ['homeBlock', 'homeBlock.image', 'banner.webBanner', 'banner.mobileBanner', 'seo.schema', 'faq'],
 
   });
 
@@ -226,7 +226,7 @@ export async function getSingleProduct(lang, slug) {
     },
     populate: ['productImage', 'seo', 'seo.schema', 'productSchema', 'productSchema.reviews',
       'related_products.productImage', 'product_categories', 'TDSFile', 'MSDSFile',
-      'table'],
+      'table', 'faq'],
   });
 
 
