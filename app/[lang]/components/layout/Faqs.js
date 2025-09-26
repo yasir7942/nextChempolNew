@@ -41,13 +41,7 @@ const FAQs = ({ dictionary, faqList = [], heading = "", text = "", page = "categ
             )}
 
             <div className="w-full mt-10 mb-10 text-center h-auto">
-                <h4
-                    className={`w-full text-left  text-xl font-semibold ${page == "product" ? "text-gray-800 rtl:text-right " : "text-textBlue rtl:text-center md:text-center "
-                        }`}
-                >
-                    {heading || nav.faq || "FAQs"}
 
-                </h4>
 
                 {text ? (
                     <p className="text-gray-800 text-left rtl:text-center md:text-center font-light py-0 summary text-base md:text-lg">
