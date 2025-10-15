@@ -17,7 +17,7 @@ import { getDictionary } from "@/libs/getDictionary";
 //import MenuFooterList from "./menu-footer-list";
 //import MenuFooterPcategory from "./menu-footer-product-category";
 
-const Footer = async ({ locale }) => {
+const Footer = async ({ locale = "en" }) => {
 
 
   const dictionary = await getDictionary(locale);

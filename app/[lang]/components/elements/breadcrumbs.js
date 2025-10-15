@@ -9,7 +9,7 @@ export default function Breadcrumbs({ breadcrumbs = [] }) {
             <ol className="flex flex-wrap items-center space-x-1">
                 {breadcrumbs.map((crumb, index) => {
                     const isLast = index === breadcrumbs.length - 1;
-                    console.log(crumb)
+                    //console.log(crumb)
                     return (
                         <li key={index} className="flex items-center space-x-1 py-3">
                             {crumb.url && !isLast ? (

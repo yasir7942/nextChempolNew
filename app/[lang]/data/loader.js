@@ -226,7 +226,7 @@ export async function getSingleProduct(lang, slug) {
     },
     populate: ['productImage', 'seo', 'seo.schema', 'productSchema', 'productSchema.reviews',
       'related_products.productImage', 'product_categories', 'TDSFile', 'MSDSFile',
-      'table', 'faq'],
+      'table', 'faq', 'productTableFour'],
   });
 
 
@@ -368,7 +368,7 @@ export async function geSinglePost(lang, slug) {
       },
 
     },
-    populate: ['featureImage', 'seo', 'seo.schema', 'post_categories'],
+    populate: ['featureImage', 'seo', 'seo.schema', 'post_categories', 'faq'],
   });
 
 

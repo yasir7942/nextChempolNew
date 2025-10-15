@@ -13,6 +13,8 @@ import Breadcrumbs from "../../components/elements/breadcrumbs";
 import { getDictionary } from "@/libs/getDictionary";
 import { i18n } from "@/i18n.config";
 import { cookies } from "next/headers";
+import FAQs from "../../components/layout/Faqs";
+import SingleTab from "../../components/layout/SingleTab";
 
 // Cache the geSinglePost function
 const cachedGeSinglePost = cache(geSinglePost);
@@ -87,7 +89,7 @@ const SingleBlogPage = async props => {
 
 
   const postData = await cachedGeSinglePost(lang, params.slug);
-
+  const faq = postData.data[0]?.faq ? postData.data[0]?.faq : [];
 
 
 
@@ -103,11 +105,11 @@ const SingleBlogPage = async props => {
     { title: `${postData.data[0]?.title}` }
   ];
 
-
-  //console.log("-----------------------single post page--------------------------------------------------");
-  // console.dir(postData, { depth: null });
-  //console.log("---------------------------End-----single post------------------end-----------------------");
-
+  /*
+    console.log("-----------------------single post page--------------------------------------------------");
+    console.dir(postData, { depth: null });
+    console.log("---------------------------End-----single post------------------end-----------------------");
+  */
   const firstDescriptionText = getFirstDescriptionText(postData.data[0].description);
   const seoDesctiption = postData.data[0]?.seo?.seoDesctiption?.trim() ? postData.data[0]?.seo?.seoDesctiption?.trim() : firstDescriptionText;
 
@@ -185,8 +187,13 @@ const SingleBlogPage = async props => {
 
           </div>
 
-        </div>
 
+
+
+          {!!faq?.length && <SingleTab heading={dictionary.navigation.faq} faqList={faq} />}
+
+
+        </div>
       </PaddingContainer>
 
       <BlogContainer locale={lang} />

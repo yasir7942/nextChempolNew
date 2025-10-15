@@ -39,8 +39,8 @@ const SearchBarForPost = ({ locale, dictionary }) => {
         //console.log(query);
         const result = await getPostBySearch(locale, query);
         setPostData(result.data);
-        console.log("****************serech****result***data*****************");
-        console.log(result.data);
+        //  console.log("****************serech****result***data*****************");
+        // console.log(result.data);
 
       } catch (error) {
         console.error('Error fetching search results:', error);

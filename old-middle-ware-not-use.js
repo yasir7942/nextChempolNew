@@ -1,14 +1,14 @@
 
-
+{/*  
 
 import { NextResponse } from 'next/server';
 import Negotiator from 'negotiator';
 import { match as matchLocale } from '@formatjs/intl-localematcher';
 import { i18n } from './i18n.config'; // Ensure you have this file with locales and defaultLocale   
 
+*/}
 
-
-/* Get Locale Handler */
+/* Get Locale Handler 
 function getLocale(request) {
     const negotiatorHeaders = {};
     request.headers.forEach((value, key) => {
@@ -20,9 +20,9 @@ function getLocale(request) {
     const locales = i18n.locales;
 
     return matchLocale(languages, locales, i18n.defaultLocale);
-}
+}*/
 
-/* Middleware */
+/* Middleware 
 export function middleware(request) {
     const pathname = request.nextUrl.pathname;
 
@@ -43,13 +43,13 @@ export function middleware(request) {
     }
 
     return NextResponse.next();
-}
+}*/
 
 /* Matcher */
 
-
+/*
 export const config = {
     matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
-
+*/
 

@@ -69,11 +69,11 @@ const AboutUsPage = async ({ params }) => {
                     <div className="flex flex-col md:flex-row    justify-center  h-auto   md:space-x-3 lg:space-x-3 mt-3 bg-gray-200">
                         {/* First Section */}
                         <div className="flex flex-col  p-5  xl:p-10 md:w-1/3 h-full  border items-center   text-black text-lg tracking-wider font-light flex-grow justify-center">
-                            <div className="max-w-sm md:max-w-lg  overflow-hidden rounded-lg">
-                                <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.coreValue.image.url)} alt={pageData.coreValue.image.alternativeText ? pageData.coreValue.image.alternativeText : "Chempol Core value"} />
+                            <div className="max-w-sm md:max-w-lg  overflow-hidden rounded-lg bg-red-300">
+                                <Image className="w-full h-full object-cover" width={800} height={800} src={getImageUrl(pageData.coreValue.image.url)} alt={pageData.coreValue.image.alternativeText ? pageData.coreValue.image.alternativeText : "Chempol Core value"} />
                             </div>
                             <h1 className="text-xl mt-5 text-left   capitalize font-normal text-textBlue">{pageData.coreValue.title}</h1>
-                            <div className="text-black md:text-justify summary 2xl:w-[80%] ">
+                            <div className="text-black text-left summary rtl:text-righ 2xl:w-full   ">
                                 <BodyDataParse content={pageData.coreValue.description} />
                             </div>
                             <a href="#" className=" hidden text-left w-full text-base  2xl:w-[80%]  text-textBlue ">Read more...</a>
@@ -85,7 +85,7 @@ const AboutUsPage = async ({ params }) => {
                                 <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.ourMission.image.url)} alt={pageData.ourMission.image.alternativeText ? pageData.ourMission.image.alternativeText : "Chempol Mission"} />
                             </div>
                             <h1 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.ourMission.title}</h1>
-                            <div className="text-black md:text-justify summary  2xl:w-[80%]  ">
+                            <div className="text-black  text-left summary rtl:text-righ  2xl:w-full  ">
                                 <BodyDataParse content={pageData.ourMission.description} />
                             </div>
                         </div>
@@ -96,7 +96,7 @@ const AboutUsPage = async ({ params }) => {
                                 <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.overVisson.image.url)} alt={pageData.overVisson.image.alternativeText ? pageData.overVisson.image.alternativeText : "Chempol Vission"} />
                             </div>
                             <h1 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.overVisson.title}</h1>
-                            <div className="text-black md:text-justify summary  2xl:w-[80%] ">
+                            <div className="text-black  text-left rtl:text-right summary  2xl:w-full  ">
                                 <BodyDataParse content={pageData.overVisson.description} />
                             </div>
                         </div>

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import BodyDataParse from "../../components/elements/data-parse-content";
 import GroupProducts from "../../components/layout/group-products";
 import PaddingContainer from "../../components/layout/padding-container";
-import { geAllProductsSlug, getAllProductsSlug, getSingleProduct } from "../../data/loader";
+import { getAllProductsSlug, getSingleProduct } from "../../data/loader";
 import { getBaseUrl, getFirstDescriptionText, getImageUrl } from "../../../../libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
@@ -381,40 +381,94 @@ const SingleProductPage = async (props) => {
               <BodyDataParse content={content} />
             </div>
 
-            {/* table of product */}
-            <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full    md:pr-2 ">
 
-              {productData.data[0].table && productData.data[0].table.length > 0 && (
 
-                <div className=" mt-4 ">
-                  <div className="text-xl font-semibold py-2">{dictionary.productPage.table}</div>
-                  <table className="w-full lg:w-[80%] xl:w-[60%] 2xl:w-[60%] text-left border-collapse rtl:text-right " >
-                    {/* Table Header */}
-                    <thead>
-                      <tr className="bg-[#F7F7F7]">
-                        <th className="p-4 font-normal border">{dictionary.productPage.property}</th>
-                        <th className="p-4 font-normal border">{dictionary.productPage.method}</th>
-                        <th className="p-4 font-normal border">{dictionary.productPage.value}</th>
-                      </tr>
-                    </thead>
+            {/* Table of product  */}
+            {Array.isArray(productData?.data?.[0]?.table) &&
+              productData.data[0].table.length > 0 && (
+                <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full md:pr-2">
+                  <div className="mt-4">
+                    <div className="text-xl font-semibold py-2">
+                      {dictionary.productPage.table}
+                    </div>
 
-                    {/* Table Body */}
-                    <tbody>
-                      {productData.data[0].table.map((row, index) => (
-                        <tr
-                          key={index}
-                          className={`${index % 2 === 0 ? "bg-[#FDFDFD]" : "bg-[#F7F7F7]"}`}
-                        >
-                          <td className="p-4 border">{row.property}</td>
-                          <td className="p-4 border">{row.method}</td>
-                          <td className="p-4 border">{row.value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                    {(() => {
+                      const rows = productData.data[0].table;
+
+                      // Turn a Strapi row into an array of up to 7 cells in order
+                      const toCells = (r = {}) => [
+                        r?.property ?? "",
+                        r?.method ?? "",
+                        r?.value ?? "",
+
+                      ];
+
+                      // Trim trailing empty cells ("" / null / undefined)
+                      const trimTrailing = (arr) => {
+                        let end = arr.length - 1;
+                        while (
+                          end >= 0 &&
+                          (arr[end] === null ||
+                            arr[end] === undefined ||
+                            String(arr[end]).trim() === "")
+                        ) {
+                          end--;
+                        }
+                        return arr.slice(0, end + 1);
+                      };
+
+                      // Header from first row
+                      const headerAll = toCells(rows[0]);
+                      const header = trimTrailing(headerAll);
+                      const colCount = Math.min(7, header.length || 0);
+
+                      // If first row is completely empty, don't render table
+                      if (colCount === 0) return null;
+
+                      const body = rows.slice(1);
+
+                      return (
+                        <table className="w-full lg:w-[80%] xl:w-[60%] 2xl:w-[60%] text-left border-collapse rtl:text-right">
+                          <thead>
+                            <tr className="bg-[#F7F7F7]">
+                              {header.map((h, i) => (
+                                <th key={i} className="p-4 font-normal border capitalize">
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+
+                          <tbody>
+                            {body.map((row, rIdx) => {
+                              const cells = toCells(row).slice(0, colCount);
+                              // pad to match header length
+                              while (cells.length < colCount) cells.push("");
+
+                              return (
+                                <tr
+                                  key={rIdx}
+                                  className={rIdx % 2 === 0 ? "bg-[#FDFDFD]" : "bg-[#F7F7F7]"}
+                                >
+                                  {cells.map((c, cIdx) => (
+                                    <td key={cIdx} className="p-4 border">
+                                      {c}
+                                    </td>
+                                  ))}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      );
+                    })()}
+                  </div>
                 </div>
               )}
-            </div>
+            {/* End Table of product */}
+
+
+
 
 
             {faqs && faqs.length > 0 && <div className="p-10"><FAQs faqList={faqs} heading={dictionary.navigation.faq} text="" page="product" />

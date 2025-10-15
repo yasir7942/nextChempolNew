@@ -78,7 +78,7 @@ const ProductCategoryGrid = async ({ locale }) => {
                 {/* Description — clamp to 2 lines and reserve space */}
                 <Link
                   href={`/${locale}/product-category/${category.slug}/`}
-                  className="mt-1 text-justify rtl:text-right text-sm leading-tight text-darkGary  min-h-[3.0rem]"
+                  className="mt-1 text-left rtl:text-right text-sm leading-tight text-darkGary  min-h-[3.0rem]"
                 >
                   {category.shortDescription ? category.shortDescription : ""}
                 </Link>

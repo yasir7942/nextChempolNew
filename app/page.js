@@ -1,19 +1,20 @@
 //Home Page
-import PaddingContainer from "./components/layout/padding-container";
-import BlogContainer from "./components/layout/blog-container";
-import SpeakableSchema from "./components/elements/speakable-schema";
+import PaddingContainer from "./[lang]/components/layout/padding-container";
+import BlogContainer from "./[lang]/components/layout/blog-container";
+import SpeakableSchema from "./[lang]/components/elements/speakable-schema";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import { cache } from 'react';
-import SEOSchema from "./components/elements/seo-schema";
+import SEOSchema from "./[lang]/components/elements/seo-schema";
 import siteConfig from "@/config/site";
-import CharcoalContentBox from "./components/layout/charcoal-content-box";
-import ProductCategoryGrid from "./components/layout/product-category-grid";
-import CTAcard from "./components/layout/cta-card";
-import Slider from "./components/layout/slider";
-import FretchVideosWrapper from "./components/elements/FretchVideosWrapper";
-import { getHomePage } from "./data/loader";
+import CharcoalContentBox from "./[lang]/components/layout/charcoal-content-box";
+import ProductCategoryGrid from "./[lang]/components/layout/product-category-grid";
+import CTAcard from "./[lang]/components/layout/cta-card";
+import Slider from "./[lang]/components/layout/slider";
+import FretchVideosWrapper from "./[lang]/components/elements/FretchVideosWrapper";
+
 import { getDictionary } from "@/libs/getDictionary";
-import FAQs from "./components/layout/Faqs";
+import FAQs from "./[lang]/components/layout/Faqs";
+import { getHomePage } from "./[lang]/data/loader";
 
 
 
