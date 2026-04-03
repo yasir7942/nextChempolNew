@@ -16,7 +16,10 @@ const initialAddState = {
 export default function AdditivesRelationPage() {
     const [loading, setLoading] = useState(true);
     const [savingType, setSavingType] = useState("");
+
     const [allApis, setAllApis] = useState([]);
+    const [allSaeGrades, setAllSaeGrades] = useState([]);
+    const [allAceas, setAllAceas] = useState([]);
 
     const [staticCategory, setStaticCategory] = useState({
         label: STATIC_CATEGORY.title,
@@ -29,8 +32,12 @@ export default function AdditivesRelationPage() {
 
     const [selectedApi, setSelectedApi] = useState("");
     const [selectedApiFromList, setSelectedApiFromList] = useState("");
+
     const [selectedSaeGrade, setSelectedSaeGrade] = useState("");
+    const [selectedSaeGradeFromList, setSelectedSaeGradeFromList] = useState("");
+
     const [selectedAcea, setSelectedAcea] = useState("");
+    const [selectedAceaFromList, setSelectedAceaFromList] = useState("");
 
     const [addMode, setAddMode] = useState({
         api: false,
@@ -126,7 +133,6 @@ export default function AdditivesRelationPage() {
         );
     }
 
-
     async function loadAllApis() {
         const data = await fetchJson("/api/admin/additives-relation?mode=allapis");
         console.log("[page] all apis response:", data);
@@ -134,12 +140,27 @@ export default function AdditivesRelationPage() {
         setAllApis(data?.items || []);
     }
 
-
     async function loadApis() {
         const data = await fetchJson("/api/admin/additives-relation?mode=apis");
         console.log("[page] apis response:", data);
         console.log("[page] apis items:", data?.items || []);
         setApis(data?.items || []);
+    }
+
+    async function loadAllSaeGrades(apiId) {
+        if (!apiId) {
+            console.log("[page] loadAllSaeGrades skipped, apiId missing");
+            setAllSaeGrades([]);
+            return;
+        }
+
+        const data = await fetchJson(
+            `/api/admin/additives-relation?mode=all-sae-grades&apiId=${encodeURIComponent(apiId)}`
+        );
+
+        console.log("[page] all sae grades response:", data);
+        console.log("[page] all sae grades items:", data?.items || []);
+        setAllSaeGrades(data?.items || []);
     }
 
     async function loadSaeGrades(apiId) {
@@ -157,6 +178,21 @@ export default function AdditivesRelationPage() {
         setSaeGrades(data?.items || []);
     }
 
+    async function loadAllAceas(saeGradeId) {
+        if (!saeGradeId) {
+            console.log("[page] loadAllAceas skipped, saeGradeId missing");
+            setAllAceas([]);
+            return;
+        }
+
+        const data = await fetchJson(
+            `/api/admin/additives-relation?mode=all-aceas&saeGradeId=${encodeURIComponent(saeGradeId)}`
+        );
+        console.log("[page] all aceas response:", data);
+        console.log("[page] all aceas items:", data?.items || []);
+        setAllAceas(data?.items || []);
+    }
+
     async function loadAceas(saeGradeId) {
         if (!saeGradeId) {
             console.log("[page] loadAceas skipped, saeGradeId missing");
@@ -172,14 +208,19 @@ export default function AdditivesRelationPage() {
         setAceas(data?.items || []);
     }
 
-
     useEffect(() => {
         async function init() {
             try {
                 console.log("[page] init start");
                 setLoading(true);
                 resetMessage();
-                await Promise.all([loadStaticCategory(), loadApis(), loadAllApis()]);
+
+                await Promise.all([
+                    loadStaticCategory(),
+                    loadApis(),
+                    loadAllApis(),
+                ]);
+
                 console.log("[page] init finished");
             } catch (error) {
                 showError(error);
@@ -191,8 +232,6 @@ export default function AdditivesRelationPage() {
         init();
     }, []);
 
-
-
     useEffect(() => {
         async function run() {
             try {
@@ -200,12 +239,20 @@ export default function AdditivesRelationPage() {
                 resetMessage();
 
                 setSelectedSaeGrade("");
+                setSelectedSaeGradeFromList("");
                 setSelectedAcea("");
+                setSelectedAceaFromList("");
+
                 setSaeGrades([]);
+                setAllSaeGrades([]);
                 setAceas([]);
+                setAllAceas([]);
 
                 if (selectedApi) {
-                    await loadSaeGrades(selectedApi);
+                    await Promise.all([
+                        loadSaeGrades(selectedApi),
+                        loadAllSaeGrades(selectedApi),
+                    ]);
                 }
             } catch (error) {
                 showError(error);
@@ -222,10 +269,15 @@ export default function AdditivesRelationPage() {
                 resetMessage();
 
                 setSelectedAcea("");
+                setSelectedAceaFromList("");
                 setAceas([]);
+                setAllAceas([]);
 
                 if (selectedSaeGrade) {
-                    await loadAceas(selectedSaeGrade);
+                    await Promise.all([
+                        loadAceas(selectedSaeGrade),
+                        loadAllAceas(selectedSaeGrade),
+                    ]);
                 }
             } catch (error) {
                 showError(error);
@@ -262,10 +314,26 @@ export default function AdditivesRelationPage() {
             console.log("[page] handleAdd selectedApi:", selectedApi);
             console.log("[page] handleAdd selectedApiFromList:", selectedApiFromList);
             console.log("[page] handleAdd selectedSaeGrade:", selectedSaeGrade);
+            console.log("[page] handleAdd selectedSaeGradeFromList:", selectedSaeGradeFromList);
+            console.log("[page] handleAdd selectedAceaFromList:", selectedAceaFromList);
 
             if (type === "api") {
                 if (!selectedApiFromList) {
                     throw new Error("Please select API from list");
+                }
+            } else if (type === "saeGrade") {
+                if (!selectedApi) {
+                    throw new Error("Please select API first");
+                }
+                if (!selectedSaeGradeFromList) {
+                    throw new Error("Please select SAE Grade from list");
+                }
+            } else if (type === "acea") {
+                if (!selectedSaeGrade) {
+                    throw new Error("Please select SAE Grade first");
+                }
+                if (!selectedAceaFromList) {
+                    throw new Error("Please select ACEA from list");
                 }
             } else {
                 if (!title) {
@@ -273,21 +341,17 @@ export default function AdditivesRelationPage() {
                 }
             }
 
-            if (type === "saeGrade" && !selectedApi) {
-                throw new Error("Please select API first");
-            }
-
-            if (type === "acea" && !selectedSaeGrade) {
-                throw new Error("Please select SAE Grade first");
-            }
-
             setSavingType(type);
 
             const payload = {
                 type,
-                title: type === "api" ? null : title,
+                title,
                 apiId: type === "api" ? selectedApiFromList : selectedApi || null,
-                saeGradeId: selectedSaeGrade || null,
+                saeGradeId:
+                    type === "saeGrade"
+                        ? selectedSaeGradeFromList
+                        : selectedSaeGrade || null,
+                aceaId: type === "acea" ? selectedAceaFromList : null,
             };
 
             console.log("[page] POST payload:", payload);
@@ -320,22 +384,33 @@ export default function AdditivesRelationPage() {
             }
 
             if (type === "saeGrade") {
-                await loadSaeGrades(selectedApi);
-                const newId = data?.item?.documentId || data?.item?.id || "";
-                console.log("[page] new SAE Grade id:", newId);
+                const newId = selectedSaeGradeFromList || "";
+                await Promise.all([
+                    loadSaeGrades(selectedApi),
+                    loadAllSaeGrades(selectedApi),
+                ]);
+
                 if (newId) {
                     setSelectedSaeGrade(String(newId));
                 }
+
+                setSelectedSaeGradeFromList("");
                 showSuccess("SAE Grade added successfully");
             }
 
             if (type === "acea") {
-                await loadAceas(selectedSaeGrade);
-                const newId = data?.item?.documentId || data?.item?.id || "";
-                console.log("[page] new ACEA id:", newId);
+                const newId = selectedAceaFromList || "";
+
+                await Promise.all([
+                    loadAceas(selectedSaeGrade),
+                    loadAllAceas(selectedSaeGrade),
+                ]);
+
                 if (newId) {
                     setSelectedAcea(String(newId));
                 }
+
+                setSelectedAceaFromList("");
                 showSuccess("ACEA added successfully");
             }
         } catch (error) {
@@ -383,7 +458,7 @@ export default function AdditivesRelationPage() {
         );
     }
 
-    function renderAddSelectOption(type, placeholder, disabled = false) {
+    function renderAddApiSelectOption(type, disabled = false) {
         return (
             <div className="mt-4 flex flex-col gap-3 md:flex-row">
                 <select
@@ -418,13 +493,75 @@ export default function AdditivesRelationPage() {
         );
     }
 
-    console.log("[page render] staticCategory:", staticCategory);
-    console.log("[page render] apis:", apis);
-    console.log("[page render] saeGrades:", saeGrades);
-    console.log("[page render] aceas:", aceas);
-    console.log("[page render] selectedApi:", selectedApi);
-    console.log("[page render] selectedSaeGrade:", selectedSaeGrade);
-    console.log("[page render] selectedAcea:", selectedAcea);
+    function renderAddSaeSelectOption(type, disabled = false) {
+        return (
+            <div className="mt-4 flex flex-col gap-3 md:flex-row">
+                <select
+                    value={selectedSaeGradeFromList}
+                    onChange={(e) => {
+                        console.log("[page] all SAE dropdown changed:", e.target.value);
+                        setSelectedSaeGradeFromList(e.target.value);
+                    }}
+                    disabled={disabled}
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 outline-none focus:border-blue-500 disabled:bg-gray-100"
+                >
+                    <option value="">Select SAE Grade from List</option>
+                    {allSaeGrades.map((item) => {
+                        const value = item.documentId || item.id;
+                        return (
+                            <option key={value} value={value}>
+                                {item.label}
+                            </option>
+                        );
+                    })}
+                </select>
+
+                <button
+                    type="button"
+                    onClick={() => handleAdd(type)}
+                    disabled={disabled || savingType === type}
+                    className="rounded-xl bg-green-600 px-5 py-3 font-medium text-white hover:bg-green-700 disabled:opacity-60"
+                >
+                    {savingType === type ? "Saving..." : "Save"}
+                </button>
+            </div>
+        );
+    }
+
+    function renderAddAceaSelectOption(type, disabled = false) {
+        return (
+            <div className="mt-4 flex flex-col gap-3 md:flex-row">
+                <select
+                    value={selectedAceaFromList}
+                    onChange={(e) => {
+                        console.log("[page] all ACEA dropdown changed:", e.target.value);
+                        setSelectedAceaFromList(e.target.value);
+                    }}
+                    disabled={disabled}
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 outline-none focus:border-blue-500 disabled:bg-gray-100"
+                >
+                    <option value="">Select ACEA from List</option>
+                    {allAceas.map((item) => {
+                        const value = item.documentId || item.id;
+                        return (
+                            <option key={value} value={value}>
+                                {item.label}
+                            </option>
+                        );
+                    })}
+                </select>
+
+                <button
+                    type="button"
+                    onClick={() => handleAdd(type)}
+                    disabled={disabled || savingType === type}
+                    className="rounded-xl bg-green-600 px-5 py-3 font-medium text-white hover:bg-green-700 disabled:opacity-60"
+                >
+                    {savingType === type ? "Saving..." : "Save"}
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -460,7 +597,9 @@ export default function AdditivesRelationPage() {
                                 <button
                                     type="button"
                                     onClick={() => toggleAdd("api")}
-                                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white ${addMode.api ? "bg-red-400 hover:bg-red-600" : "bg-gray-700 hover:bg-gray-500"
+                                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white ${addMode.api
+                                        ? "bg-red-400 hover:bg-red-600"
+                                        : "bg-gray-700 hover:bg-gray-500"
                                         }`}
                                 >
                                     {addMode.api ? "Cancel" : "Add API"}
@@ -473,7 +612,7 @@ export default function AdditivesRelationPage() {
                                     console.log("[page] API dropdown changed:", e.target.value);
                                     setSelectedApi(e.target.value);
                                 }}
-                                className=" w-full appearance rounded-xl border border-gray-300 px-4 pr-10 py-3 outline-none focus:border-blue-500 bg-white"
+                                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 outline-none focus:border-blue-500 bg-white"
                             >
                                 <option value="">Select API</option>
                                 {apis.map((item) => {
@@ -486,7 +625,7 @@ export default function AdditivesRelationPage() {
                                 })}
                             </select>
 
-                            {addMode.api && renderAddSelectOption("api", "Enter API name")}
+                            {addMode.api && renderAddApiSelectOption("api")}
                         </div>
 
                         <div className="rounded-2xl border border-gray-200 p-4">
@@ -497,7 +636,10 @@ export default function AdditivesRelationPage() {
                                 <button
                                     type="button"
                                     onClick={() => toggleAdd("saeGrade")}
-                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white ${addMode.saeGrade
+                                        ? "bg-red-400 hover:bg-red-600"
+                                        : "bg-blue-600 hover:bg-blue-700"
+                                        }`}
                                 >
                                     {addMode.saeGrade ? "Cancel" : "Add SAE Grade"}
                                 </button>
@@ -526,7 +668,7 @@ export default function AdditivesRelationPage() {
                             </select>
 
                             {addMode.saeGrade &&
-                                renderAddBox("saeGrade", "Enter SAE Grade name", !selectedApi)}
+                                renderAddSaeSelectOption("saeGrade", !selectedApi)}
                         </div>
 
                         <div className="rounded-2xl border border-gray-200 p-4">
@@ -535,7 +677,10 @@ export default function AdditivesRelationPage() {
                                 <button
                                     type="button"
                                     onClick={() => toggleAdd("acea")}
-                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white ${addMode.acea
+                                        ? "bg-red-400 hover:bg-red-600"
+                                        : "bg-blue-600 hover:bg-blue-700"
+                                        }`}
                                 >
                                     {addMode.acea ? "Cancel" : "Add ACEA"}
                                 </button>
@@ -564,7 +709,7 @@ export default function AdditivesRelationPage() {
                             </select>
 
                             {addMode.acea &&
-                                renderAddBox("acea", "Enter ACEA name", !selectedSaeGrade)}
+                                renderAddAceaSelectOption("acea", !selectedSaeGrade)}
                         </div>
 
                         <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-4">

@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import qs from "qs";
 
-// ---------------- CONFIG ----------------
-
 const STATIC_CATEGORY = {
     title: "PCMO/Gasoline",
     slug: "pcmo-gasoline",
 };
-
-// ---------------- FETCH WRAPPER ----------------
-// SAME STYLE AS YOUR getHomePage()
 
 async function fetchData(endpoint, query = "") {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -24,7 +19,7 @@ async function fetchData(endpoint, query = "") {
         const res = await fetch(url, {
             headers: {
                 "Strapi-Response-Format": "v4",
-                ...(token && { Authorization: `Bearer ${token}` }),
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
             cache: "no-store",
         });
@@ -35,7 +30,6 @@ async function fetchData(endpoint, query = "") {
         console.log("[fetchData] first 800 chars:", text.slice(0, 800));
 
         const data = JSON.parse(text);
-
         return data;
     } catch (err) {
         console.log("[fetchData] ERROR:", err);
@@ -43,29 +37,11 @@ async function fetchData(endpoint, query = "") {
     }
 }
 
-// ---------------- HELPERS ----------------
-
 function getField(item, field) {
     if (!item) return "";
     if (item[field] !== undefined) return item[field];
     if (item?.attributes?.[field] !== undefined) return item.attributes[field];
     return "";
-}
-
-function getRelation(item, relation) {
-    if (!item) return [];
-
-    // flat
-    if (Array.isArray(item?.[relation])) return item[relation];
-
-    // flat with data
-    if (Array.isArray(item?.[relation]?.data)) return item[relation].data;
-
-    // v4
-    if (Array.isArray(item?.attributes?.[relation]?.data))
-        return item.attributes[relation].data;
-
-    return [];
 }
 
 function mapItems(items, field = "name") {
@@ -75,8 +51,6 @@ function mapItems(items, field = "name") {
         label: getField(item, field),
     }));
 }
-
-// ---------------- STATIC CATEGORY ----------------
 
 async function getStaticCategory() {
     const query = qs.stringify({
@@ -94,15 +68,12 @@ async function getStaticCategory() {
     });
 
     const res = await fetchData("product-categories", query);
-
     const item = res?.data?.[0];
 
     console.log("[getStaticCategory] result:", item);
 
     return item || null;
 }
-
-// ---------------- GET ----------------
 
 export async function GET(req) {
     try {
@@ -116,8 +87,6 @@ export async function GET(req) {
         console.log("[GET] mode:", mode);
         console.log("[GET] apiId:", apiId);
         console.log("[GET] saeGradeId:", saeGradeId);
-
-        // ---------------- STATIC CATEGORY ----------------
 
         if (mode === "static-category") {
             const category = await getStaticCategory();
@@ -133,8 +102,6 @@ export async function GET(req) {
             });
         }
 
-
-        // ----------All------ APIS ----------------
         if (mode === "allapis") {
             const category = await getStaticCategory();
 
@@ -151,25 +118,18 @@ export async function GET(req) {
                     .filter(Boolean)
             );
 
-            console.log("existingApis:", existingApis);
-            console.log("existingApiIds:", [...existingApiIds]);
-
             const query = qs.stringify({
                 pagination: { pageSize: 500 },
-                sort: ["name:desc"],
+                sort: ["name:asc"],
             });
 
             const res = await fetchData("apis", query);
-
             const allApis = res?.data || [];
 
             const filteredApis = allApis.filter((api) => {
-                const apiId = api?.documentId || api?.id;
-                return !existingApiIds.has(apiId);
+                const currentId = api?.documentId || api?.id;
+                return !existingApiIds.has(currentId);
             });
-
-            console.log("All API:", allApis);
-            console.log("Filtered API:", filteredApis);
 
             return NextResponse.json({
                 ok: true,
@@ -177,42 +137,32 @@ export async function GET(req) {
             });
         }
 
-
-        // ----------selected------ APIS ----------------
-
         if (mode === "apis") {
             const category = await getStaticCategory();
 
-
-            if (!category?.documentId) {
+            if (!category?.id) {
                 return NextResponse.json({ ok: true, items: [] });
-            };
+            }
 
             const query = qs.stringify({
-
                 filters: {
                     product_category: {
                         id: {
-                            $eq: [Number(category.id)],
+                            $eq: Number(category.id),
                         },
                     },
                 },
                 populate: {
-
                     product_category: true,
                 },
-
+                pagination: {
+                    pageSize: 500,
+                },
+                sort: ["name:asc"],
             });
 
-            const res = await fetchData(
-                `apis`,
-                query
-            );
-
-            const apis = res?.data;
-
-            console.log("[APIS] categoryDetail:", category.attributes.title, apis);
-            //   const apis = getRelation(categoryDetail, "apis");
+            const res = await fetchData("apis", query);
+            const apis = res?.data || [];
 
             return NextResponse.json({
                 ok: true,
@@ -220,7 +170,55 @@ export async function GET(req) {
             });
         }
 
-        // ---------------- SAE GRADES ----------------
+        if (mode === "all-sae-grades") {
+            if (!apiId) return NextResponse.json({ ok: true, items: [] });
+
+            const selectedApiQuery = qs.stringify({
+                filters: {
+                    documentId: {
+                        $eq: apiId,
+                    },
+                },
+                populate: {
+                    sae_grades: true,
+                },
+                pagination: { pageSize: 1 },
+            });
+
+            const apiRes = await fetchData("apis", selectedApiQuery);
+            const apiItem = apiRes?.data?.[0];
+
+            const existingSaeGrades =
+                apiItem?.attributes?.sae_grades?.data ||
+                apiItem?.sae_grades?.data ||
+                apiItem?.sae_grades ||
+                [];
+
+            const existingSaeIds = new Set(
+                existingSaeGrades
+                    .map((item) => item?.documentId || item?.id)
+                    .filter(Boolean)
+            );
+
+            const allSaeQuery = qs.stringify({
+                fields: ["name"],
+                pagination: { pageSize: 500 },
+                sort: ["name:asc"],
+            });
+
+            const allSaeRes = await fetchData("sae-grades", allSaeQuery);
+            const allSaeGrades = allSaeRes?.data || [];
+
+            const filteredSaeGrades = allSaeGrades.filter((item) => {
+                const currentId = item?.documentId || item?.id;
+                return !existingSaeIds.has(currentId);
+            });
+
+            return NextResponse.json({
+                ok: true,
+                items: mapItems(filteredSaeGrades, "name"),
+            });
+        }
 
         if (mode === "sae-grades") {
             if (!apiId) return NextResponse.json({ ok: true, items: [] });
@@ -235,11 +233,10 @@ export async function GET(req) {
                 },
                 fields: ["name"],
                 pagination: { pageSize: 500 },
+                sort: ["name:asc"],
             });
 
             const res = await fetchData("sae-grades", query);
-
-            console.log("[SAE] raw:", res?.data);
 
             return NextResponse.json({
                 ok: true,
@@ -247,7 +244,55 @@ export async function GET(req) {
             });
         }
 
-        // ---------------- ACEA ----------------
+        if (mode === "all-aceas") {
+            if (!saeGradeId) return NextResponse.json({ ok: true, items: [] });
+
+            const selectedSaeQuery = qs.stringify({
+                filters: {
+                    documentId: {
+                        $eq: saeGradeId,
+                    },
+                },
+                populate: {
+                    aceas: true,
+                },
+                pagination: { pageSize: 1 },
+            });
+
+            const saeRes = await fetchData("sae-grades", selectedSaeQuery);
+            const saeItem = saeRes?.data?.[0];
+
+            const existingAceas =
+                saeItem?.attributes?.aceas?.data ||
+                saeItem?.aceas?.data ||
+                saeItem?.aceas ||
+                [];
+
+            const existingAceaIds = new Set(
+                existingAceas
+                    .map((item) => item?.documentId || item?.id)
+                    .filter(Boolean)
+            );
+
+            const allAceaQuery = qs.stringify({
+                fields: ["name"],
+                pagination: { pageSize: 500 },
+                sort: ["name:asc"],
+            });
+
+            const allAceaRes = await fetchData("aceas", allAceaQuery);
+            const allAceas = allAceaRes?.data || [];
+
+            const filteredAceas = allAceas.filter((item) => {
+                const currentId = item?.documentId || item?.id;
+                return !existingAceaIds.has(currentId);
+            });
+
+            return NextResponse.json({
+                ok: true,
+                items: mapItems(filteredAceas, "name"),
+            });
+        }
 
         if (mode === "aceas") {
             if (!saeGradeId) return NextResponse.json({ ok: true, items: [] });
@@ -262,11 +307,10 @@ export async function GET(req) {
                 },
                 fields: ["name"],
                 pagination: { pageSize: 500 },
+                sort: ["name:asc"],
             });
 
             const res = await fetchData("aceas", query);
-
-            console.log("[ACEA] raw:", res?.data);
 
             return NextResponse.json({
                 ok: true,
@@ -274,8 +318,10 @@ export async function GET(req) {
             });
         }
 
-        return NextResponse.json({ ok: false, error: "Invalid mode" }, { status: 400 });
-
+        return NextResponse.json(
+            { ok: false, error: "Invalid mode" },
+            { status: 400 }
+        );
     } catch (err) {
         console.log("[GET ERROR]", err);
 
@@ -289,12 +335,10 @@ export async function GET(req) {
     }
 }
 
-// ---------------- POST -----for save Data-----------
-
 export async function POST(req) {
     try {
         const body = await req.json();
-        const { type, title, apiId, saeGradeId } = body;
+        const { type, title, apiId, saeGradeId, aceaId } = body;
 
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
         const token = process.env.API_TOKEN;
@@ -302,13 +346,8 @@ export async function POST(req) {
         console.log("==================================================");
         console.log("[POST] body:", body);
 
-
-
-        // ---------------- CREATE API ----------------
-
         if (type === "api") {
             const category = await getStaticCategory();
-
             const categoryDocumentId = category?.documentId || category?.data?.documentId;
 
             if (!apiId || !categoryDocumentId) {
@@ -341,8 +380,6 @@ export async function POST(req) {
 
             const updatedCategory = await updateCategoryRes.json();
 
-            console.log("**************************updatedCategory:", updatedCategory);
-
             if (!updateCategoryRes.ok) {
                 return NextResponse.json(
                     {
@@ -354,63 +391,106 @@ export async function POST(req) {
                 );
             }
 
-
-
             return NextResponse.json({
                 ok: true,
                 item: updatedCategory?.data || null,
             });
         }
 
-
-
-
-        // ---------------- CREATE SAE ----------------
-
         if (type === "saeGrade") {
-            const res = await fetch(`${baseUrl}sae-grades`, {
-                method: "POST",
+            if (!apiId || !saeGradeId) {
+                return NextResponse.json(
+                    {
+                        ok: false,
+                        error: "apiId or saeGradeId missing",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            const updateApiRes = await fetch(`${baseUrl}apis/${apiId}`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     data: {
-                        name: title,
-                        api: apiId,
+                        sae_grades: {
+                            connect: [saeGradeId],
+                        },
                     },
                 }),
             });
 
-            const data = await res.json();
+            const updatedApi = await updateApiRes.json();
 
-            return NextResponse.json({ ok: true, item: data?.data });
+            if (!updateApiRes.ok) {
+                return NextResponse.json(
+                    {
+                        ok: false,
+                        error: "Failed to connect SAE Grade with API",
+                        details: updatedApi,
+                    },
+                    { status: updateApiRes.status }
+                );
+            }
+
+            return NextResponse.json({
+                ok: true,
+                item: updatedApi?.data || null,
+            });
         }
-
-        // ---------------- CREATE ACEA ----------------
 
         if (type === "acea") {
-            const res = await fetch(`${baseUrl}aceas`, {
-                method: "POST",
+            if (!saeGradeId || !aceaId) {
+                return NextResponse.json(
+                    {
+                        ok: false,
+                        error: "saeGradeId or aceaId missing",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            const updateSaeRes = await fetch(`${baseUrl}sae-grades/${saeGradeId}`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     data: {
-                        name: title,
-                        sae_grade: saeGradeId,
+                        aceas: {
+                            connect: [aceaId],
+                        },
                     },
                 }),
             });
 
-            const data = await res.json();
+            const updatedSae = await updateSaeRes.json();
 
-            return NextResponse.json({ ok: true, item: data?.data });
+            if (!updateSaeRes.ok) {
+                return NextResponse.json(
+                    {
+                        ok: false,
+                        error: "Failed to connect ACEA with SAE Grade",
+                        details: updatedSae,
+                    },
+                    { status: updateSaeRes.status }
+                );
+            }
+
+            return NextResponse.json({
+                ok: true,
+                item: updatedSae?.data || null,
+            });
         }
 
-        return NextResponse.json({ ok: false });
-
+        return NextResponse.json(
+            { ok: false, error: "Invalid type" },
+            { status: 400 }
+        );
     } catch (err) {
         console.log("[POST ERROR]", err);
 
