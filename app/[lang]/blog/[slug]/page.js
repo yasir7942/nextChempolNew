@@ -34,9 +34,9 @@ export async function generateMetadata(props) {
   const metadataParams = {
     pageTitle: postData.data[0].title,
     pageSlug: postData.data[0].slug,
-    pageDescription: getFirstDescriptionText(postData.data[0].description),
+    seoDescription: getFirstDescriptionText(postData.data[0].description),
     seoTitle: postData.data[0].seo?.seoTitle,
-    seoDesctiption: postData.data[0]?.seo?.seoDesctiption ?? "",
+    seoDescription: postData.data[0]?.seo?.seoDesctiption ?? "",
     rebotStatus: postData.data[0].seo?.preventIndexing,
     canonicalLinks: postData.data[0].seo?.canonicalLinks,
     dataPublishedTime: postData.data[0].publishedAt,
@@ -48,6 +48,7 @@ export async function generateMetadata(props) {
 
 
   const metaData = await generatePageMetadata({ type: "blog", path: "/blog/", params: metadataParams, lang: lang });
+
 
   return metaData;
 }

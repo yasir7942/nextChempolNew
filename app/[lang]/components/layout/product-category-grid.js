@@ -57,14 +57,17 @@ const ProductCategoryGrid = async ({ locale }) => {
                 key={category.id}
                 className="flex h-full flex-col mt-5 justify-start rounded-lg  text-center"
               >
-                <Link href={`/${locale}/product-category/${category.slug}/`} className="block">
-                  <Image
-                    className="rounded-xl object-cover z-2"
-                    src={getImageUrl(category.image.url)}
-                    width={500}
-                    height={300}
-                    alt={category.title}
-                  />
+                <Link href={`/${locale}/product-category/${category?.slug}/`} className="block">
+                  {category?.image?.url && (
+
+                    <Image
+                      className="rounded-xl object-cover z-2"
+                      src={getImageUrl(category.image.url)}
+                      width={500}
+                      height={300}
+                      alt={category.title}
+                    />
+                  )}
                 </Link>
 
                 {/* Title — reserve one line height */}

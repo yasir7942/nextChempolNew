@@ -10,7 +10,7 @@ export async function generateMetadata({ type, path, params, lang = "en" }) {
     pageSlug,
     pageDescription,
     seoTitle,
-    seoDesctiption,
+    seoDescription,
     rebotStatus,
     canonicalLinks,
     dataPublishedTime,
@@ -24,7 +24,7 @@ export async function generateMetadata({ type, path, params, lang = "en" }) {
 
 
   const finalSeoTitle = seoTitle?.trim() ? seoTitle : pageTitle;
-  const finalSeoDescription = seoDesctiption?.trim() ? seoDesctiption : pageDescription;
+  const finalSeoDescription = seoDescription?.trim() ? seoDescription : pageDescription;
   const finalRebotStatus = rebotStatus !== true;  // rebotStatus ture means prevent Indexing
   const autoCanonicalSlug = path + pageSlug + "/";
   const manualCanonicalSlug = validateCanonicalSlug(canonicalLinks?.trim());

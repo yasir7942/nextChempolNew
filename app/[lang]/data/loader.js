@@ -26,11 +26,6 @@ export async function fetchData(path, filter) {
     cache: cacheSystem,
 
   }
-
-
-
-
-
   const url = new URL(path, baseUrl);
   url.search = filter;
 
@@ -226,7 +221,7 @@ export async function getSingleProduct(lang, slug) {
     },
     populate: ['productImage', 'seo', 'seo.schema', 'productSchema', 'productSchema.reviews',
       'related_products.productImage', 'product_categories', 'TDSFile', 'MSDSFile',
-      'table', 'faq', 'productTableFour'],
+      'table', 'faq'],
   });
 
 
