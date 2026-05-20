@@ -1,5 +1,24 @@
-User-Agent:*
-Disallow: /
+
+# Allow everything by default
+User-agent: *
+Allow: /
+
+# Block non-indexable/private areas
+Disallow: /admin
+Disallow: /api
+Disallow: /account
+Disallow: /cart
+Disallow: /checkout
+Disallow: /private
+Disallow: /search
+
+# Make sure bots can fetch assets (don’t block _next)
+Disallow: /_next/static/
+Disallow: /static/
+
+# Your sitemaps
+Sitemap: https://chempol.co.uk/sitemap.xml
  
 
- 
+# Host (optional, mostly for Yandex/Baidu)
+Host: chempol.co.uk
