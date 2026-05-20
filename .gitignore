@@ -9,6 +9,8 @@
 .env-server
 
 *.zip
+*.7z
+
 
 desktop.ini
 
@@ -41,3 +43,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+package-lock.json
+.node_modules
+.next
+.htaccess
+htaccess
+.env
+.env_server
+robots.txt
