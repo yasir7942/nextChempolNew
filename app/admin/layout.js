@@ -1,10 +1,5 @@
-import AdminHeader from "./shared/AdminHeader";
+import AdminShell from "./shared/AdminShell";
 
 export default function AdminLayout({ children }) {
-    return (
-        <div className="min-h-screen bg-gray-100">
-            <AdminHeader />
-            {children}
-        </div>
-    );
+    return <AdminShell>{children}</AdminShell>;
 }

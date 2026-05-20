@@ -120,7 +120,8 @@
         "property": "Property",
         "method": "Method", 
         "value": "Value",
-        "table":"Product Characteristics"
+        "table":"Product Characteristics",
+        "dosage":"DOSAGE RECOMMENDED (WT%):"
         
     },
     "imageObject":

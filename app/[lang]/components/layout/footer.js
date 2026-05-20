@@ -29,7 +29,7 @@ const Footer = async ({ locale = "en" }) => {
 
   return (
 
-    <footer className="w-full pt-16 relative z-20    pb-10 bg-[#2D2D2D]">
+    <footer className="w-full pt-16 relative z-20    pb-10 bg-[#2D2D2D] text-white">
 
 
       <WhatsAppButton />

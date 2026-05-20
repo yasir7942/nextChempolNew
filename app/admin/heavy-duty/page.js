@@ -108,6 +108,11 @@ export default function HeavyDutyPage() {
     const [selectedAcea, setSelectedAcea] = useState("");
     const [selectedOem, setSelectedOem] = useState("");
 
+    const [dosageDocId, setDosageDocId] = useState("");
+    const [dosageTitle, setDosageTitle] = useState("");
+    const [loadingDosage, setLoadingDosage] = useState(false);
+    const [savingDosage, setSavingDosage] = useState(false);
+
     const [selectedAdd, setSelectedAdd] = useState({
         api: "",
         saeGrade: "",
@@ -271,6 +276,24 @@ export default function HeavyDutyPage() {
         setAllProducts(all?.items || []);
     }
 
+    async function loadDosage(productId) {
+        setDosageDocId("");
+        setDosageTitle("");
+
+        if (!productId) return;
+
+        try {
+            setLoadingDosage(true);
+
+            const data = await fetchJson(apiUrl("dosage", { productId }));
+
+            setDosageDocId(data?.item?.documentId || "");
+            setDosageTitle(data?.item?.title || "");
+        } finally {
+            setLoadingDosage(false);
+        }
+    }
+
     async function loadLeaf(saeGradeId, productId) {
         if (!saeGradeId || !productId) {
             setAceas([]);
@@ -320,6 +343,9 @@ export default function HeavyDutyPage() {
                 setSelectedAcea("");
                 setSelectedOem("");
 
+                setDosageDocId("");
+                setDosageTitle("");
+
                 setSaeGrades([]);
                 setAllSaeGrades([]);
                 setProducts([]);
@@ -348,6 +374,9 @@ export default function HeavyDutyPage() {
                 setSelectedProduct("");
                 setSelectedAcea("");
                 setSelectedOem("");
+
+                setDosageDocId("");
+                setDosageTitle("");
 
                 setProducts([]);
                 setAllProducts([]);
@@ -380,8 +409,14 @@ export default function HeavyDutyPage() {
                 setOems([]);
                 setAllOems([]);
 
+                setDosageDocId("");
+                setDosageTitle("");
+
                 if (selectedSaeGrade && selectedProduct) {
-                    await loadLeaf(selectedSaeGrade, selectedProduct);
+                    await Promise.all([
+                        loadDosage(selectedProduct),
+                        loadLeaf(selectedSaeGrade, selectedProduct),
+                    ]);
                 }
             } catch (error) {
                 showError(error);
@@ -403,6 +438,47 @@ export default function HeavyDutyPage() {
             ...prev,
             [type]: !prev[type],
         }));
+    }
+
+    async function handleSaveDosage() {
+        try {
+            resetMessage();
+
+            if (!selectedProduct) {
+                throw new Error("Please select Product first");
+            }
+
+            if (!dosageTitle.trim()) {
+                throw new Error("Please enter dosage");
+            }
+
+            setSavingDosage(true);
+
+            const data = await fetchJson(API_ROUTE, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    type: "dosage",
+                    productId: selectedProduct,
+                    title: dosageTitle.trim(),
+                    dosageId: dosageDocId || null,
+                }),
+            });
+
+            setDosageDocId(data?.item?.documentId || dosageDocId || "");
+
+            if (data?.item?.title) {
+                setDosageTitle(data.item.title);
+            }
+
+            showSuccess("Dosage saved successfully");
+        } catch (error) {
+            showError(error);
+        } finally {
+            setSavingDosage(false);
+        }
     }
 
     async function handleAdd(type) {
@@ -567,6 +643,8 @@ export default function HeavyDutyPage() {
             if (type === "product") {
                 if (String(selectedProduct) === String(documentId)) {
                     setSelectedProduct("");
+                    setDosageDocId("");
+                    setDosageTitle("");
                 }
 
                 setSelectedAcea("");
@@ -604,8 +682,8 @@ export default function HeavyDutyPage() {
         return (
             <div
                 className={`mb-3 rounded-lg border px-3 py-2 text-sm font-medium ${message.type === "error"
-                        ? "border-red-200 bg-red-50 text-red-700"
-                        : "border-green-200 bg-green-50 text-green-700"
+                    ? "border-red-200 bg-red-50 text-red-700"
+                    : "border-green-200 bg-green-50 text-green-700"
                     }`}
             >
                 {message.text}
@@ -735,12 +813,7 @@ export default function HeavyDutyPage() {
         );
     }
 
-    function AddDropdown({
-        type,
-        options,
-        value,
-        disabled = false,
-    }) {
+    function AddDropdown({ type, options, value, disabled = false }) {
         const [query, setQuery] = useState("");
 
         const dropdownList = toDropdownOptions(options);
@@ -839,11 +912,7 @@ export default function HeavyDutyPage() {
         );
     }
 
-    function AddPanel({
-        type,
-        options,
-        disabled = false,
-    }) {
+    function AddPanel({ type, options, disabled = false }) {
         const selectedValue = selectedAdd[type];
         const dropdownList = toDropdownOptions(options);
 
@@ -891,14 +960,7 @@ export default function HeavyDutyPage() {
         );
     }
 
-    function Section({
-        type,
-        value,
-        onChange,
-        options,
-        addOptions,
-        disabled = false,
-    }) {
+    function Section({ type, value, onChange, options, addOptions, disabled = false }) {
         const meta = SECTION_META[type];
 
         return (
@@ -911,7 +973,7 @@ export default function HeavyDutyPage() {
 
                         {type === "product" && (
                             <p className="text-[11px] text-gray-500">
-                                Select product first, then ACEA / OEM will open.
+                                Select product first, then Dosage / ACEA / OEM will open.
                             </p>
                         )}
                     </div>
@@ -921,8 +983,8 @@ export default function HeavyDutyPage() {
                         onClick={() => toggleAdd(type)}
                         disabled={disabled}
                         className={`h-8 rounded-lg px-3 text-xs font-semibold text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${addMode[type]
-                                ? "bg-red-500 hover:bg-red-600"
-                                : "bg-blue-600 hover:bg-blue-700"
+                            ? "bg-red-500 hover:bg-red-600"
+                            : "bg-blue-600 hover:bg-blue-700"
                             }`}
                     >
                         {addMode[type] ? "Cancel" : meta.addText}
@@ -949,6 +1011,50 @@ export default function HeavyDutyPage() {
         );
     }
 
+    function renderDosageSection() {
+        const disabled = !selectedProduct;
+
+        return (
+            <section className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+                <div className="mb-2">
+                    <h3 className="text-sm font-bold text-gray-900">
+                        Dosage
+                    </h3>
+
+                    <p className="text-[11px] text-gray-500">
+                        Product dosage is saved in ProductDosage collection and linked with selected Product.
+                    </p>
+                </div>
+
+                {disabled ? (
+                    <div className="flex h-10 w-full items-center rounded-lg border border-gray-200 bg-gray-100 px-3 text-sm text-gray-500">
+                        Select Product first
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
+                        <input
+                            type="text"
+                            value={dosageTitle}
+                            onChange={(e) => setDosageTitle(e.target.value)}
+                            disabled={loadingDosage || savingDosage}
+                            placeholder={loadingDosage ? "Loading dosage..." : "Enter product dosage"}
+                            className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+                        />
+
+                        <button
+                            type="button"
+                            onClick={handleSaveDosage}
+                            disabled={loadingDosage || savingDosage || !dosageTitle.trim()}
+                            className="h-10 rounded-lg bg-green-600 px-5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {savingDosage ? "Saving..." : dosageDocId ? "Update" : "Save"}
+                        </button>
+                    </div>
+                )}
+            </section>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 p-3 md:p-4">
             <div className="mx-auto max-w-6xl">
@@ -959,7 +1065,7 @@ export default function HeavyDutyPage() {
                         </h1>
 
                         <p className="mt-1 text-sm text-blue-50">
-                            API → SAE Grade → Product → ACEA / OEM
+                            API → SAE Grade → Product → Dosage / ACEA / OEM
                         </p>
                     </div>
 
@@ -971,7 +1077,7 @@ export default function HeavyDutyPage() {
 
                         <InfoBox
                             label="Flow"
-                            value="API → SAE Grade → Product → ACEA / OEM"
+                            value="API → SAE Grade → Product → Dosage / ACEA / OEM"
                         />
                     </div>
                 </div>
@@ -1014,6 +1120,8 @@ export default function HeavyDutyPage() {
                                 addOptions={allProducts}
                                 disabled={!selectedSaeGrade}
                             />
+
+                            {renderDosageSection()}
 
                             <Section
                                 type="acea"
@@ -1058,6 +1166,11 @@ export default function HeavyDutyPage() {
                                 <SummaryRow
                                     label="Product"
                                     value={selectedProductObj?.label}
+                                />
+
+                                <SummaryRow
+                                    label="Dosage"
+                                    value={dosageTitle}
                                 />
 
                                 <SummaryRow

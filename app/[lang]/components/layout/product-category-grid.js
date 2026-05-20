@@ -73,7 +73,7 @@ const ProductCategoryGrid = async ({ locale }) => {
                 {/* Title — reserve one line height */}
                 <Link
                   href={`/${locale}/product-category/${category.slug}/`}
-                  className="mt-2 line-clamp-1 text-center rtl:text-right text-base md:text-xl font-normal text-darkGary hover:text-textBlue transition duration-300 ease-in-out min-h-[1.75rem]"
+                  className="mt-2 line-clamp-1 text-center rtl:text-right text-base md:text-xl font-normal text-textBlue hover:text-darkGary transition duration-300 ease-in-out min-h-[1.75rem]"
                 >
                   {category.title}
                 </Link>

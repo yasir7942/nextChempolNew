@@ -22,7 +22,8 @@ module.exports = {
 			colors: {
 				backgroundColor: "white",
 				textBlue: "#1976bc",
-				textLightBlue: "#03c7ff",
+				darkBlue: "#1976bc",
+				textLightBlue: "#1776bc",
 				darkYellow: "#FFDE00",
 				darkGary: "#2c2c2c",
 				burnYellow: "#f7be5a",

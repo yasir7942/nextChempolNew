@@ -21,19 +21,19 @@ export default async function sitemap() {
 
     // ── STATIC ROUTES ─────────────────────────────────────────
     links.push(
-      { url: `${baseURL}${prefix}`, changeFrequency: "weekly", priority: 1 },
-      { url: `${baseURL}${prefix}/blog`, changeFrequency: "weekly", priority: 0.8 },
-      { url: `${baseURL}${prefix}/contact`, changeFrequency: "weekly", priority: 0.5 },
-      { url: `${baseURL}${prefix}/faq`, changeFrequency: "weekly", priority: 0.5 },
-      { url: `${baseURL}${prefix}/about-us`, changeFrequency: "weekly", priority: 0.5 },
-      { url: `${baseURL}${prefix}/videos`, changeFrequency: "weekly", priority: 0.5 },
-      { url: `${baseURL}${prefix}/lubricant-additives-manufacturers-in-uae`, changeFrequency: "weekly", priority: 0.9 }
+      { url: `${baseURL}${prefix}/`, changeFrequency: "weekly", priority: 1 },
+      { url: `${baseURL}${prefix}/blog/`, changeFrequency: "weekly", priority: 0.8 },
+      { url: `${baseURL}${prefix}/contact/`, changeFrequency: "weekly", priority: 0.5 },
+      { url: `${baseURL}${prefix}/faq/`, changeFrequency: "weekly", priority: 0.5 },
+      { url: `${baseURL}${prefix}/about-us/`, changeFrequency: "weekly", priority: 0.5 },
+      { url: `${baseURL}${prefix}/videos/`, changeFrequency: "weekly", priority: 0.5 },
+      { url: `${baseURL}${prefix}/lubricant-additives-manufacturers-in-uae/`, changeFrequency: "weekly", priority: 0.9 }
     );
     // ── PRODUCT CATEGORIES ────────────────────────────────────────
     const catRes = await geProductCategoryLeftMenu(lang);
     catRes?.data?.forEach((category) => {
       links.push({
-        url: `${baseURL}${prefix}/product-category/${category.slug}`,
+        url: `${baseURL}${prefix}/product-category/${category.slug}/`,
         lastModified: new Date(category.updatedAt),
         priority: 0.9,
         changeFrequency: "weekly",
@@ -44,7 +44,7 @@ export default async function sitemap() {
     const prodRes = await getAllProductsSlug(lang);
     prodRes?.data?.forEach((product) => {
       links.push({
-        url: `${baseURL}${prefix}/product/${product.slug}`,
+        url: `${baseURL}${prefix}/product/${product.slug}/`,
         lastModified: new Date(product.updatedAt),
         priority: 0.7,
         changeFrequency: "weekly",
@@ -55,7 +55,7 @@ export default async function sitemap() {
     const blogRes = await getAllPostSlug(lang);
     blogRes?.data?.forEach((post) => {
       links.push({
-        url: `${baseURL}${prefix}/blog/${post.slug}`,
+        url: `${baseURL}${prefix}/blog/${post.slug}/`,
         lastModified: new Date(post.updatedAt),
         priority: 0.5,
         changeFrequency: "weekly",

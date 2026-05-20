@@ -437,6 +437,37 @@ async function getByDocumentId(endpoint, documentId, populate = {}) {
     return null;
 }
 
+async function getProductDosage(productId) {
+    if (!productId) return null;
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                product: {
+                    documentId: {
+                        $eq: productId,
+                    },
+                },
+            },
+            fields: ["title"],
+            populate: {
+                product: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
+            sort: ["createdAt:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("product-dosages", query);
+    return res?.data?.[0] || null;
+}
+
 async function findTypeByTitleAndCategory(title) {
     const category = await getStaticCategory();
 
@@ -659,6 +690,9 @@ async function getDeleteCheck(type, documentId) {
             product_categories: true,
             product_category: true,
             type: true,
+            product_dosages: {
+                fields: ["title"],
+            },
             oems: {
                 fields: ["title"],
             },
@@ -818,6 +852,26 @@ export async function GET(req) {
             });
         }
 
+        if (mode === "dosage") {
+            if (!productId) {
+                return okJson({
+                    item: null,
+                });
+            }
+
+            const dosage = await getProductDosage(productId);
+
+            return okJson({
+                item: dosage
+                    ? {
+                        id: dosage?.id,
+                        documentId: dosage?.documentId,
+                        title: getField(dosage, "title"),
+                    }
+                    : null,
+            });
+        }
+
         if (mode === "all-types" || mode === "types") {
             const category = await getStaticCategory();
 
@@ -844,23 +898,9 @@ export async function GET(req) {
             const res = await fetchData("types", query);
             const allTypes = res?.data || [];
 
-            console.log("[industrial types] category:", {
-                id: category?.id,
-                documentId: category?.documentId,
-                title: getField(category, "title"),
-                slug: getField(category, "slug"),
-            });
-
-            console.log("[industrial types] allTypes count:", allTypes.length);
-
             const existingTypes = allTypes.filter((item) => {
                 return typeBelongsToStaticCategory(item, category);
             });
-
-            console.log(
-                "[industrial types] filtered existingTypes count:",
-                existingTypes.length
-            );
 
             if (mode === "all-types") {
                 return okJson({
@@ -915,8 +955,6 @@ export async function GET(req) {
                     return productTypeId(product) === String(typeId);
                 });
 
-            console.log("[industrial products] selected type products count:", products.length);
-
             return okJson({
                 items: mapProductItems(products),
             });
@@ -942,31 +980,19 @@ export async function GET(req) {
             const res = await fetchData("products", query);
             const allProducts = res?.data || [];
 
-            console.log("[industrial all-products] total:", allProducts.length);
-
             const categoryProducts = allProducts.filter((product) => {
                 return productBelongsToStaticCategory(product, category);
             });
 
-            console.log(
-                "[industrial all-products] categoryProducts:",
-                categoryProducts.length
-            );
-
             const items = categoryProducts.filter((product) => {
                 const currentTypeId = productTypeId(product);
 
-                // Show products with no Type.
                 if (!currentTypeId) return true;
 
-                // Also show products already in selected Type,
-                // so dropdown does not falsely become empty.
                 if (typeId && String(currentTypeId) === String(typeId)) return true;
 
                 return false;
             });
-
-            console.log("[industrial all-products] dropdown items:", items.length);
 
             return okJson({
                 items: mapProductItems(items),
@@ -1037,6 +1063,7 @@ export async function POST(req) {
             title,
             typeId,
             productId,
+            dosageId,
         } = body;
 
         console.log("==================================================");
@@ -1048,6 +1075,82 @@ export async function POST(req) {
 
         if (!title && type !== "product") {
             return errorJson("title is missing", 400);
+        }
+
+        if (type === "dosage") {
+            if (!productId) {
+                return errorJson("productId is missing", 400);
+            }
+
+            if (!title?.trim()) {
+                return errorJson("Dosage title is missing", 400);
+            }
+
+            const product = await getByDocumentId("products", productId, {
+                product_categories: true,
+                product_category: true,
+                product_dosages: true,
+            });
+
+            if (!product) {
+                return errorJson("Product not found", 404);
+            }
+
+            const category = await getStaticCategory();
+
+            if (!productBelongsToStaticCategory(product, category)) {
+                return errorJson(
+                    "Product does not belong to Industrial Additives category",
+                    400
+                );
+            }
+
+            let existingDosage = null;
+
+            if (dosageId) {
+                existingDosage = await getByDocumentId("product-dosages", dosageId, {
+                    product: true,
+                });
+            }
+
+            if (!existingDosage) {
+                existingDosage = await getProductDosage(productId);
+            }
+
+            if (existingDosage?.documentId) {
+                const updated = await strapiPut(
+                    `product-dosages/${existingDosage.documentId}?status=published`,
+                    {
+                        data: {
+                            title: title.trim(),
+                            product: productId,
+                        },
+                    }
+                );
+
+                if (!updated.ok) {
+                    return errorJson("Failed to update Dosage", updated.status, updated.data);
+                }
+
+                return okJson({
+                    item: updated.data?.data || null,
+                });
+            }
+
+            const created = await strapiPost("product-dosages?status=published", {
+                data: {
+                    title: title.trim(),
+                    product: productId,
+                },
+            });
+
+            if (!created.ok) {
+                return errorJson("Failed to create Dosage", created.status, created.data);
+            }
+
+            return okJson({
+                item: created.data?.data || null,
+            });
         }
 
         if (type === "type") {

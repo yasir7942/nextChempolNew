@@ -221,7 +221,7 @@ export async function getSingleProduct(lang, slug) {
     },
     populate: ['productImage', 'seo', 'seo.schema', 'productSchema', 'productSchema.reviews',
       'related_products.productImage', 'product_categories', 'TDSFile', 'MSDSFile',
-      'table', 'faq'],
+      'table', 'faq', 'Dosage'],
   });
 
 
@@ -267,28 +267,6 @@ export async function geProductsByGroup(productSlug, groupSlug) {
 
 }
 
-
-export async function geProductsBySearch(lang, query) {
-
-
-  const searchProductQuery = qs.stringify({
-    locale: lang,
-    filters: {
-      $or: [
-        { title: { $containsi: query } },
-
-        { product_categories: { title: { $containsi: query } } }
-      ],
-    },
-    populate: ['productImage', 'product_categories', 'seo.schema'],
-    pagination: {
-      pageSize: 10,
-      page: 1,
-    },
-  });
-
-  return await fetchData("products", searchProductQuery);
-}
 
 
 

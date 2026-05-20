@@ -181,7 +181,7 @@ const SingleBlogPage = async props => {
           <div className="W-full h-auto   " >
             <Image className="w-full h-auto " quality={100} src={getImageUrl(postData.data[0].featureImage.url)} height={1400} width={1400} alt={postData.data[0].title} />
           </div>
-          <h1 className="   text-2xl md:text-3xl text-gray-900 " >{postData.data[0].title}</h1>
+          <h1 className="   text-2xl md:text-3xl text-darkBlue  " >{postData.data[0].title}</h1>
           <div className="text-gray-800 font-light text-base mt-5   pr-5 md:pr-2 rich-text" >
 
             <BodyDataParse content={postData.data[0].description} />

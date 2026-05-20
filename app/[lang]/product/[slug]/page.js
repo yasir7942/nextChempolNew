@@ -261,7 +261,7 @@ const SingleProductPage = async (props) => {
   };
 
 
-
+  console.log(productData.data[0]?.Dosage.length);
 
   return (
     <div className=" z-10 relative">
@@ -293,7 +293,7 @@ const SingleProductPage = async (props) => {
             <div className="flex flex-col md:flex-row w-full h-auto p-0 lg:p-8">
 
               {/* title just for mobile */}
-              <h1 className="capitalize font-semibold text-2xl pb-5 md:hidden ">
+              <h1 className="capitalize font-semibold text-2xl pb-5 md:hidden text-[var(--primary)] ">
                 {productData.data[0].title}
               </h1>
 
@@ -321,7 +321,7 @@ const SingleProductPage = async (props) => {
 
               {/* text section */}
               <div className="w-full md:w-4/6 flex flex-col text-gray-800 ">
-                <h1 className="capitalize font-semibold text-2xl hidden md:block  ">
+                <h1 className="capitalize font-semibold text-2xl hidden md:block  text-[var(--primary)] ">
                   {productData.data[0].title}
                 </h1>
 
@@ -346,7 +346,7 @@ const SingleProductPage = async (props) => {
                         className=" w-full md:w-3/4 2xl:w-3/6"
                         download
                       >
-                        <div className="py-3 bg-white text-black border-[3px] px-4 border-textLightBlue flex  items-center  font-light text-left">
+                        <div className="py-3 bg-white text-black border-[3px] px-4 border-textLightBlue  flex  items-center  font-light text-left">
                           <div>{dictionary.productPage.tds}
                             <span className="text-gray-500 pl-3 rtl:pr-3">PDF</span></div>
 
@@ -370,14 +370,107 @@ const SingleProductPage = async (props) => {
                       </a>
                     )}
                   </div>
+
                 </div>
+                {/* Dosage Table section */}
+
+                {Array.isArray(productData?.data?.[0]?.Dosage) &&
+                  productData.data[0].Dosage.length > 0 && (
+                    <div className="font-light text-[var(--primary)] text-base mt-5 md:pl-8 w-full md:pr-2 ">
+                      <div className="mt-4">
+                        <div className="text-xl font-semibold py-2 uppercase">
+                          {dictionary.productPage.dosage}
+                        </div>
+
+                        {(() => {
+                          const rows = productData.data[0].Dosage;
+
+                          // Turn a Strapi row into an array of up to 7 cells in order
+                          const toCells = (r = {}) => [
+                            r?.performance ?? "",
+                            r?.Sae ?? "",
+                            r?.dosage ?? "",
+
+                          ];
+
+                          // Trim trailing empty cells ("" / null / undefined)
+                          const trimTrailing = (arr) => {
+                            let end = arr.length - 1;
+                            while (
+                              end >= 0 &&
+                              (arr[end] === null ||
+                                arr[end] === undefined ||
+                                String(arr[end]).trim() === "")
+                            ) {
+                              end--;
+                            }
+                            return arr.slice(0, end + 1);
+                          };
+
+                          // Header from first row
+                          const headerAll = toCells(rows[0]);
+                          const header = trimTrailing(headerAll);
+                          const colCount = Math.min(7, header.length || 0);
+
+                          // If first row is completely empty, don't render table
+                          if (colCount === 0) return null;
+
+                          const body = rows.slice(1);
+
+                          return (
+                            <table className="w-full lg:w-[100%] xl:w-[100%] 2xl:w-[100%] text-left border-collapse border-black rtl:text-right">
+                              <thead>
+                                <tr className="bg-[var(--primary)] text-white ">
+
+                                  <th className="p-2 font-normal border capitalize">
+                                    Performance level SAE
+                                  </th>
+                                  <th className="p-2 font-normal border capitalize">
+                                    Viscosity Grade
+                                  </th>
+                                  <th className="p-2 font-normal border capitalize">
+                                    Dosage (m%)
+                                  </th>
+
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                {body.map((row, rIdx) => {
+                                  const cells = toCells(row).slice(0, colCount);
+                                  // pad to match header length
+                                  while (cells.length < colCount) cells.push("");
+
+                                  return (
+                                    <tr
+                                      key={rIdx}
+                                      className={rIdx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                                    >
+                                      {cells.map((c, cIdx) => (
+                                        <td key={cIdx} className="p-2 border text-black">
+                                          {c}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
+                {/* End Dosage Table section */}
+
 
               </div>
 
             </div>
 
             <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full lg:w-[90%]     pr-5 md:pr-2 rich-text">
-              <div className="text-xl font-semibold py-2">{dictionary.productPage.description}</div>
+              <div className="text-xl font-semibold py-2 uppercase text-[var(--primary)] ">{dictionary.productPage.description}</div>
               <BodyDataParse content={content} />
             </div>
 
@@ -388,7 +481,7 @@ const SingleProductPage = async (props) => {
               productData.data[0].table.length > 0 && (
                 <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full md:pr-2">
                   <div className="mt-4">
-                    <div className="text-xl font-semibold py-2">
+                    <div className="text-xl font-semibold py-2 text-[var(--primary)]">
                       {dictionary.productPage.table}
                     </div>
 
@@ -428,11 +521,11 @@ const SingleProductPage = async (props) => {
                       const body = rows.slice(1);
 
                       return (
-                        <table className="w-full lg:w-[80%] xl:w-[60%] 2xl:w-[60%] text-left border-collapse rtl:text-right">
+                        <table className="w-full lg:w-[90%] xl:w-[80%] 2xl:w-[80%] text-left border-collapse rtl:text-right">
                           <thead>
-                            <tr className="bg-[#F7F7F7]">
+                            <tr className="bg-[var(--primary)]">
                               {header.map((h, i) => (
-                                <th key={i} className="p-4 font-normal border capitalize">
+                                <th key={i} className="p-2 font-normal border capitalize text-white">
                                   {h}
                                 </th>
                               ))}
@@ -448,10 +541,10 @@ const SingleProductPage = async (props) => {
                               return (
                                 <tr
                                   key={rIdx}
-                                  className={rIdx % 2 === 0 ? "bg-[#FDFDFD]" : "bg-[#F7F7F7]"}
+                                  className={rIdx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                                 >
                                   {cells.map((c, cIdx) => (
-                                    <td key={cIdx} className="p-4 border">
+                                    <td key={cIdx} className="p-2 border text-black">
                                       {c}
                                     </td>
                                   ))}

@@ -51,7 +51,9 @@ async function parseResponse(res) {
     try {
         data = JSON.parse(text);
     } catch {
-        data = { raw: text };
+        data = {
+            raw: text,
+        };
     }
 
     return {
@@ -152,7 +154,10 @@ function errorJson(error, status = 400, details = null) {
 
 function getField(item, field) {
     if (!item) return "";
-    if (item[field] !== undefined) return item[field];
+
+    if (item[field] !== undefined) {
+        return item[field];
+    }
 
     if (item?.attributes?.[field] !== undefined) {
         return item.attributes[field];
@@ -231,6 +236,7 @@ function getRelationObject(item, relationName) {
 
     if (!rel) return null;
     if (rel?.data) return rel.data;
+    if (Array.isArray(rel)) return rel[0] || null;
 
     return rel;
 }
@@ -426,6 +432,37 @@ async function getByDocumentId(endpoint, documentId, populate = {}) {
     });
 
     return null;
+}
+
+async function getProductDosage(productId) {
+    if (!productId) return null;
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                product: {
+                    documentId: {
+                        $eq: productId,
+                    },
+                },
+            },
+            fields: ["title"],
+            populate: {
+                product: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
+            sort: ["createdAt:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("product-dosages", query);
+    return res?.data?.[0] || null;
 }
 
 async function findTypeByTitleAndCategory(title) {
@@ -650,6 +687,9 @@ async function getDeleteCheck(type, documentId) {
             product_categories: true,
             product_category: true,
             type: true,
+            product_dosages: {
+                fields: ["title"],
+            },
             oems: {
                 fields: ["title"],
             },
@@ -806,6 +846,26 @@ export async function GET(req) {
                     label: getField(category, "title") || STATIC_CATEGORY.title,
                     slug: getField(category, "slug") || STATIC_CATEGORY.slug,
                 },
+            });
+        }
+
+        if (mode === "dosage") {
+            if (!productId) {
+                return okJson({
+                    item: null,
+                });
+            }
+
+            const dosage = await getProductDosage(productId);
+
+            return okJson({
+                item: dosage
+                    ? {
+                        id: dosage?.id,
+                        documentId: dosage?.documentId,
+                        title: getField(dosage, "title"),
+                    }
+                    : null,
             });
         }
 
@@ -997,6 +1057,7 @@ export async function POST(req) {
             title,
             typeId,
             productId,
+            dosageId,
         } = body;
 
         console.log("==================================================");
@@ -1008,6 +1069,82 @@ export async function POST(req) {
 
         if (!title && type !== "product") {
             return errorJson("title is missing", 400);
+        }
+
+        if (type === "dosage") {
+            if (!productId) {
+                return errorJson("productId is missing", 400);
+            }
+
+            if (!title?.trim()) {
+                return errorJson("Dosage title is missing", 400);
+            }
+
+            const product = await getByDocumentId("products", productId, {
+                product_categories: true,
+                product_category: true,
+                product_dosages: true,
+            });
+
+            if (!product) {
+                return errorJson("Product not found", 404);
+            }
+
+            const category = await getStaticCategory();
+
+            if (!productBelongsToStaticCategory(product, category)) {
+                return errorJson(
+                    "Product does not belong to Marine Additives category",
+                    400
+                );
+            }
+
+            let existingDosage = null;
+
+            if (dosageId) {
+                existingDosage = await getByDocumentId("product-dosages", dosageId, {
+                    product: true,
+                });
+            }
+
+            if (!existingDosage) {
+                existingDosage = await getProductDosage(productId);
+            }
+
+            if (existingDosage?.documentId) {
+                const updated = await strapiPut(
+                    `product-dosages/${existingDosage.documentId}?status=published`,
+                    {
+                        data: {
+                            title: title.trim(),
+                            product: productId,
+                        },
+                    }
+                );
+
+                if (!updated.ok) {
+                    return errorJson("Failed to update Dosage", updated.status, updated.data);
+                }
+
+                return okJson({
+                    item: updated.data?.data || null,
+                });
+            }
+
+            const created = await strapiPost("product-dosages?status=published", {
+                data: {
+                    title: title.trim(),
+                    product: productId,
+                },
+            });
+
+            if (!created.ok) {
+                return errorJson("Failed to create Dosage", created.status, created.data);
+            }
+
+            return okJson({
+                item: created.data?.data || null,
+            });
         }
 
         if (type === "type") {
@@ -1194,7 +1331,10 @@ export async function DELETE(req) {
     try {
         const body = await req.json();
 
-        const { type, documentId } = body;
+        const {
+            type,
+            documentId,
+        } = body;
 
         if (!type || !documentId) {
             return errorJson("type or documentId is missing", 400);

@@ -268,6 +268,7 @@ async function getSaeGradeByDocumentId(saeGradeId) {
             fields: ["title", "slug"],
             populate: {
                 product_categories: true,
+                product_dosages: true,
             },
         },
         jasos: {
@@ -401,6 +402,32 @@ async function getJasoCountForSaeAndProduct({
 
     const res = await fetchData("jasos", query);
     return res?.data?.length || 0;
+}
+
+async function getProductDosage(productId) {
+    if (!productId) return null;
+
+    const query = qs.stringify({
+        status: "published",
+        filters: {
+            product: {
+                documentId: {
+                    $eq: productId,
+                },
+            },
+        },
+        fields: ["title"],
+        populate: {
+            product: true,
+        },
+        pagination: {
+            pageSize: 1,
+        },
+        sort: ["createdAt:asc"],
+    });
+
+    const res = await fetchData("product-dosages", query);
+    return res?.data?.[0] || null;
 }
 
 async function getDeleteCheck(type, documentId, extra = {}) {
@@ -590,6 +617,26 @@ export async function GET(req) {
             });
         }
 
+        if (mode === "dosage") {
+            if (!productId) {
+                return okJson({
+                    item: null,
+                });
+            }
+
+            const dosage = await getProductDosage(productId);
+
+            return okJson({
+                item: dosage
+                    ? {
+                        id: dosage?.id,
+                        documentId: dosage?.documentId,
+                        title: getField(dosage, "title"),
+                    }
+                    : null,
+            });
+        }
+
         if (mode === "allapis" || mode === "apis") {
             const category = await getStaticCategory();
             const categoryDocumentId = category?.documentId;
@@ -704,6 +751,7 @@ export async function GET(req) {
                 fields: ["title", "slug"],
                 populate: {
                     product_categories: true,
+                    product_dosages: true,
                 },
                 pagination: {
                     pageSize: 1000,
@@ -780,6 +828,7 @@ export async function POST(req) {
             apiId,
             saeGradeId,
             productId,
+            dosageId,
         } = body;
 
         console.log("==================================================");
@@ -791,6 +840,79 @@ export async function POST(req) {
 
         if (!title && type !== "product") {
             return errorJson("title is missing", 400);
+        }
+
+        if (type === "dosage") {
+            if (!productId) {
+                return errorJson("productId is missing", 400);
+            }
+
+            if (!title?.trim()) {
+                return errorJson("Dosage title is missing", 400);
+            }
+
+            const product = await getByDocumentId("products", productId, {
+                product_categories: true,
+                product_dosages: true,
+            });
+
+            if (!product) {
+                return errorJson("Product not found", 404);
+            }
+
+            if (!productBelongsToStaticCategory(product)) {
+                return errorJson(
+                    "Product does not belong to Motorcycle Oil Additive category",
+                    400
+                );
+            }
+
+            let existingDosage = null;
+
+            if (dosageId) {
+                existingDosage = await getByDocumentId("product-dosages", dosageId, {
+                    product: true,
+                });
+            }
+
+            if (!existingDosage) {
+                existingDosage = await getProductDosage(productId);
+            }
+
+            if (existingDosage?.documentId) {
+                const updated = await strapiPut(
+                    `product-dosages/${existingDosage.documentId}?status=published`,
+                    {
+                        data: {
+                            title: title.trim(),
+                            product: productId,
+                        },
+                    }
+                );
+
+                if (!updated.ok) {
+                    return errorJson("Failed to update Dosage", updated.status, updated.data);
+                }
+
+                return okJson({
+                    item: updated.data?.data || null,
+                });
+            }
+
+            const created = await strapiPost("product-dosages?status=published", {
+                data: {
+                    title: title.trim(),
+                    product: productId,
+                },
+            });
+
+            if (!created.ok) {
+                return errorJson("Failed to create Dosage", created.status, created.data);
+            }
+
+            return okJson({
+                item: created.data?.data || null,
+            });
         }
 
         if (type === "api") {

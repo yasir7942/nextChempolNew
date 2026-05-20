@@ -51,7 +51,7 @@ const DisaplyFrontVideos = ({ VideoData, latestRelasetext }) => {
                                     />
                                 </div>
                             </div>
-                            <h2 className=" font-medium md:font-semibold leading-4 md:leading-6 text-sm md:text-base pt-3 text-textBlue w-[95%]">
+                            <h2 className=" font-medium md:font-semibold leading-4 md:leading-6 text-sm md:text-base pt-3 text-darkBlue w-[95%]">
                                 {video.title || ""}
                             </h2>
                             <p className="text-sm text-gray-700 font-light">

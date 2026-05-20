@@ -18,7 +18,7 @@ const ProductCategoryMenu = ({ locale, dictionary, menuData }) => {
   return (
     <div>
       {/* Desktop View */}
-      <div className="hidden md:flex flex-row md:flex-col space-y-0 space-x-2 md:space-y-2 md:space-x-0 text-black capitalize">
+      <div className="hidden md:flex flex-row md:flex-col space-y-0 space-x-2 md:space-y-2 md:space-x-0 text-darkBlue capitalize">
         <div className="flex flex-col space-y-3 text-base md:font-normal md:text-lg">
           <Link href="#">{dictionary.navigation.productCategory}</Link>
           <div className="w-full h-[1px] bg-[#0f0f0f]"></div>
@@ -27,7 +27,7 @@ const ProductCategoryMenu = ({ locale, dictionary, menuData }) => {
         {/* Category Menu */}
         {menuData.map((menu) => (
           <div key={menu.id} className="flex flex-col space-y-3 text-base md:font-light md:text-base">
-            <Link href={`/${locale}/product-category/${menu.slug}`} className="transition duration-300 ease-in-out hover:text-textBlue">
+            <Link href={`/${locale}/product-category/${menu.slug}`} className="transition  text-black duration-300 ease-in-out hover:text-textBlue">
               - {menu.title}
             </Link>
           </div>
@@ -35,7 +35,7 @@ const ProductCategoryMenu = ({ locale, dictionary, menuData }) => {
       </div>
 
       {/* Mobile View */}
-      <div className="flex flex-row justify-start md:hidden text-gray-900 ">
+      <div className="flex flex-row justify-start md:hidden text-darkBlue ">
         <Sheet open={openSheet} onOpenChange={setOpenSheet}>
           <SheetTrigger className="flex justify-start items-end space-x-2 ">
             <IoMdMenu size={20} />

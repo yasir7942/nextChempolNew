@@ -2,15 +2,54 @@ import { NextResponse } from "next/server";
 import qs from "qs";
 import ENUMS from "../../../admin/config/enums.json";
 
+export const runtime = "nodejs";
+
 const STATIC_CATEGORY = {
     title: "Synthetic Oils",
     slug: "synthetic-oils",
 };
 
+const TYPE_CONFIG = {
+    type: {
+        endpoint: "types",
+        field: "title",
+        label: "Type",
+    },
+    product: {
+        endpoint: "products",
+        field: "title",
+        label: "Product",
+    },
+};
+
+function getTypeEnum() {
+    return ENUMS.SyntheticType || [];
+}
+
 function joinUrl(base, endpoint) {
     const cleanBase = String(base || "").trim().replace(/\/$/, "");
     const cleanEndpoint = String(endpoint || "").trim().replace(/^\//, "");
     return `${cleanBase}/${cleanEndpoint}`;
+}
+
+async function parseResponse(res) {
+    const text = await res.text();
+
+    let data = null;
+
+    try {
+        data = JSON.parse(text);
+    } catch {
+        data = {
+            raw: text,
+        };
+    }
+
+    return {
+        ok: res.ok,
+        status: res.status,
+        data,
+    };
 }
 
 async function fetchData(endpoint, query = "") {
@@ -31,115 +70,99 @@ async function fetchData(endpoint, query = "") {
             cache: "no-store",
         });
 
-        const text = await res.text();
+        const parsed = await parseResponse(res);
 
-        console.log("[synthetic fetchData] status:", res.status);
-        console.log("[synthetic fetchData] first 800 chars:", text.slice(0, 800));
+        console.log("[synthetic fetchData] status:", parsed.status);
+        console.log(
+            "[synthetic fetchData] first 1000 chars:",
+            JSON.stringify(parsed.data).slice(0, 1000)
+        );
 
-        try {
-            return JSON.parse(text);
-        } catch (error) {
-            console.log("[synthetic fetchData] Invalid JSON:", error);
-            return null;
-        }
+        return parsed.data;
     } catch (err) {
         console.log("[synthetic fetchData] ERROR:", err);
         return null;
     }
 }
 
-async function strapiPost(endpoint, payload) {
+async function strapiRequest(method, endpoint, payload = null) {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     const token = process.env.API_TOKEN;
 
     const url = joinUrl(baseUrl, endpoint);
 
     console.log("==================================================");
-    console.log("[synthetic strapiPost] URL:", url);
-    console.log("[synthetic strapiPost] payload:", JSON.stringify(payload, null, 2));
+    console.log(`[synthetic ${method}] URL:`, url);
+
+    if (payload) {
+        console.log(
+            `[synthetic ${method}] payload:`,
+            JSON.stringify(payload, null, 2)
+        );
+    }
 
     const res = await fetch(url, {
-        method: "POST",
+        method,
         headers: {
             "Content-Type": "application/json",
             "Strapi-Response-Format": "v4",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(payload),
+        ...(payload ? { body: JSON.stringify(payload) } : {}),
         cache: "no-store",
     });
 
-    const text = await res.text();
+    const parsed = await parseResponse(res);
 
-    let data = null;
+    console.log(`[synthetic ${method}] status:`, parsed.status);
+    console.log(
+        `[synthetic ${method}] response:`,
+        JSON.stringify(parsed.data, null, 2)
+    );
 
-    try {
-        data = JSON.parse(text);
-    } catch {
-        data = { raw: text };
-    }
-
-    console.log("[synthetic strapiPost] status:", res.status);
-    console.log("[synthetic strapiPost] response:", JSON.stringify(data, null, 2));
-
-    return {
-        ok: res.ok,
-        status: res.status,
-        data,
-    };
+    return parsed;
 }
 
-async function strapiPut(endpoint, payload) {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const token = process.env.API_TOKEN;
+const strapiPost = (endpoint, payload) => strapiRequest("POST", endpoint, payload);
+const strapiPut = (endpoint, payload) => strapiRequest("PUT", endpoint, payload);
+const strapiDelete = (endpoint) => strapiRequest("DELETE", endpoint);
 
-    const url = joinUrl(baseUrl, endpoint);
-
-    console.log("==================================================");
-    console.log("[synthetic strapiPut] URL:", url);
-    console.log("[synthetic strapiPut] payload:", JSON.stringify(payload, null, 2));
-
-    const res = await fetch(url, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Strapi-Response-Format": "v4",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-        cache: "no-store",
+function okJson(data = {}) {
+    return NextResponse.json({
+        ok: true,
+        ...data,
     });
+}
 
-    const text = await res.text();
-
-    let data = null;
-
-    try {
-        data = JSON.parse(text);
-    } catch {
-        data = { raw: text };
-    }
-
-    console.log("[synthetic strapiPut] status:", res.status);
-    console.log("[synthetic strapiPut] response:", JSON.stringify(data, null, 2));
-
-    return {
-        ok: res.ok,
-        status: res.status,
-        data,
-    };
+function errorJson(error, status = 400, details = null) {
+    return NextResponse.json(
+        {
+            ok: false,
+            error,
+            ...(details ? { details } : {}),
+        },
+        {
+            status,
+        }
+    );
 }
 
 function getField(item, field) {
     if (!item) return "";
 
-    if (item[field] !== undefined) return item[field];
+    if (item[field] !== undefined) {
+        return item[field];
+    }
 
     if (item?.attributes?.[field] !== undefined) {
         return item.attributes[field];
     }
 
     return "";
+}
+
+function sameText(a, b) {
+    return String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
 }
 
 function enumItems(values = []) {
@@ -149,6 +172,49 @@ function enumItems(values = []) {
         value,
         label: value,
     }));
+}
+
+function mapItems(items = [], field = "title") {
+    return items.map((item) => ({
+        id: item?.id,
+        documentId: item?.documentId,
+        label:
+            getField(item, field) ||
+            getField(item, "name") ||
+            `Item ${item?.id || ""}`,
+    }));
+}
+
+function getProductLabel(item) {
+    return (
+        getField(item, "title") ||
+        getField(item, "name") ||
+        getField(item, "productName") ||
+        getField(item, "productTitle") ||
+        getField(item, "slug") ||
+        `Product ${item?.id || ""}`
+    );
+}
+
+function mapProductItems(items = []) {
+    return items.map((item) => ({
+        id: item?.id,
+        documentId: item?.documentId,
+        label: getProductLabel(item),
+    }));
+}
+
+function filterEnumByExisting(enumValues = [], existingItems = [], field = "title") {
+    return enumItems(
+        enumValues.filter((value) => {
+            return !existingItems.some((item) => {
+                return (
+                    sameText(getField(item, field), value) ||
+                    sameText(getField(item, "name"), value)
+                );
+            });
+        })
+    );
 }
 
 function getRelationArray(item, relationName) {
@@ -165,148 +231,456 @@ function getRelationObject(item, relationName) {
 
     if (!rel) return null;
     if (rel?.data) return rel.data;
+    if (Array.isArray(rel)) return rel[0] || null;
 
     return rel;
 }
 
-function getProductLabel(item) {
-    return (
-        getField(item, "title") ||
-        getField(item, "name") ||
-        getField(item, "productName") ||
-        getField(item, "productTitle") ||
-        getField(item, "slug") ||
-        `Product ${item?.id || ""}`
-    );
+function relationId(item) {
+    return String(item?.documentId || item?.id || "");
 }
 
-function mapProductItems(items = []) {
-    return (items || []).map((item) => ({
-        id: item?.id,
-        documentId: item?.documentId,
-        label: getProductLabel(item),
-    }));
+function categoryMatches(cat, category = null) {
+    if (!cat) return false;
+
+    const targetSlug = STATIC_CATEGORY.slug;
+    const targetTitle = STATIC_CATEGORY.title;
+    const targetDocumentId = String(category?.documentId || "");
+    const targetId = String(category?.id || "");
+
+    const catSlug = String(getField(cat, "slug") || "");
+    const catTitle = String(getField(cat, "title") || "");
+    const catDocumentId = String(cat?.documentId || "");
+    const catId = String(cat?.id || "");
+
+    if (catSlug && catSlug === targetSlug) return true;
+    if (catTitle && sameText(catTitle, targetTitle)) return true;
+    if (targetDocumentId && catDocumentId && catDocumentId === targetDocumentId) return true;
+    if (targetId && catId && catId === targetId) return true;
+
+    return false;
 }
 
-function productBelongsToStaticCategory(product) {
-    const categories = getRelationArray(product, "product_categories");
+function productBelongsToStaticCategory(product, category = null) {
+    const manyCategories = getRelationArray(product, "product_categories");
 
-    return categories.some((category) => {
-        const slug = getField(category, "slug");
-        return slug === STATIC_CATEGORY.slug;
-    });
+    if (manyCategories.some((cat) => categoryMatches(cat, category))) {
+        return true;
+    }
+
+    const singleCategory = getRelationObject(product, "product_category");
+
+    if (categoryMatches(singleCategory, category)) {
+        return true;
+    }
+
+    return false;
 }
 
-function productHasAnyType(product) {
+function typeBelongsToStaticCategory(typeItem, category = null) {
+    const singleCategory = getRelationObject(typeItem, "product_category");
+
+    if (categoryMatches(singleCategory, category)) {
+        return true;
+    }
+
+    const manyCategories = getRelationArray(typeItem, "product_categories");
+
+    if (manyCategories.some((cat) => categoryMatches(cat, category))) {
+        return true;
+    }
+
+    return false;
+}
+
+function productTypeId(product) {
     const type = getRelationObject(product, "type");
-    return Boolean(type?.documentId || type?.id);
+    return relationId(type);
 }
 
 async function getStaticCategory() {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            slug: {
-                $eq: STATIC_CATEGORY.slug,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                slug: {
+                    $eq: STATIC_CATEGORY.slug,
+                },
+            },
+            fields: ["title", "slug"],
+            pagination: {
+                pageSize: 1,
             },
         },
-        populate: {
-            types: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData("product-categories", query);
     return res?.data?.[0] || null;
 }
 
-async function findTypeByTitleAndCategory(title, categoryDocumentId) {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            title: {
-                $eqi: title,
-            },
-            product_category: {
+async function getByDocumentId(endpoint, documentId, populate = {}) {
+    if (!documentId) return null;
+
+    const wanted = String(documentId);
+
+    const directQuery = qs.stringify(
+        {
+            status: "published",
+            populate,
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const directRes = await fetchData(`${endpoint}/${wanted}`, directQuery);
+
+    if (directRes?.data) {
+        return directRes.data;
+    }
+
+    const docQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
                 documentId: {
-                    $eq: categoryDocumentId,
+                    $eq: wanted,
                 },
             },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
         },
-        populate: {
-            product_category: true,
-            products: true,
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const docRes = await fetchData(endpoint, docQuery);
+
+    if (docRes?.data?.[0]) {
+        return docRes.data[0];
+    }
+
+    const idQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                id: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
         },
-        pagination: {
-            pageSize: 1,
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const idRes = await fetchData(endpoint, idQuery);
+
+    if (idRes?.data?.[0]) {
+        return idRes.data[0];
+    }
+
+    const allQuery = qs.stringify(
+        {
+            status: "published",
+            populate: "*",
+            pagination: {
+                pageSize: 1000,
+            },
         },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const allRes = await fetchData(endpoint, allQuery);
+    const allItems = allRes?.data || [];
+
+    const found = allItems.find((item) => {
+        return (
+            String(item?.documentId || "") === wanted ||
+            String(item?.id || "") === wanted
+        );
     });
 
-    const res = await fetchData("types", query);
+    if (found) {
+        return found;
+    }
+
+    console.log("[synthetic getByDocumentId] not found after all attempts:", {
+        endpoint,
+        documentId: wanted,
+        directRes,
+        docRes,
+        idRes,
+        allCount: allItems.length,
+    });
+
+    return null;
+}
+
+async function getProductDosage(productId) {
+    if (!productId) return null;
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                product: {
+                    documentId: {
+                        $eq: productId,
+                    },
+                },
+            },
+            fields: ["title"],
+            populate: {
+                product: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
+            sort: ["createdAt:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("product-dosages", query);
     return res?.data?.[0] || null;
 }
 
-async function findOrCreateTypeByTitle(title) {
+async function findTypeByTitleAndCategory(title) {
     const category = await getStaticCategory();
-    const categoryDocumentId = category?.documentId || category?.id;
 
-    if (!categoryDocumentId) {
-        return {
-            ok: false,
-            status: 404,
-            error: "Product category not found",
-            details: null,
-            item: null,
-        };
+    if (!category?.documentId && !category?.id) {
+        return null;
     }
 
-    let typeItem = await findTypeByTitleAndCategory(title, categoryDocumentId);
-
-    if (typeItem) {
-        return {
-            ok: true,
-            status: 200,
-            item: typeItem,
-        };
-    }
-
-    const createdType = await strapiPost("types?status=published", {
-        data: {
-            title,
-            product_category: categoryDocumentId,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                $or: [
+                    {
+                        title: {
+                            $eqi: title,
+                        },
+                    },
+                    {
+                        name: {
+                            $eqi: title,
+                        },
+                    },
+                ],
+            },
+            populate: "*",
+            pagination: {
+                pageSize: 500,
+            },
+            sort: ["title:asc"],
         },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
-    if (!createdType.ok) {
+    const res = await fetchData("types", query);
+    const items = res?.data || [];
+
+    return (
+        items.find((item) => {
+            const sameTitle =
+                sameText(getField(item, "title"), title) ||
+                sameText(getField(item, "name"), title);
+
+            if (!sameTitle) return false;
+
+            return typeBelongsToStaticCategory(item, category);
+        }) || null
+    );
+}
+
+async function createTypeWithCategory(title, categoryDocumentId) {
+    const attempts = [
+        {
+            endpoint: "types?status=published",
+            data: {
+                title,
+                product_category: categoryDocumentId,
+            },
+        },
+        {
+            endpoint: "types?status=published",
+            data: {
+                title,
+                product_categories: [categoryDocumentId],
+            },
+        },
+        {
+            endpoint: "types",
+            data: {
+                title,
+                product_category: categoryDocumentId,
+            },
+        },
+        {
+            endpoint: "types",
+            data: {
+                title,
+                product_categories: [categoryDocumentId],
+            },
+        },
+        {
+            endpoint: "types?status=published",
+            data: {
+                name: title,
+                product_category: categoryDocumentId,
+            },
+        },
+        {
+            endpoint: "types?status=published",
+            data: {
+                name: title,
+                product_categories: [categoryDocumentId],
+            },
+        },
+        {
+            endpoint: "types",
+            data: {
+                name: title,
+                product_category: categoryDocumentId,
+            },
+        },
+        {
+            endpoint: "types",
+            data: {
+                name: title,
+                product_categories: [categoryDocumentId],
+            },
+        },
+    ];
+
+    let lastResult = null;
+
+    for (const item of attempts) {
+        const result = await strapiPost(item.endpoint, {
+            data: item.data,
+        });
+
+        if (result.ok) {
+            return result;
+        }
+
+        lastResult = result;
+    }
+
+    return lastResult;
+}
+
+async function getDeleteCheck(type, documentId) {
+    if (type === "product") {
+        const category = await getStaticCategory();
+
+        const product = await getByDocumentId("products", documentId, {
+            product_categories: true,
+            product_category: true,
+            type: true,
+            product_dosages: {
+                fields: ["title"],
+            },
+        });
+
+        if (!product) {
+            return {
+                blocked: true,
+                message: "Product not found.",
+            };
+        }
+
+        if (!productBelongsToStaticCategory(product, category)) {
+            return {
+                blocked: true,
+                message: "Product does not belong to Synthetic Oils category.",
+            };
+        }
+
+        const currentTypeId = productTypeId(product);
+
+        if (!currentTypeId) {
+            return {
+                blocked: true,
+                message: "This Product is not connected with any Type.",
+            };
+        }
+
         return {
-            ok: false,
-            status: createdType.status,
-            error: "Failed to create Type",
-            details: createdType.data,
-            item: null,
+            blocked: false,
+            message:
+                "This will remove Type relation from Product only. Product collection record will not be deleted.",
+        };
+    }
+
+    if (!TYPE_CONFIG[type]) {
+        return {
+            blocked: true,
+            message: "Invalid delete type",
+        };
+    }
+
+    if (type === "type") {
+        const category = await getStaticCategory();
+
+        const item = await getByDocumentId("types", documentId, {
+            product_category: true,
+            product_categories: true,
+            products: {
+                fields: ["title"],
+            },
+        });
+
+        if (!item) {
+            return {
+                blocked: true,
+                message: `Type not found for documentId: ${documentId}. Please refresh page and try again.`,
+            };
+        }
+
+        if (!typeBelongsToStaticCategory(item, category)) {
+            return {
+                blocked: true,
+                message: "This Type does not belong to Synthetic Oils category.",
+            };
+        }
+
+        const productCount = getRelationArray(item, "products").length;
+
+        if (productCount) {
+            return {
+                blocked: true,
+                message: `This Type has relation data (${productCount} Product). First remove relation data, then delete it.`,
+            };
+        }
+
+        return {
+            blocked: false,
         };
     }
 
     return {
-        ok: true,
-        status: 200,
-        item: createdType.data?.data || null,
+        blocked: true,
+        message: "Delete not allowed for this item.",
     };
-}
-
-async function getTypeDocumentIdFromEnumValue(typeTitle) {
-    const category = await getStaticCategory();
-    const categoryDocumentId = category?.documentId || category?.id;
-
-    if (!categoryDocumentId) return null;
-
-    const typeItem = await findTypeByTitleAndCategory(typeTitle, categoryDocumentId);
-
-    if (!typeItem) return null;
-
-    return typeItem?.documentId || typeItem?.id || null;
 }
 
 export async function GET(req) {
@@ -315,16 +689,27 @@ export async function GET(req) {
 
         const mode = searchParams.get("mode");
         const typeId = searchParams.get("typeId");
+        const productId = searchParams.get("productId");
+        const type = searchParams.get("type");
+        const documentId = searchParams.get("documentId");
 
         console.log("==================================================");
         console.log("[synthetic GET] mode:", mode);
         console.log("[synthetic GET] typeId:", typeId);
+        console.log("[synthetic GET] productId:", productId);
+
+        if (mode === "delete-check") {
+            if (!type || !documentId) {
+                return errorJson("type or documentId is missing", 400);
+            }
+
+            return okJson(await getDeleteCheck(type, documentId));
+        }
 
         if (mode === "static-category") {
             const category = await getStaticCategory();
 
-            return NextResponse.json({
-                ok: true,
+            return okJson({
                 item: {
                     id: category?.id,
                     documentId: category?.documentId,
@@ -334,112 +719,147 @@ export async function GET(req) {
             });
         }
 
-        if (mode === "types") {
-            return NextResponse.json({
-                ok: true,
-                items: enumItems(ENUMS.SyntheticType || []),
+        if (mode === "dosage") {
+            if (!productId) {
+                return okJson({
+                    item: null,
+                });
+            }
+
+            const dosage = await getProductDosage(productId);
+
+            return okJson({
+                item: dosage
+                    ? {
+                        id: dosage?.id,
+                        documentId: dosage?.documentId,
+                        title: getField(dosage, "title"),
+                    }
+                    : null,
+            });
+        }
+
+        if (mode === "all-types" || mode === "types") {
+            const category = await getStaticCategory();
+
+            if (!category?.documentId && !category?.id) {
+                return okJson({
+                    items: mode === "all-types" ? enumItems(getTypeEnum()) : [],
+                });
+            }
+
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    populate: "*",
+                    pagination: {
+                        pageSize: 1000,
+                    },
+                    sort: ["title:asc"],
+                },
+                {
+                    encodeValuesOnly: true,
+                }
+            );
+
+            const res = await fetchData("types", query);
+            const allTypes = res?.data || [];
+
+            const existingTypes = allTypes.filter((item) => {
+                return typeBelongsToStaticCategory(item, category);
+            });
+
+            if (mode === "all-types") {
+                return okJson({
+                    items: filterEnumByExisting(
+                        getTypeEnum(),
+                        existingTypes,
+                        "title"
+                    ),
+                });
+            }
+
+            return okJson({
+                items: mapItems(existingTypes, "title"),
             });
         }
 
         if (mode === "products") {
-            if (!typeId) return NextResponse.json({ ok: true, items: [] });
-
-            const typeDocumentId = await getTypeDocumentIdFromEnumValue(typeId);
-
-            if (!typeDocumentId) {
-                return NextResponse.json({ ok: true, items: [] });
+            if (!typeId) {
+                return okJson({
+                    items: [],
+                });
             }
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    product_categories: {
-                        slug: {
-                            $eq: STATIC_CATEGORY.slug,
-                        },
+            const category = await getStaticCategory();
+
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    populate: "*",
+                    pagination: {
+                        pageSize: 1000,
                     },
-                    type: {
-                        documentId: {
-                            $eq: typeDocumentId,
-                        },
-                    },
+                    sort: ["title:asc"],
                 },
-                fields: ["title", "slug"],
-                populate: {
-                    product_categories: true,
-                    type: true,
-                },
-                pagination: {
-                    pageSize: 1000,
-                },
-                sort: ["title:asc"],
-            });
+                {
+                    encodeValuesOnly: true,
+                }
+            );
 
             const res = await fetchData("products", query);
 
-            const products = (res?.data || []).filter((product) =>
-                productBelongsToStaticCategory(product)
-            );
+            const products = (res?.data || [])
+                .filter((product) => productBelongsToStaticCategory(product, category))
+                .filter((product) => productTypeId(product) === String(typeId));
 
-            return NextResponse.json({
-                ok: true,
+            return okJson({
                 items: mapProductItems(products),
             });
         }
 
         if (mode === "all-products") {
-            if (!typeId) return NextResponse.json({ ok: true, items: [] });
+            const category = await getStaticCategory();
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    product_categories: {
-                        slug: {
-                            $eq: STATIC_CATEGORY.slug,
-                        },
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    populate: "*",
+                    pagination: {
+                        pageSize: 1000,
                     },
+                    sort: ["title:asc"],
                 },
-                fields: ["title", "slug"],
-                populate: {
-                    product_categories: true,
-                    type: true,
-                },
-                pagination: {
-                    pageSize: 1000,
-                },
-                sort: ["title:asc"],
-            });
-
-            const res = await fetchData("products", query);
-
-            const categoryProducts = (res?.data || []).filter((product) =>
-                productBelongsToStaticCategory(product)
+                {
+                    encodeValuesOnly: true,
+                }
             );
 
-            const availableProducts = categoryProducts.filter((product) => {
-                return !productHasAnyType(product);
+            const res = await fetchData("products", query);
+            const allProducts = res?.data || [];
+
+            const categoryProducts = allProducts.filter((product) => {
+                return productBelongsToStaticCategory(product, category);
             });
 
-            return NextResponse.json({
-                ok: true,
-                items: mapProductItems(availableProducts),
+            const items = categoryProducts.filter((product) => {
+                const currentTypeId = productTypeId(product);
+
+                if (!currentTypeId) return true;
+                if (typeId && String(currentTypeId) === String(typeId)) return true;
+
+                return false;
+            });
+
+            return okJson({
+                items: mapProductItems(items),
             });
         }
 
-        return NextResponse.json(
-            { ok: false, error: "Invalid mode" },
-            { status: 400 }
-        );
+        return errorJson("Invalid mode", 400);
     } catch (err) {
         console.log("[synthetic GET ERROR]", err);
-
-        return NextResponse.json(
-            {
-                ok: false,
-                error: err.message || "Server error",
-            },
-            { status: 500 }
-        );
+        return errorJson(err.message || "Server error", 500);
     }
 }
 
@@ -449,145 +869,319 @@ export async function POST(req) {
 
         const {
             type,
+            title,
             typeId,
             productId,
+            dosageId,
         } = body;
 
         console.log("==================================================");
         console.log("[synthetic POST] body:", body);
 
         if (!type) {
-            return NextResponse.json(
-                { ok: false, error: "type is missing" },
-                { status: 400 }
-            );
+            return errorJson("type is missing", 400);
+        }
+
+        if (!title && type !== "product") {
+            return errorJson("title is missing", 400);
+        }
+
+        if (type === "dosage") {
+            if (!productId) {
+                return errorJson("productId is missing", 400);
+            }
+
+            if (!title?.trim()) {
+                return errorJson("Dosage title is missing", 400);
+            }
+
+            const product = await getByDocumentId("products", productId, {
+                product_categories: true,
+                product_category: true,
+                product_dosages: true,
+            });
+
+            if (!product) {
+                return errorJson("Product not found", 404);
+            }
+
+            const category = await getStaticCategory();
+
+            if (!productBelongsToStaticCategory(product, category)) {
+                return errorJson(
+                    "Product does not belong to Synthetic Oils category",
+                    400
+                );
+            }
+
+            let existingDosage = null;
+
+            if (dosageId) {
+                existingDosage = await getByDocumentId("product-dosages", dosageId, {
+                    product: true,
+                });
+            }
+
+            if (!existingDosage) {
+                existingDosage = await getProductDosage(productId);
+            }
+
+            if (existingDosage?.documentId) {
+                const updated = await strapiPut(
+                    `product-dosages/${existingDosage.documentId}?status=published`,
+                    {
+                        data: {
+                            title: title.trim(),
+                            product: productId,
+                        },
+                    }
+                );
+
+                if (!updated.ok) {
+                    return errorJson("Failed to update Dosage", updated.status, updated.data);
+                }
+
+                return okJson({
+                    item: updated.data?.data || null,
+                });
+            }
+
+            const created = await strapiPost("product-dosages?status=published", {
+                data: {
+                    title: title.trim(),
+                    product: productId,
+                },
+            });
+
+            if (!created.ok) {
+                return errorJson("Failed to create Dosage", created.status, created.data);
+            }
+
+            return okJson({
+                item: created.data?.data || null,
+            });
+        }
+
+        if (type === "type") {
+            if (!title) {
+                return errorJson("title is missing", 400);
+            }
+
+            if (await findTypeByTitleAndCategory(title)) {
+                return errorJson("This Type already exists for this category", 409);
+            }
+
+            const category = await getStaticCategory();
+
+            if (!category?.documentId && !category?.id) {
+                return errorJson("Product category not found", 404);
+            }
+
+            const categoryDocumentId = category.documentId || category.id;
+
+            const created = await createTypeWithCategory(title, categoryDocumentId);
+
+            if (!created?.ok) {
+                return errorJson(
+                    "Failed to create Type",
+                    created?.status || 500,
+                    created?.data || null
+                );
+            }
+
+            return okJson({
+                item: created.data?.data || null,
+            });
         }
 
         if (type === "product") {
             if (!typeId || !productId) {
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: "typeId or productId missing",
-                    },
-                    { status: 400 }
-                );
+                return errorJson("typeId or productId missing", 400);
             }
 
-            const typeResult = await findOrCreateTypeByTitle(typeId);
-
-            if (!typeResult.ok || !typeResult.item) {
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: typeResult.error || "Failed to find/create Type",
-                        details: typeResult.details || null,
-                    },
-                    { status: typeResult.status || 500 }
-                );
-            }
-
-            const typeItem = typeResult.item;
-            const typeDocumentId = typeItem?.documentId || typeItem?.id;
-
-            if (!typeDocumentId) {
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: "Type documentId not found",
-                    },
-                    { status: 500 }
-                );
-            }
-
-            const checkProductQuery = qs.stringify({
-                status: "published",
-                filters: {
-                    documentId: {
-                        $eq: productId,
-                    },
-                    product_categories: {
-                        slug: {
-                            $eq: STATIC_CATEGORY.slug,
-                        },
-                    },
-                },
-                fields: ["title", "slug"],
-                populate: {
-                    product_categories: true,
-                    type: true,
-                },
-                pagination: {
-                    pageSize: 1,
-                },
+            const product = await getByDocumentId("products", productId, {
+                product_categories: true,
+                product_category: true,
+                type: true,
             });
 
-            const checkProductRes = await fetchData("products", checkProductQuery);
-            const product = checkProductRes?.data?.[0] || null;
-
             if (!product) {
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: "Product not found in published Synthetic Oils category",
-                    },
-                    { status: 404 }
+                return errorJson(
+                    "Product not found in published Synthetic Oils category",
+                    404
                 );
             }
 
-            if (!productBelongsToStaticCategory(product)) {
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: "Product does not belong to Synthetic Oils category",
-                    },
-                    { status: 400 }
+            const category = await getStaticCategory();
+
+            if (!productBelongsToStaticCategory(product, category)) {
+                return errorJson(
+                    "Product does not belong to Synthetic Oils category",
+                    400
                 );
             }
 
-            if (productHasAnyType(product)) {
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: "Product already has Type",
-                    },
-                    { status: 409 }
-                );
+            const currentTypeId = productTypeId(product);
+
+            if (currentTypeId && String(currentTypeId) === String(typeId)) {
+                return okJson({
+                    item: product,
+                });
+            }
+
+            if (currentTypeId && String(currentTypeId) !== String(typeId)) {
+                return errorJson("This Product already has another Type", 409);
             }
 
             const updated = await strapiPut(`products/${productId}?status=published`, {
                 data: {
-                    type: typeDocumentId,
+                    type: typeId,
                 },
             });
 
             if (!updated.ok) {
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: "Failed to connect Product with Type",
-                        details: updated.data,
-                    },
-                    { status: updated.status }
+                return errorJson(
+                    "Failed to connect Product with Type",
+                    updated.status,
+                    updated.data
                 );
             }
 
-            return NextResponse.json({
-                ok: true,
+            return okJson({
                 item: updated.data?.data || null,
             });
         }
 
-        return NextResponse.json(
-            { ok: false, error: "Invalid type" },
-            { status: 400 }
-        );
+        return errorJson("Invalid type", 400);
     } catch (err) {
         console.log("[synthetic POST ERROR]", err);
+        return errorJson(err.message || "Server error", 500);
+    }
+}
 
-        return NextResponse.json(
-            { ok: false, error: err.message || "Server error" },
-            { status: 500 }
-        );
+export async function DELETE(req) {
+    try {
+        const body = await req.json();
+
+        const {
+            type,
+            documentId,
+        } = body;
+
+        if (!type || !documentId) {
+            return errorJson("type or documentId is missing", 400);
+        }
+
+        if (!TYPE_CONFIG[type]) {
+            return errorJson("Invalid delete type", 400);
+        }
+
+        const check = await getDeleteCheck(type, documentId);
+
+        if (check.blocked) {
+            return errorJson(check.message || "This item cannot be deleted", 409);
+        }
+
+        if (type === "product") {
+            const product = await getByDocumentId("products", documentId, {
+                product_categories: true,
+                product_category: true,
+                type: true,
+            });
+
+            if (!product) {
+                return errorJson("Product not found", 404);
+            }
+
+            const category = await getStaticCategory();
+
+            if (!productBelongsToStaticCategory(product, category)) {
+                return errorJson(
+                    "Product does not belong to Synthetic Oils category.",
+                    400
+                );
+            }
+
+            const currentTypeId = productTypeId(product);
+
+            if (!currentTypeId) {
+                return errorJson("This Product is not connected with any Type.", 400);
+            }
+
+            const updated = await strapiPut(`products/${documentId}?status=published`, {
+                data: {
+                    type: null,
+                },
+            });
+
+            if (!updated.ok) {
+                return errorJson(
+                    "Failed to remove Product relation from Type",
+                    updated.status,
+                    updated.data
+                );
+            }
+
+            return okJson({
+                item: updated.data?.data || null,
+            });
+        }
+
+        if (type === "type") {
+            const category = await getStaticCategory();
+
+            const item = await getByDocumentId("types", documentId, {
+                product_category: true,
+                product_categories: true,
+                products: {
+                    fields: ["title"],
+                },
+            });
+
+            if (!item) {
+                return errorJson(`Type not found for documentId: ${documentId}`, 404);
+            }
+
+            if (!typeBelongsToStaticCategory(item, category)) {
+                return errorJson(
+                    "This Type does not belong to Synthetic Oils category.",
+                    400
+                );
+            }
+
+            const productCount = getRelationArray(item, "products").length;
+
+            if (productCount) {
+                return errorJson(
+                    `This Type has relation data (${productCount} Product). First remove relation data, then delete it.`,
+                    409
+                );
+            }
+
+            const deleted = await strapiDelete(`types/${documentId}`);
+
+            if (!deleted.ok) {
+                return errorJson("Failed to delete Type", deleted.status, deleted.data);
+            }
+
+            return okJson({
+                item: deleted.data?.data || null,
+            });
+        }
+
+        const cfg = TYPE_CONFIG[type];
+
+        const deleted = await strapiDelete(`${cfg.endpoint}/${documentId}`);
+
+        if (!deleted.ok) {
+            return errorJson(`Failed to delete ${cfg.label}`, deleted.status, deleted.data);
+        }
+
+        return okJson({
+            item: deleted.data?.data || null,
+        });
+    } catch (err) {
+        console.log("[synthetic DELETE ERROR]", err);
+        return errorJson(err.message || "Server error", 500);
     }
 }

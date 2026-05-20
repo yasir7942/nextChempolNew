@@ -113,6 +113,11 @@ export default function GasolinePage() {
     const [selectedIlsac, setSelectedIlsac] = useState("");
     const [selectedOem, setSelectedOem] = useState("");
 
+    const [dosageDocId, setDosageDocId] = useState("");
+    const [dosageTitle, setDosageTitle] = useState("");
+    const [loadingDosage, setLoadingDosage] = useState(false);
+    const [savingDosage, setSavingDosage] = useState(false);
+
     const [selectedAdd, setSelectedAdd] = useState({
         api: "",
         saeGrade: "",
@@ -281,6 +286,24 @@ export default function GasolinePage() {
         setAllProducts(all?.items || []);
     }
 
+    async function loadDosage(productId) {
+        setDosageDocId("");
+        setDosageTitle("");
+
+        if (!productId) return;
+
+        try {
+            setLoadingDosage(true);
+
+            const data = await fetchJson(apiUrl("dosage", { productId }));
+
+            setDosageDocId(data?.item?.documentId || "");
+            setDosageTitle(data?.item?.title || "");
+        } finally {
+            setLoadingDosage(false);
+        }
+    }
+
     async function loadLeaf(saeGradeId, productId) {
         if (!saeGradeId || !productId) {
             setAceas([]);
@@ -337,6 +360,9 @@ export default function GasolinePage() {
                 setSelectedIlsac("");
                 setSelectedOem("");
 
+                setDosageDocId("");
+                setDosageTitle("");
+
                 setSaeGrades([]);
                 setAllSaeGrades([]);
                 setProducts([]);
@@ -368,6 +394,9 @@ export default function GasolinePage() {
                 setSelectedAcea("");
                 setSelectedIlsac("");
                 setSelectedOem("");
+
+                setDosageDocId("");
+                setDosageTitle("");
 
                 setProducts([]);
                 setAllProducts([]);
@@ -405,8 +434,14 @@ export default function GasolinePage() {
                 setOems([]);
                 setAllOems([]);
 
+                setDosageDocId("");
+                setDosageTitle("");
+
                 if (selectedSaeGrade && selectedProduct) {
-                    await loadLeaf(selectedSaeGrade, selectedProduct);
+                    await Promise.all([
+                        loadDosage(selectedProduct),
+                        loadLeaf(selectedSaeGrade, selectedProduct),
+                    ]);
                 }
             } catch (error) {
                 showError(error);
@@ -428,6 +463,47 @@ export default function GasolinePage() {
             ...prev,
             [type]: !prev[type],
         }));
+    }
+
+    async function handleSaveDosage() {
+        try {
+            resetMessage();
+
+            if (!selectedProduct) {
+                throw new Error("Please select Product first");
+            }
+
+            if (!dosageTitle.trim()) {
+                throw new Error("Please enter dosage");
+            }
+
+            setSavingDosage(true);
+
+            const data = await fetchJson("/api/admin/gasoline", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    type: "dosage",
+                    productId: selectedProduct,
+                    title: dosageTitle.trim(),
+                    dosageId: dosageDocId || null,
+                }),
+            });
+
+            setDosageDocId(data?.item?.documentId || dosageDocId || "");
+
+            if (data?.item?.title) {
+                setDosageTitle(data.item.title);
+            }
+
+            showSuccess("Dosage saved successfully");
+        } catch (error) {
+            showError(error);
+        } finally {
+            setSavingDosage(false);
+        }
     }
 
     async function handleAdd(type) {
@@ -593,6 +669,8 @@ export default function GasolinePage() {
             if (type === "product") {
                 if (String(selectedProduct) === String(documentId)) {
                     setSelectedProduct("");
+                    setDosageDocId("");
+                    setDosageTitle("");
                 }
 
                 setSelectedAcea("");
@@ -682,15 +760,15 @@ export default function GasolinePage() {
             >
                 <div className="relative w-full">
                     <ComboboxInput
-                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 pr-9 text-sm text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         displayValue={(item) => item?.label || ""}
                         onChange={(event) => setQuery(event.target.value)}
                         onFocus={() => setQuery("")}
                         placeholder={placeholder}
                     />
 
-                    <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                        ⌄
+                    <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                        <span className="text-lg leading-none">⌄</span>
                     </ComboboxButton>
 
                     <ComboboxOptions className="absolute z-50 mt-1 max-h-64 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
@@ -801,15 +879,15 @@ export default function GasolinePage() {
             >
                 <div className="relative w-full">
                     <ComboboxInput
-                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 pr-9 text-sm text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         displayValue={(item) => item?.label || ""}
                         onChange={(event) => setQuery(event.target.value)}
                         onFocus={() => setQuery("")}
                         placeholder={`Search / select ${ADD_LABELS[type]}`}
                     />
 
-                    <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                        ⌄
+                    <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                        <span className="text-lg leading-none">⌄</span>
                     </ComboboxButton>
 
                     <ComboboxOptions className="absolute z-50 mt-1 max-h-64 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
@@ -920,7 +998,7 @@ export default function GasolinePage() {
 
                         {type === "product" && (
                             <p className="text-[11px] text-gray-500">
-                                Select product first, then ACEA / ILSAC / OEM will open.
+                                Select product first, then Dosage / ACEA / ILSAC / OEM will open.
                             </p>
                         )}
                     </div>
@@ -958,6 +1036,50 @@ export default function GasolinePage() {
         );
     }
 
+    function renderDosageSection() {
+        const disabled = !selectedProduct;
+
+        return (
+            <section className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+                <div className="mb-2">
+                    <h3 className="text-sm font-bold text-gray-900">
+                        Dosage
+                    </h3>
+
+                    <p className="text-[11px] text-gray-500">
+                        Product dosage is saved in ProductDosage collection and linked with selected Product.
+                    </p>
+                </div>
+
+                {disabled ? (
+                    <div className="flex h-9 w-full items-center rounded-lg border border-gray-200 bg-gray-100 px-3 text-sm text-gray-500">
+                        Select Product first
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
+                        <input
+                            type="text"
+                            value={dosageTitle}
+                            onChange={(e) => setDosageTitle(e.target.value)}
+                            disabled={loadingDosage || savingDosage}
+                            placeholder={loadingDosage ? "Loading dosage..." : "Enter product dosage"}
+                            className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+                        />
+
+                        <button
+                            type="button"
+                            onClick={handleSaveDosage}
+                            disabled={loadingDosage || savingDosage || !dosageTitle.trim()}
+                            className="h-9 rounded-lg bg-green-600 px-5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {savingDosage ? "Saving..." : dosageDocId ? "Update" : "Save"}
+                        </button>
+                    </div>
+                )}
+            </section>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 p-3 md:p-4">
             <div className="mx-auto max-w-6xl">
@@ -968,7 +1090,7 @@ export default function GasolinePage() {
                         </h1>
 
                         <p className="mt-1 text-sm text-blue-50">
-                            API → SAE Grade → Product → ACEA / ILSAC / OEM
+                            API → SAE Grade → Product → Dosage / ACEA / ILSAC / OEM
                         </p>
                     </div>
 
@@ -978,11 +1100,9 @@ export default function GasolinePage() {
                             value={staticCategory?.label || STATIC_CATEGORY.title}
                         />
 
-
-
                         <InfoBox
                             label="Flow"
-                            value="API → SAE Grade → Product → ACEA / ILSAC / OEM"
+                            value="API → SAE Grade → Product → Dosage / ACEA / ILSAC / OEM"
                         />
                     </div>
                 </div>
@@ -1025,6 +1145,8 @@ export default function GasolinePage() {
                                 addOptions={allProducts}
                                 disabled={!selectedSaeGrade}
                             />
+
+                            {renderDosageSection()}
 
                             <Section
                                 type="acea"
@@ -1078,6 +1200,11 @@ export default function GasolinePage() {
                                 <SummaryRow
                                     label="Product"
                                     value={selectedProductObj?.label}
+                                />
+
+                                <SummaryRow
+                                    label="Dosage"
+                                    value={dosageTitle}
                                 />
 
                                 <SummaryRow

@@ -114,7 +114,8 @@
   "property": "Propiedad",
   "method": "Método",
   "value": "Valor",
-  "table": "Características del producto"
+  "table": "Características del producto",
+  "dosage":"Dosis recomendada (% en peso):"
 },
 "imageObject": {
     "creditText": "Chempol Aditivos y Especialidades Químicas",
