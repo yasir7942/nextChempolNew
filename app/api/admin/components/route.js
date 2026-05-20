@@ -842,18 +842,24 @@ export async function GET(req) {
                 return productBelongsToStaticCategory(product, category);
             });
 
-            const items = categoryProducts.filter((product) => {
-                const currentTypeId = productTypeId(product);
+            /* const items = categoryProducts.filter((product) => {
+                 const currentTypeId = productTypeId(product);
+ 
+                 if (!currentTypeId) return true;
+                 if (typeId && String(currentTypeId) === String(typeId)) return true;
+ 
+                 return false;
+             });
+ 
+             return okJson({
+                 items: mapProductItems(items),
+             }); */
 
-                if (!currentTypeId) return true;
-                if (typeId && String(currentTypeId) === String(typeId)) return true;
-
-                return false;
-            });
-
+            const items = categoryProducts;
             return okJson({
                 items: mapProductItems(items),
             });
+
         }
 
         return errorJson("Invalid mode", 400);
@@ -1029,9 +1035,9 @@ export async function POST(req) {
                 });
             }
 
-            if (currentTypeId && String(currentTypeId) !== String(typeId)) {
-                return errorJson("This Product already has another Type", 409);
-            }
+            /*  if (currentTypeId && String(currentTypeId) !== String(typeId)) {
+                  return errorJson("This Product already has another Type", 409);
+              }*/
 
             const updated = await strapiPut(`products/${productId}?status=published`, {
                 data: {

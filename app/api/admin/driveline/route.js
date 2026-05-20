@@ -698,7 +698,8 @@ export async function GET(req) {
 
             const items = (res?.data || [])
                 .filter(productBelongsToStaticCategory)
-                .filter((product) => !productHasAnyApi(product));
+            // .filter((product) => !productHasAnyApi(product));
+
 
             return okJson({
                 items: mapProductItems(items),
@@ -917,9 +918,9 @@ export async function POST(req) {
                 return errorJson("Product does not belong to Driveline Additives category", 400);
             }
 
-            if (productHasAnyApi(product)) {
-                return errorJson("Product already has API", 409);
-            }
+            /*  if (productHasAnyApi(product)) {
+                  return errorJson("Product already has API", 409);
+              }  */
 
             const updated = await strapiPut(`products/${productId}?status=published`, {
                 data: {

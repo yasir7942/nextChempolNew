@@ -693,10 +693,7 @@ export async function GET(req) {
             const res = await fetchData("products", query);
 
             const items = (res?.data || [])
-                .filter(productBelongsToStaticCategory)
-                .filter((product) => {
-                    return !productTypeId(product);
-                });
+                .filter(productBelongsToStaticCategory);
 
             return okJson({
                 items: mapProductItems(items),
@@ -900,13 +897,14 @@ export async function POST(req) {
 
             const currentTypeId = productTypeId(product);
 
-            if (currentTypeId && String(currentTypeId) === String(typeId)) {
-                return errorJson("This Product already exists in selected Type", 409);
-            }
+            /*  if (currentTypeId && String(currentTypeId) === String(typeId)) {
+                  return errorJson("This Product already exists in selected Type", 409);
+              }  */
 
-            if (currentTypeId && String(currentTypeId) !== String(typeId)) {
-                return errorJson("This Product already has another Type", 409);
-            }
+            /* if (currentTypeId && String(currentTypeId) !== String(typeId)) {
+                 return errorJson("This Product already has another Type", 409);
+                 
+             } */
 
             const updated = await strapiPut(`products/${productId}?status=published`, {
                 data: {

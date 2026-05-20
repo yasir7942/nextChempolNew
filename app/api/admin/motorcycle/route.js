@@ -999,12 +999,12 @@ export async function POST(req) {
 
             const existingProductIds = getSaeGradeProductIds(saeGrade);
 
-            if (existingProductIds.includes(String(productId))) {
-                return errorJson(
-                    "This Product already exists in selected SAE Grade",
-                    409
-                );
-            }
+            /*  if (existingProductIds.includes(String(productId))) {
+                  return errorJson(
+                      "This Product already exists in selected SAE Grade",
+                      409
+                  );
+              }   */
 
             const nextProductIds = [
                 ...existingProductIds,

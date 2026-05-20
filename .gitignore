@@ -52,3 +52,12 @@ htaccess
 .env
 .env_server
 robots.txt
+chempo15lang.7z
+
+*.7z
+*.zip
+*.rar
+
+*.7z
+*.zip
+*.rar

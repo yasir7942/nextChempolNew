@@ -722,7 +722,7 @@ export async function GET(req) {
 
             const items = (res?.data || [])
                 .filter(productBelongsToStaticCategory)
-                .filter((product) => !productHasAnySaeGrade(product));
+            // .filter((product) => !productHasAnySaeGrade(product));
 
             return okJson({
                 items: mapProductItems(items),
@@ -954,9 +954,10 @@ export async function POST(req) {
                 return errorJson("Product does not belong to Heavy Duty /HDDEO category", 400);
             }
 
-            if (productHasAnySaeGrade(product)) {
-                return errorJson("Product already has SAE Grade", 409);
-            }
+            /* if (productHasAnySaeGrade(product)) {
+                 return errorJson("Product already has SAE Grade", 409);
+             }*/
+
 
             const updated = await strapiPut(`products/${productId}?status=published`, {
                 data: {
