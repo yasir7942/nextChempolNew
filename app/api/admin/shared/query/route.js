@@ -3,6 +3,10 @@ import qs from "qs";
 
 export const runtime = "nodejs";
 
+const STRAPI_LOCALE = "en";
+const SAFE_PAGE_SIZE = 200;
+const MAX_PAGES = 50;
+
 const CATEGORY_CONFIG = {
     "pcmo-gasoline": {
         title: "Gasoline/PCMO",
@@ -83,6 +87,12 @@ const TYPE_FIRST_CATEGORY_SLUGS = new Set([
     "speciality-chemicals",
 ]);
 
+const SAE_FLOW_CATEGORY_SLUGS = new Set([
+    "pcmo-gasoline",
+    "heavy-duty-hddeo",
+    "motorcycle-oil-additive",
+]);
+
 const FIELD_LABELS = {
     api: "API",
     saeGrade: "SAE Grade",
@@ -92,6 +102,29 @@ const FIELD_LABELS = {
     oem: "OEM",
     jaso: "JASO",
     ssi: "SSI",
+};
+
+const LEAF_CONFIG = {
+    acea: {
+        endpoint: "aceas",
+        field: "name",
+        label: "ACEA",
+    },
+    ilsac: {
+        endpoint: "ilsacs",
+        field: "title",
+        label: "ILSAC",
+    },
+    oem: {
+        endpoint: "oems",
+        field: "title",
+        label: "OEM",
+    },
+    jaso: {
+        endpoint: "jasos",
+        field: "title",
+        label: "JASO",
+    },
 };
 
 const PRODUCT_RELATION_FIELDS = {
@@ -118,47 +151,33 @@ const TYPE_RELATION_FIELDS = {
 
 const PRODUCT_POPULATE = {
     product_categories: true,
-    product_category: true,
     api: true,
-    apis: true,
-    sae_grade: true,
     sae_grades: true,
-    saeGrade: true,
-    saeGrades: true,
-    type: true,
     types: true,
     sys_aceas: true,
     sys_ilsacs: true,
     sys_oems: true,
     sys_jasos: true,
-    aceas: true,
-    ilsacs: true,
-    oems: true,
-    jasos: true,
-    ssis: true,
     productImage: true,
-    image: true,
-    thumbnail: true,
+    dosages: true,
 };
 
 const SAE_GRADE_POPULATE = {
     api: true,
-    apis: true,
     products: {
-        populate: PRODUCT_POPULATE,
-    },
-    product: {
         populate: PRODUCT_POPULATE,
     },
     aceas: true,
     ilsacs: true,
     oems: true,
     jasos: true,
+    dosages: true,
 };
 
 function joinUrl(base, endpoint) {
     const cleanBase = String(base || "").trim().replace(/\/$/, "");
     const cleanEndpoint = String(endpoint || "").trim().replace(/^\//, "");
+
     return `${cleanBase}/${cleanEndpoint}`;
 }
 
@@ -234,13 +253,8 @@ function errorJson(error, status = 400, details = null) {
 function getField(item, field) {
     if (!item) return "";
 
-    if (item[field] !== undefined) {
-        return item[field];
-    }
-
-    if (item?.attributes?.[field] !== undefined) {
-        return item.attributes[field];
-    }
+    if (item[field] !== undefined) return item[field];
+    if (item?.attributes?.[field] !== undefined) return item.attributes[field];
 
     return "";
 }
@@ -284,6 +298,60 @@ function sameId(item, selectedId) {
         String(item?.documentId || "") === selected ||
         String(item?.id || "") === selected
     );
+}
+
+function isNumericId(value) {
+    return /^\d+$/.test(String(value || ""));
+}
+
+function relationFilterByAnyId(relationName, selectedId) {
+    if (!relationName || !selectedId) return {};
+
+    const value = String(selectedId);
+    const checks = [
+        {
+            [relationName]: {
+                documentId: {
+                    $eq: value,
+                },
+            },
+        },
+    ];
+
+    if (isNumericId(value)) {
+        checks.push({
+            [relationName]: {
+                id: {
+                    $eq: Number(value),
+                },
+            },
+        });
+    }
+
+    return {
+        $or: checks,
+    };
+}
+
+function categoryFilterBySlug(categorySlug) {
+    return {
+        $or: [
+            {
+                product_categories: {
+                    slug: {
+                        $eq: categorySlug,
+                    },
+                },
+            },
+            {
+                product_category: {
+                    slug: {
+                        $eq: categorySlug,
+                    },
+                },
+            },
+        ],
+    };
 }
 
 function getRelationArray(item, relationName) {
@@ -417,7 +485,7 @@ function productHasApi(product, apiId) {
 function productHasSaeGrade(product, saeGradeId) {
     return hasRelationByNames(
         product,
-        ["sae_grade", "sae_grades", "saeGrade", "saeGrades"],
+        ["sae_grades", "sae_grade", "saeGrades", "saeGrade"],
         saeGradeId
     );
 }
@@ -446,7 +514,7 @@ function productHasSaeGradeViaFilterRelations(product, saeGradeId) {
         return rels.some((rel) =>
             hasRelationByNames(
                 rel,
-                ["sae_grade", "sae_grades", "saeGrade", "saeGrades"],
+                ["sae_grades", "sae_grade", "saeGrades", "saeGrade"],
                 saeGradeId
             )
         );
@@ -460,14 +528,7 @@ function imageUrlFromProduct(product) {
         process.env.NEXT_PUBLIC_API_BASE_URL ||
         "";
 
-    const possibleMedia = [
-        getRelationObject(product, "image"),
-        getRelationObject(product, "productImage"),
-        getRelationObject(product, "product_image"),
-        getRelationObject(product, "thumbnail"),
-    ].filter(Boolean);
-
-    const media = possibleMedia[0];
+    const media = getRelationObject(product, "productImage");
 
     const url =
         getField(media, "url") ||
@@ -477,39 +538,10 @@ function imageUrlFromProduct(product) {
         "";
 
     if (!url) return "";
-
     if (url.startsWith("http")) return url;
 
     return `${String(base).replace(/\/api\/?$/, "").replace(/\/$/, "")}${url}`;
 }
-
-function productToCard(product) {
-    return {
-        id: product?.id,
-        documentId: product?.documentId,
-        title: getProductTitle(product),
-        slug: getField(product, "slug"),
-        image: imageUrlFromProduct(product),
-
-        api: getRelationsByNames(product, ["api", "apis"]).map(getLabel)[0] || "",
-        saeGrade:
-            getRelationsByNames(product, [
-                "sae_grade",
-                "sae_grades",
-                "saeGrade",
-                "saeGrades",
-            ]).map(getLabel)[0] || "",
-        type: getRelationsByNames(product, ["type", "types"]).map(getLabel)[0] || "",
-
-        aceas: getRelationsByNames(product, PRODUCT_RELATION_FIELDS.acea).map(getLabel),
-        ilsacs: getRelationsByNames(product, PRODUCT_RELATION_FIELDS.ilsac).map(getLabel),
-        oems: getRelationsByNames(product, PRODUCT_RELATION_FIELDS.oem).map(getLabel),
-        jasos: getRelationsByNames(product, PRODUCT_RELATION_FIELDS.jaso).map(getLabel),
-        ssis: getRelationsByNames(product, PRODUCT_RELATION_FIELDS.ssi).map(getLabel),
-    };
-}
-
-/* ---------------- PRODUCT DOSAGE ---------------- */
 
 function getProductKeys(product) {
     const keys = [];
@@ -520,76 +552,427 @@ function getProductKeys(product) {
     return keys;
 }
 
-function getDosageProductKeys(dosage) {
-    const product = getRelationObject(dosage, "product");
-    const keys = [];
+/* ---------------- DOSAGE COLLECTION ---------------- */
 
-    if (product?.documentId) keys.push(String(product.documentId));
-    if (product?.id) keys.push(String(product.id));
+const DOSAGE_API_RELATION_FIELDS = ["sys_apis", "apis", "api"];
+const DOSAGE_SAE_RELATION_FIELDS = [
+    "sys_sae_grades",
+    "sae_grades",
+    "sae_grade",
+    "saeGrades",
+    "saeGrade",
+];
+const DOSAGE_TYPE_RELATION_FIELDS = [
+    "types",
+    "type",
+    "sys_types",
+    "product_types",
+    "product_type",
+];
 
-    return keys;
+function getDosageValue(row) {
+    return (
+        getField(row, "dosage") ||
+        getField(row, "title") ||
+        getField(row, "value") ||
+        ""
+    );
 }
 
-async function loadProductDosageMap() {
-    const query = qs.stringify(
-        {
-            status: "published",
-            populate: {
-                product: true,
-            },
-            pagination: {
-                pageSize: 1000,
-            },
-            sort: ["title:asc"],
-        },
-        { encodeValuesOnly: true }
-    );
+function buildProductsAnyFilter(productIds = []) {
+    const ids = Array.from(new Set(productIds.map(String).filter(Boolean)));
 
-    const res = await fetchData("product-dosages", query);
-    const dosages = res?.data || [];
+    if (!ids.length) return null;
+
+    return {
+        $or: ids.map((id) => {
+            if (isNumericId(id)) {
+                return {
+                    products: {
+                        id: {
+                            $eq: Number(id),
+                        },
+                    },
+                };
+            }
+
+            return {
+                products: {
+                    documentId: {
+                        $eq: id,
+                    },
+                },
+            };
+        }),
+    };
+}
+
+function rowHasContextRelations(row) {
+    return (
+        getRelationsByNames(row, DOSAGE_API_RELATION_FIELDS).length > 0 ||
+        getRelationsByNames(row, DOSAGE_SAE_RELATION_FIELDS).length > 0 ||
+        getRelationsByNames(row, DOSAGE_TYPE_RELATION_FIELDS).length > 0
+    );
+}
+
+function dosageRowMatchesSelectedFlow(row, filters = {}) {
+    const useSaeFlow = Boolean(filters.api && filters.saeGrade);
+    const useTypeFlow = Boolean(filters.type && !useSaeFlow);
+
+    /*
+        Dosage follows the current selected flow only:
+        - API/SAE categories: Product + API + SAE Grade
+        - Type categories: Product + Type
+
+        Refinement filters such as ACEA, ILSAC, OEM, JASO and SSI are not part of
+        dosage lookup here. They only refine products/chips.
+    */
+
+    if (useSaeFlow) {
+        return (
+            hasRelationByNames(row, DOSAGE_API_RELATION_FIELDS, filters.api) &&
+            hasRelationByNames(row, DOSAGE_SAE_RELATION_FIELDS, filters.saeGrade)
+        );
+    }
+
+    if (useTypeFlow) {
+        return hasRelationByNames(row, DOSAGE_TYPE_RELATION_FIELDS, filters.type);
+    }
+
+    return true;
+}
+
+function productKeySet(product) {
+    return new Set(getProductKeys(product).map(String));
+}
+
+function dosageRowBelongsToProduct(row, product) {
+    const keys = productKeySet(product);
+
+    return getRelationArray(row, "products").some((rowProduct) => {
+        return getProductKeys(rowProduct).some((key) => keys.has(String(key)));
+    });
+}
+
+function setDosageForRowProducts({ map, row, products, overwrite = false }) {
+    const value = getDosageValue(row);
+
+    if (!value) return;
+
+    products.forEach((product) => {
+        if (!dosageRowBelongsToProduct(row, product)) return;
+
+        getProductKeys(product).forEach((key) => {
+            if (overwrite || !map.has(String(key))) {
+                map.set(String(key), value);
+            }
+        });
+    });
+}
+
+async function loadDosageMapForContext({ filters, products = [] }) {
+    const cleanProducts = uniqueRelationObjects(products);
+    const productIds = cleanProducts.flatMap((product) => getProductKeys(product));
+    const productFilter = buildProductsAnyFilter(productIds);
+
+    if (!productFilter) {
+        return new Map();
+    }
+
+    /*
+        Fetch dosage rows by Product first, then match the selected flow in JS.
+        This is more reliable than hard-filtering every context relation in qs,
+        because some dosage rows use Product + API + SAE Grade while other rows use
+        Product + Type, depending on category flow.
+    */
+
+    const rows = await loadCollectionItems("dosages", {
+        fields: ["dosage"],
+        filters: productFilter,
+        populate: "*",
+        sort: ["updatedAt:desc", "createdAt:desc"],
+    });
 
     const map = new Map();
 
-    dosages.forEach((dosage) => {
-        const title = getField(dosage, "title");
+    rows.forEach((row) => {
+        if (!dosageRowMatchesSelectedFlow(row, filters)) return;
 
-        if (!title) return;
+        setDosageForRowProducts({
+            map,
+            row,
+            products: cleanProducts,
+        });
+    });
 
-        const productKeys = getDosageProductKeys(dosage);
+    /*
+        Optional safe fallback: if a dosage row is only linked with Product and has
+        no API/SAE/Type context relations, use it as a generic product dosage.
+        Exact flow rows above always win.
+    */
+    rows.forEach((row) => {
+        if (rowHasContextRelations(row)) return;
 
-        productKeys.forEach((key) => {
-            if (!key) return;
-
-            const existing = map.get(key);
-
-            if (existing) {
-                map.set(key, `${existing}, ${title}`);
-            } else {
-                map.set(key, title);
-            }
+        setDosageForRowProducts({
+            map,
+            row,
+            products: cleanProducts,
         });
     });
 
     return map;
 }
 
-function productToCardWithDosage(product, dosageMap) {
-    const card = productToCard(product);
-
-    let dosage = "";
-
+function getDosageForProduct(product, dosageMap) {
     for (const key of getProductKeys(product)) {
-        if (dosageMap.has(key)) {
-            dosage = dosageMap.get(key);
-            break;
+        if (dosageMap.has(String(key))) {
+            return dosageMap.get(String(key));
         }
     }
 
+    return "";
+}
+
+/* ---------------- LEAF MAP ---------------- */
+
+async function loadLeafRowsForSae(field, saeGradeId) {
+    const cfg = LEAF_CONFIG[field];
+
+    if (!cfg || !saeGradeId) return [];
+
+    const query = qs.stringify(
+        {
+            locale: STRAPI_LOCALE,
+            status: "published",
+            filters: relationFilterByAnyId("sae_grade", saeGradeId),
+            fields: [cfg.field],
+            populate: {
+                sae_grade: {
+                    fields: ["name"],
+                },
+                product: {
+                    fields: ["title"],
+                },
+            },
+            pagination: {
+                pageSize: 1000,
+            },
+            sort: [`${cfg.field}:asc`],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData(cfg.endpoint, query);
+
+    return res?.data || [];
+}
+
+async function loadLeafMapForSae(saeGradeId, fields = ["acea", "ilsac", "oem", "jaso"]) {
+    const map = new Map();
+
+    if (!saeGradeId) return map;
+
+    const entries = await Promise.all(
+        fields.map(async (field) => {
+            return [field, await loadLeafRowsForSae(field, saeGradeId)];
+        })
+    );
+
+    function ensureProduct(product) {
+        const keys = getProductKeys(product);
+
+        keys.forEach((key) => {
+            if (!map.has(key)) {
+                map.set(key, {
+                    aceas: [],
+                    aceaIds: [],
+                    ilsacs: [],
+                    ilsacIds: [],
+                    oems: [],
+                    oemIds: [],
+                    jasos: [],
+                    jasoIds: [],
+                });
+            }
+        });
+
+        return keys;
+    }
+
+    entries.forEach(([field, rows]) => {
+        const cfg = LEAF_CONFIG[field];
+
+        rows.forEach((row) => {
+            const product = getRelationObject(row, "product");
+            const label = getField(row, cfg.field);
+            const rowId = row?.documentId || row?.id;
+
+            if (!product || !label || !rowId) return;
+
+            const keys = ensureProduct(product);
+
+            const labelKey =
+                field === "acea"
+                    ? "aceas"
+                    : field === "ilsac"
+                        ? "ilsacs"
+                        : field === "oem"
+                            ? "oems"
+                            : "jasos";
+
+            const idKey =
+                field === "acea"
+                    ? "aceaIds"
+                    : field === "ilsac"
+                        ? "ilsacIds"
+                        : field === "oem"
+                            ? "oemIds"
+                            : "jasoIds";
+
+            keys.forEach((key) => {
+                const item = map.get(key);
+
+                if (!item[labelKey].includes(label)) {
+                    item[labelKey].push(label);
+                }
+
+                if (!item[idKey].map(String).includes(String(rowId))) {
+                    item[idKey].push(rowId);
+                }
+            });
+        });
+    });
+
+    return map;
+}
+
+function getLeafForProduct(product, leafMap) {
+    for (const key of getProductKeys(product)) {
+        if (leafMap.has(key)) {
+            return leafMap.get(key);
+        }
+    }
+
+    return null;
+}
+
+function productMatchesLeafFilters(product, filters, leafMap) {
+    const leaf = getLeafForProduct(product, leafMap);
+
+    if (filters.acea && !leaf?.aceaIds?.map(String).includes(String(filters.acea))) {
+        return false;
+    }
+
+    if (filters.ilsac && !leaf?.ilsacIds?.map(String).includes(String(filters.ilsac))) {
+        return false;
+    }
+
+    if (filters.oem && !leaf?.oemIds?.map(String).includes(String(filters.oem))) {
+        return false;
+    }
+
+    if (filters.jaso && !leaf?.jasoIds?.map(String).includes(String(filters.jaso))) {
+        return false;
+    }
+
+    return true;
+}
+
+function optionFromLeaf(row, field) {
+    const cfg = LEAF_CONFIG[field];
+
     return {
-        ...card,
-        dosage,
+        id: row?.id,
+        documentId: row?.documentId || row?.id,
+        label: getField(row, cfg.field),
     };
 }
+
+async function getLeafOptionsFromCollection(field, saeGradeId) {
+    const rows = await loadLeafRowsForSae(field, saeGradeId);
+
+    return uniqueOptions(rows.map((row) => optionFromLeaf(row, field)));
+}
+
+/* ---------------- CARD MAPPING ---------------- */
+
+function productToBaseCard(product) {
+    return {
+        id: product?.id,
+        documentId: product?.documentId,
+        title: getProductTitle(product),
+        image: imageUrlFromProduct(product),
+
+        api: "",
+        saeGrade: "",
+        type: "",
+
+        aceas: [],
+        ilsacs: [],
+        oems: [],
+        jasos: [],
+        ssis: [],
+
+        dosage: "",
+    };
+}
+
+function productToContextCard({
+    product,
+    filters,
+    apiItem,
+    saeGrade,
+    typeItem,
+    dosageMap,
+    leafMap,
+    categorySlug,
+}) {
+    const card = productToBaseCard(product);
+    const leaf = getLeafForProduct(product, leafMap);
+    const isSaeFlow = Boolean(filters.api && filters.saeGrade);
+
+    console.log(dosageMap);
+
+    card.dosage = getDosageForProduct(product, dosageMap);
+
+    console.log(card.dosage);
+
+    if (isSaeFlow) {
+        card.api = getLabel(apiItem);
+        card.saeGrade = getLabel(saeGrade);
+
+        card.aceas = leaf?.aceas || [];
+        card.ilsacs = leaf?.ilsacs || [];
+        card.oems = leaf?.oems || [];
+        card.jasos = leaf?.jasos || [];
+
+        return card;
+    }
+
+    if (filters.type) {
+        card.type = getLabel(typeItem);
+
+        const productOems = getRelationsByNames(product, PRODUCT_RELATION_FIELDS.oem).map(getLabel);
+        const productSsis = getRelationsByNames(product, PRODUCT_RELATION_FIELDS.ssi).map(getLabel);
+        const productApis = getRelationsByNames(product, ["api", "apis"]).map(getLabel);
+
+        card.api =
+            filters.api && categorySlug === "driveline-additives"
+                ? productApis[0] || ""
+                : "";
+
+        card.oems = productOems;
+        card.ssis = productSsis;
+
+        return card;
+    }
+
+    return card;
+}
+
+/* ---------------- PARAMS ---------------- */
 
 function getSelectedFilters(searchParams) {
     return {
@@ -604,39 +987,81 @@ function getSelectedFilters(searchParams) {
     };
 }
 
-async function loadCollectionItems(endpoint, extraQuery = {}) {
-    const query = qs.stringify(
-        {
-            status: "published",
-            populate: "*",
-            pagination: {
-                pageSize: 1000,
-            },
-            sort: ["name:asc", "title:asc"],
-            ...extraQuery,
-        },
-        { encodeValuesOnly: true }
-    );
+async function fetchCollectionPages(endpoint, queryObject = {}, pageSize = SAFE_PAGE_SIZE) {
+    const allRows = [];
+    let page = 1;
+    let pageCount = 1;
 
-    const res = await fetchData(endpoint, query);
-    return res?.data || [];
+    do {
+        const query = qs.stringify(
+            {
+                locale: STRAPI_LOCALE,
+                status: "published",
+                ...queryObject,
+                pagination: {
+                    ...(queryObject.pagination || {}),
+                    page,
+                    pageSize,
+                },
+            },
+            { encodeValuesOnly: true }
+        );
+
+        const res = await fetchData(endpoint, query);
+        const rows = res?.data || [];
+        const pagination = res?.meta?.pagination || {};
+
+        allRows.push(...rows);
+
+        pageCount = Number(pagination.pageCount || (rows.length < pageSize ? page : page + 1));
+        page += 1;
+    } while (page <= pageCount && page <= MAX_PAGES);
+
+    return allRows;
 }
 
-async function loadProductsFromStrapi() {
+async function loadCollectionItems(endpoint, extraQuery = {}) {
+    return fetchCollectionPages(endpoint, {
+        populate: "*",
+        sort: ["name:asc", "title:asc"],
+        ...extraQuery,
+    });
+}
+
+async function loadProductsFromStrapi(categorySlug = "", extraAndFilters = []) {
+    const andFilters = [];
+
+    if (categorySlug) {
+        andFilters.push(categoryFilterBySlug(categorySlug));
+    }
+
+    extraAndFilters.filter(Boolean).forEach((filter) => {
+        andFilters.push(filter);
+    });
+
     return loadCollectionItems("products", {
+        populate: PRODUCT_POPULATE,
+        ...(andFilters.length
+            ? {
+                filters: {
+                    $and: andFilters,
+                },
+            }
+            : {}),
         sort: ["title:asc"],
     });
 }
 
-async function getByAnyIdFromCollection(endpoint, selectedId) {
+async function getByAnyIdFromCollection(endpoint, selectedId, populate = "*") {
     if (!selectedId) return null;
 
     const wanted = String(selectedId);
 
     const directQuery = qs.stringify(
         {
+            locale: STRAPI_LOCALE,
             status: "published",
-            populate: "*",
+            populate,
         },
         { encodeValuesOnly: true }
     );
@@ -649,13 +1074,14 @@ async function getByAnyIdFromCollection(endpoint, selectedId) {
 
     const documentIdQuery = qs.stringify(
         {
+            locale: STRAPI_LOCALE,
             status: "published",
             filters: {
                 documentId: {
                     $eq: wanted,
                 },
             },
-            populate: "*",
+            populate,
             pagination: {
                 pageSize: 1,
             },
@@ -671,13 +1097,14 @@ async function getByAnyIdFromCollection(endpoint, selectedId) {
 
     const idQuery = qs.stringify(
         {
+            locale: STRAPI_LOCALE,
             status: "published",
             filters: {
                 id: {
                     $eq: wanted,
                 },
             },
-            populate: "*",
+            populate,
             pagination: {
                 pageSize: 1,
             },
@@ -691,7 +1118,9 @@ async function getByAnyIdFromCollection(endpoint, selectedId) {
         return idRes.data[0];
     }
 
-    const allItems = await loadCollectionItems(endpoint);
+    const allItems = await loadCollectionItems(endpoint, {
+        populate,
+    });
 
     return allItems.find((item) => sameId(item, wanted)) || null;
 }
@@ -699,6 +1128,7 @@ async function getByAnyIdFromCollection(endpoint, selectedId) {
 async function getProductCategory(categorySlug) {
     const query = qs.stringify(
         {
+            locale: STRAPI_LOCALE,
             status: "published",
             filters: {
                 slug: {
@@ -714,6 +1144,7 @@ async function getProductCategory(categorySlug) {
     );
 
     const res = await fetchData("product-categories", query);
+
     return res?.data?.[0] || null;
 }
 
@@ -728,7 +1159,6 @@ async function getApiOptions(categorySlug) {
     }
 
     const apis = await loadCollectionItems("apis");
-
     const filtered = apis.filter((api) => relationHasCategory(api, categorySlug));
 
     return uniqueOptions(filtered.map(optionFromRelation));
@@ -742,7 +1172,12 @@ async function getSaeGradeOptionsFromApi(apiId) {
     const items = [];
 
     if (api) {
-        getRelationsByNames(api, ["sae_grades", "saeGrades", "sae_grades"]).forEach((grade) => {
+        getRelationsByNames(api, [
+            "sae_grades",
+            "saeGrades",
+            "sae_grade",
+            "saeGrade",
+        ]).forEach((grade) => {
             items.push(optionFromRelation(grade));
         });
     }
@@ -763,74 +1198,13 @@ async function getSaeGradeOptionsFromApi(apiId) {
 async function getSaeGradeBySelectedFilter(saeGradeId) {
     if (!saeGradeId) return null;
 
-    const wanted = String(saeGradeId);
-
-    const directQuery = qs.stringify(
-        {
-            status: "published",
-            populate: SAE_GRADE_POPULATE,
-        },
-        { encodeValuesOnly: true }
-    );
-
-    const directRes = await fetchData(`sae-grades/${wanted}`, directQuery);
-
-    if (directRes?.data) {
-        return directRes.data;
-    }
-
-    const documentIdQuery = qs.stringify(
-        {
-            status: "published",
-            filters: {
-                documentId: {
-                    $eq: wanted,
-                },
-            },
-            populate: SAE_GRADE_POPULATE,
-            pagination: {
-                pageSize: 1,
-            },
-        },
-        { encodeValuesOnly: true }
-    );
-
-    const documentIdRes = await fetchData("sae-grades", documentIdQuery);
-
-    if (documentIdRes?.data?.[0]) {
-        return documentIdRes.data[0];
-    }
-
-    const idQuery = qs.stringify(
-        {
-            status: "published",
-            filters: {
-                id: {
-                    $eq: wanted,
-                },
-            },
-            populate: SAE_GRADE_POPULATE,
-            pagination: {
-                pageSize: 1,
-            },
-        },
-        { encodeValuesOnly: true }
-    );
-
-    const idRes = await fetchData("sae-grades", idQuery);
-
-    if (idRes?.data?.[0]) {
-        return idRes.data[0];
-    }
-
-    return getByAnyIdFromCollection("sae-grades", saeGradeId);
+    return getByAnyIdFromCollection("sae-grades", saeGradeId, SAE_GRADE_POPULATE);
 }
 
 function getOptionsFromSaeGradeRecord(saeGrade, field) {
     if (!saeGrade) return [];
 
     const names = SAE_RELATION_FIELDS[field] || [];
-
     const rels = getRelationsByNames(saeGrade, names);
 
     return uniqueOptions(rels.map(optionFromRelation));
@@ -842,56 +1216,52 @@ function getProductsFromSaeGradeRecord(saeGrade) {
     return getRelationsByNames(saeGrade, ["products", "product"]);
 }
 
-async function getProductsBySaeGradeFallback(saeGradeId) {
+async function getProductsBySaeGradesRelation({
+    saeGradeId,
+    categorySlug,
+    saeGrade,
+}) {
     if (!saeGradeId) return [];
 
-    const byDocumentIdQuery = qs.stringify(
-        {
-            status: "published",
-            filters: {
-                sae_grade: {
-                    documentId: {
-                        $eq: String(saeGradeId),
-                    },
-                },
-            },
-            populate: PRODUCT_POPULATE,
-            pagination: {
-                pageSize: 1000,
-            },
-            sort: ["title:asc"],
-        },
-        { encodeValuesOnly: true }
-    );
+    /*
+        IMPORTANT for Gasoline/PCMO, Heavy Duty and Motorcycle:
+        after API + SAE Grade selection, product cards must come from selected
+        SAE Grade + selected category. We use Strapi category filter first so we
+        do not lose products because of the default 100 record API limit.
+    */
 
-    const byDocumentIdRes = await fetchData("products", byDocumentIdQuery);
+    const fromSaeGrade = getProductsFromSaeGradeRecord(saeGrade).filter((product) => {
+        const categories = [
+            ...getRelationArray(product, "product_categories"),
+            ...getRelationArray(product, "product_category"),
+        ];
 
-    if (byDocumentIdRes?.data?.length) {
-        return byDocumentIdRes.data;
+        if (!categories.length) return true;
+
+        return productBelongsToCategory(product, categorySlug);
+    });
+
+    if (fromSaeGrade.length) {
+        return fromSaeGrade;
     }
 
-    const byIdQuery = qs.stringify(
-        {
-            status: "published",
-            filters: {
-                sae_grade: {
-                    id: {
-                        $eq: String(saeGradeId),
-                    },
-                },
-            },
-            populate: PRODUCT_POPULATE,
-            pagination: {
-                pageSize: 1000,
-            },
-            sort: ["title:asc"],
-        },
-        { encodeValuesOnly: true }
-    );
+    const directProducts = await loadProductsFromStrapi(categorySlug, [
+        relationFilterByAnyId("sae_grades", saeGradeId),
+    ]);
 
-    const byIdRes = await fetchData("products", byIdQuery);
+    if (directProducts.length) {
+        return directProducts;
+    }
 
-    return byIdRes?.data || [];
+    const categoryProducts = await loadProductsFromStrapi(categorySlug);
+
+    return categoryProducts.filter((product) => {
+        return hasRelationByNames(
+            product,
+            ["sae_grades", "sae_grade", "saeGrades", "saeGrade"],
+            saeGradeId
+        );
+    });
 }
 
 /* ---------------- TYPE FLOW ---------------- */
@@ -899,6 +1269,7 @@ async function getProductsBySaeGradeFallback(saeGradeId) {
 async function getTypeOptions(categorySlug) {
     const directQuery = qs.stringify(
         {
+            locale: STRAPI_LOCALE,
             status: "published",
             filters: {
                 product_category: {
@@ -924,7 +1295,6 @@ async function getTypeOptions(categorySlug) {
     }
 
     const allTypes = await loadCollectionItems("types");
-
     const filteredTypes = allTypes.filter((type) => relationHasCategory(type, categorySlug));
 
     if (filteredTypes.length) {
@@ -932,7 +1302,6 @@ async function getTypeOptions(categorySlug) {
     }
 
     const category = await getProductCategory(categorySlug);
-
     const typesFromCategory = getRelationsByNames(category, ["types", "type"]);
 
     return uniqueOptions(typesFromCategory.map(optionFromRelation));
@@ -948,7 +1317,6 @@ function getTypeRelationOptions(typeItem, field) {
     if (!typeItem) return [];
 
     const names = TYPE_RELATION_FIELDS[field] || [];
-
     const rels = getRelationsByNames(typeItem, names);
 
     return uniqueOptions(rels.map(optionFromRelation));
@@ -988,10 +1356,7 @@ function makeProductIdSet(products = []) {
 function productIdInSet(product, set) {
     if (!product || !set?.size) return false;
 
-    return (
-        set.has(String(product.documentId || "")) ||
-        set.has(String(product.id || ""))
-    );
+    return set.has(String(product.documentId || "")) || set.has(String(product.id || ""));
 }
 
 function mergeProducts(allProducts = [], relationProducts = []) {
@@ -1023,12 +1388,7 @@ async function filterProductsBySelectedRelations({
     saeGrade,
     typeItem,
 }) {
-    let saeGradeProducts = getProductsFromSaeGradeRecord(saeGrade);
-
-    if (filters.saeGrade && !saeGradeProducts.length) {
-        saeGradeProducts = await getProductsBySaeGradeFallback(filters.saeGrade);
-    }
-
+    const saeGradeProducts = getProductsFromSaeGradeRecord(saeGrade);
     const saeGradeProductIds = makeProductIdSet(saeGradeProducts);
 
     const typeProducts = getProductsFromTypeRecord(typeItem);
@@ -1061,7 +1421,9 @@ async function filterProductsBySelectedRelations({
                 return true;
             }
 
-            if (!filters.api) return true;
+            if (!filters.api || filters.saeGrade) {
+                return true;
+            }
 
             return productHasApi(product, filters.api);
         })
@@ -1077,16 +1439,13 @@ async function filterProductsBySelectedRelations({
         .filter((product) => {
             if (!filters.type) return true;
 
-            return (
-                productIdInSet(product, typeProductIds) ||
-                productHasType(product, filters.type)
-            );
+            return productIdInSet(product, typeProductIds) || productHasType(product, filters.type);
         })
-        .filter((product) => productHasFilterRelation(product, "acea", filters.acea))
-        .filter((product) => productHasFilterRelation(product, "ilsac", filters.ilsac))
-        .filter((product) => productHasFilterRelation(product, "oem", filters.oem))
-        .filter((product) => productHasFilterRelation(product, "jaso", filters.jaso))
-        .filter((product) => productHasFilterRelation(product, "ssi", filters.ssi));
+        .filter((product) => {
+            if (!filters.ssi) return true;
+
+            return productHasFilterRelation(product, "ssi", filters.ssi);
+        });
 }
 
 function filtersBeforeField(category, filters, field) {
@@ -1166,8 +1525,16 @@ export async function GET(req) {
             }
 
             if (["acea", "ilsac", "oem", "jaso"].includes(field) && filters.saeGrade) {
-                const saeGrade = await getSaeGradeBySelectedFilter(filters.saeGrade);
+                const leafOptions = await getLeafOptionsFromCollection(field, filters.saeGrade);
 
+                if (leafOptions.length) {
+                    return okJson({
+                        label: FIELD_LABELS[field] || field,
+                        items: leafOptions,
+                    });
+                }
+
+                const saeGrade = await getSaeGradeBySelectedFilter(filters.saeGrade);
                 const relationOptions = getOptionsFromSaeGradeRecord(saeGrade, field);
 
                 return okJson({
@@ -1200,7 +1567,7 @@ export async function GET(req) {
                 });
             }
 
-            const allProducts = await loadProductsFromStrapi();
+            const allProducts = await loadProductsFromStrapi(categorySlug);
             const previousFilters = filtersBeforeField(category, filters, field);
             const saeGrade = await getSaeGradeBySelectedFilter(previousFilters.saeGrade);
             const typeItem = await getSelectedType(previousFilters.type);
@@ -1233,11 +1600,59 @@ export async function GET(req) {
         }
 
         if (mode === "products") {
-            const allProducts = await loadProductsFromStrapi();
+            const apiItem = filters.api
+                ? await getByAnyIdFromCollection("apis", filters.api)
+                : null;
+
+
             const saeGrade = await getSaeGradeBySelectedFilter(filters.saeGrade);
+
+
             const typeItem = await getSelectedType(filters.type);
 
-            const products = await filterProductsBySelectedRelations({
+
+            if (SAE_FLOW_CATEGORY_SLUGS.has(categorySlug) && filters.api && filters.saeGrade) {
+                const leafMap = await loadLeafMapForSae(
+                    filters.saeGrade,
+                    ["acea", "ilsac", "oem", "jaso"]
+                );
+
+                let products = await getProductsBySaeGradesRelation({
+                    saeGradeId: filters.saeGrade,
+                    categorySlug,
+                    saeGrade,
+                });
+
+                products = products.filter((product) => {
+                    return productMatchesLeafFilters(product, filters, leafMap);
+                });
+
+                const dosageMap = await loadDosageMapForContext({ filters, products });
+
+                console.log(filters, dosageMap);
+
+                const items = products.map((product) =>
+                    productToContextCard({
+                        product,
+                        filters,
+                        apiItem,
+                        saeGrade,
+                        typeItem,
+                        dosageMap,
+                        leafMap,
+                        categorySlug,
+                    })
+                );
+
+                return okJson({
+                    category,
+                    items,
+                });
+            }
+
+            const allProducts = await loadProductsFromStrapi(categorySlug);
+
+            let products = await filterProductsBySelectedRelations({
                 products: allProducts,
                 categorySlug,
                 filters,
@@ -1245,11 +1660,40 @@ export async function GET(req) {
                 typeItem,
             });
 
-            const dosageMap = await loadProductDosageMap();
+            const leafMap = filters.saeGrade
+                ? await loadLeafMapForSae(filters.saeGrade, ["acea", "ilsac", "oem", "jaso"])
+                : new Map();
+
+            if (filters.saeGrade) {
+                products = products.filter((product) => {
+                    return productMatchesLeafFilters(product, filters, leafMap);
+                });
+            }
+
+            if (filters.type && filters.oem) {
+                products = products.filter((product) => {
+                    return productHasFilterRelation(product, "oem", filters.oem);
+                });
+            }
+
+            const dosageMap = await loadDosageMapForContext({ filters, products });
+
+            const items = products.map((product) =>
+                productToContextCard({
+                    product,
+                    filters,
+                    apiItem,
+                    saeGrade,
+                    typeItem,
+                    dosageMap,
+                    leafMap,
+                    categorySlug,
+                })
+            );
 
             return okJson({
                 category,
-                items: products.map((product) => productToCardWithDosage(product, dosageMap)),
+                items,
             });
         }
 

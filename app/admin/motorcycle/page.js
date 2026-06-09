@@ -262,16 +262,22 @@ export default function MotorcyclePage() {
         setAllProducts(all?.items || []);
     }
 
-    async function loadDosage(productId) {
+    async function loadDosage(productId, apiId = selectedApi, saeGradeId = selectedSaeGrade) {
         setDosageDocId("");
         setDosageTitle("");
 
-        if (!productId) return;
+        if (!apiId || !saeGradeId || !productId) return;
 
         try {
             setLoadingDosage(true);
 
-            const data = await fetchJson(apiUrl("dosage", { productId }));
+            const data = await fetchJson(
+                apiUrl("dosage", {
+                    apiId,
+                    saeGradeId,
+                    productId,
+                })
+            );
 
             setDosageDocId(data?.item?.documentId || "");
             setDosageTitle(data?.item?.title || "");
@@ -385,7 +391,7 @@ export default function MotorcyclePage() {
 
                 if (selectedSaeGrade && selectedProduct) {
                     await Promise.all([
-                        loadDosage(selectedProduct),
+                        loadDosage(selectedProduct, selectedApi, selectedSaeGrade),
                         loadJasos(selectedSaeGrade, selectedProduct),
                     ]);
                 }
@@ -395,7 +401,7 @@ export default function MotorcyclePage() {
         }
 
         run();
-    }, [selectedProduct]);
+    }, [selectedProduct, selectedApi, selectedSaeGrade]);
 
     function setSelectedAddValue(type, value) {
         setSelectedAdd((prev) => ({
@@ -415,8 +421,8 @@ export default function MotorcyclePage() {
         try {
             resetMessage();
 
-            if (!selectedProduct) {
-                throw new Error("Please select Product first");
+            if (!selectedApi || !selectedSaeGrade || !selectedProduct) {
+                throw new Error("Please select API, SAE Grade and Product first");
             }
 
             if (!dosageTitle.trim()) {
@@ -432,6 +438,8 @@ export default function MotorcyclePage() {
                 },
                 body: JSON.stringify({
                     type: "dosage",
+                    apiId: selectedApi,
+                    saeGradeId: selectedSaeGrade,
                     productId: selectedProduct,
                     title: dosageTitle.trim(),
                     dosageId: dosageDocId || null,
@@ -1014,7 +1022,7 @@ export default function MotorcyclePage() {
                     </h3>
 
                     <p className="text-[11px] text-gray-500">
-                        Product dosage is saved in ProductDosage collection and linked with selected Product.
+                        Dosage is loaded and saved by the selected relation values for this category.
                     </p>
                 </div>
 

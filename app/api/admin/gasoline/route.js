@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import qs from "qs";
 import ENUMS from "../../../admin/config/enums.json";
 
-const STATIC_CATEGORY = { title: "PCMO/Gasoline", slug: "pcmo-gasoline" };
+export const runtime = "nodejs";
+
+const STATIC_CATEGORY = {
+    title: "Gasoline/PCMO",
+    slug: "pcmo-gasoline",
+};
 
 const TYPE_CONFIG = {
     api: { endpoint: "apis", field: "name", label: "API" },
@@ -40,10 +45,11 @@ async function parseResponse(res) {
 async function fetchData(endpoint, query = "") {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     const token = process.env.API_TOKEN;
+
     const url = `${joinUrl(baseUrl, endpoint)}${query ? `?${query}` : ""}`;
 
     console.log("==================================================");
-    console.log("[fetchData] URL:", url);
+    console.log("[gasoline fetchData] URL:", url);
 
     try {
         const res = await fetch(url, {
@@ -56,12 +62,15 @@ async function fetchData(endpoint, query = "") {
 
         const parsed = await parseResponse(res);
 
-        console.log("[fetchData] status:", parsed.status);
-        console.log("[fetchData] first 800 chars:", JSON.stringify(parsed.data).slice(0, 800));
+        console.log("[gasoline fetchData] status:", parsed.status);
+        console.log(
+            "[gasoline fetchData] first 900 chars:",
+            JSON.stringify(parsed.data).slice(0, 900)
+        );
 
         return parsed.data;
     } catch (err) {
-        console.log("[fetchData] ERROR:", err);
+        console.log("[gasoline fetchData] ERROR:", err);
         return null;
     }
 }
@@ -70,7 +79,16 @@ async function strapiRequest(method, endpoint, payload = null) {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     const token = process.env.API_TOKEN;
 
-    const res = await fetch(joinUrl(baseUrl, endpoint), {
+    const url = joinUrl(baseUrl, endpoint);
+
+    console.log("==================================================");
+    console.log(`[gasoline ${method}] URL:`, url);
+
+    if (payload) {
+        console.log(`[gasoline ${method}] payload:`, JSON.stringify(payload, null, 2));
+    }
+
+    const res = await fetch(url, {
         method,
         headers: {
             "Content-Type": "application/json",
@@ -81,7 +99,15 @@ async function strapiRequest(method, endpoint, payload = null) {
         cache: "no-store",
     });
 
-    return parseResponse(res);
+    const parsed = await parseResponse(res);
+
+    console.log(`[gasoline ${method}] status:`, parsed.status);
+    console.log(
+        `[gasoline ${method}] response:`,
+        JSON.stringify(parsed.data).slice(0, 1200)
+    );
+
+    return parsed;
 }
 
 const strapiPost = (endpoint, payload) => strapiRequest("POST", endpoint, payload);
@@ -108,8 +134,10 @@ function errorJson(error, status = 400, details = null) {
 
 function getField(item, field) {
     if (!item) return "";
+
     if (item[field] !== undefined) return item[field];
     if (item?.attributes?.[field] !== undefined) return item.attributes[field];
+
     return "";
 }
 
@@ -160,6 +188,10 @@ function getRelationArray(item, relationName) {
     if (Array.isArray(rel)) return rel;
     if (Array.isArray(rel?.data)) return rel.data;
 
+    if (rel && typeof rel === "object" && (rel.id || rel.documentId)) {
+        return [rel];
+    }
+
     return [];
 }
 
@@ -168,19 +200,163 @@ function getRelationObject(item, relationName) {
 
     if (!rel) return null;
     if (rel?.data) return rel.data;
+    if (Array.isArray(rel)) return rel[0] || null;
 
     return rel;
 }
 
-function productBelongsToStaticCategory(product) {
-    return getRelationArray(product, "product_categories").some((category) => {
-        return getField(category, "slug") === STATIC_CATEGORY.slug;
-    });
+function relationIds(items = []) {
+    return (Array.isArray(items) ? items : [])
+        .map((item) => item?.documentId || item?.id)
+        .filter(Boolean);
 }
 
-function productHasAnySaeGrade(product) {
-    const sae = getRelationObject(product, "sae_grade");
-    return Boolean(sae?.documentId || sae?.id);
+function relationHasId(items = [], documentId) {
+    return relationIds(items).some((id) => String(id) === String(documentId));
+}
+
+function sameEntity(item, selectedId) {
+    if (!item || !selectedId) return false;
+
+    return (
+        String(item?.documentId || "") === String(selectedId) ||
+        String(item?.id || "") === String(selectedId)
+    );
+}
+
+async function getByAnyId(endpoint, selectedId, populate = {}) {
+    if (!selectedId) return null;
+
+    const wanted = String(selectedId);
+
+    const directQuery = qs.stringify(
+        {
+            status: "published",
+            populate,
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const directRes = await fetchData(`${endpoint}/${wanted}`, directQuery);
+
+    if (directRes?.data) {
+        return directRes.data;
+    }
+
+    const documentIdQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                documentId: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const documentIdRes = await fetchData(endpoint, documentIdQuery);
+
+    if (documentIdRes?.data?.[0]) {
+        return documentIdRes.data[0];
+    }
+
+    const idQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                id: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const idRes = await fetchData(endpoint, idQuery);
+
+    if (idRes?.data?.[0]) {
+        return idRes.data[0];
+    }
+
+    return null;
+}
+
+const productPopulate = {
+    product_categories: true,
+    sae_grades: true,
+    api: true,
+    dosages: true,
+};
+
+async function findGasolineProductForSave(productId, saeGradeId = "") {
+    if (!productId) return null;
+
+    /*
+        First check selected SAE Grade products, because the dropdown/product section
+        is based on sae_grade.products relation.
+    */
+    if (saeGradeId) {
+        const saeGrade = await getSaeGradeWithProducts(saeGradeId);
+        const saeProducts = getRelationArray(saeGrade, "products");
+
+        const fromSaeGrade = saeProducts.find((product) => sameEntity(product, productId));
+
+        if (fromSaeGrade) {
+            return fromSaeGrade;
+        }
+    }
+
+    const direct = await getByAnyId("products", productId, productPopulate);
+
+    if (direct) {
+        return direct;
+    }
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            fields: ["title", "slug"],
+            populate: productPopulate,
+            pagination: {
+                pageSize: 1000,
+            },
+            sort: ["title:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("products", query);
+    const products = res?.data || [];
+
+    return products.find((product) => sameEntity(product, productId)) || null;
+}
+
+
+function productBelongsToStaticCategory(product) {
+    return getRelationArray(product, "product_categories").some((category) => {
+        return (
+            getField(category, "slug") === STATIC_CATEGORY.slug ||
+            sameText(getField(category, "title"), STATIC_CATEGORY.title) ||
+            sameText(getField(category, "title"), "PCMO/Gasoline")
+        );
+    });
 }
 
 function getEnumForType(type) {
@@ -193,20 +369,39 @@ function getEnumForType(type) {
 }
 
 async function getStaticCategory() {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            slug: {
-                $eq: STATIC_CATEGORY.slug,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                $or: [
+                    {
+                        slug: {
+                            $eq: STATIC_CATEGORY.slug,
+                        },
+                    },
+                    {
+                        title: {
+                            $eqi: STATIC_CATEGORY.title,
+                        },
+                    },
+                    {
+                        title: {
+                            $eqi: "PCMO/Gasoline",
+                        },
+                    },
+                ],
+            },
+            populate: {
+                apis: true,
+            },
+            pagination: {
+                pageSize: 1,
             },
         },
-        populate: {
-            apis: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData("product-categories", query);
     return res?.data?.[0] || null;
@@ -215,71 +410,186 @@ async function getStaticCategory() {
 async function getByDocumentId(endpoint, documentId, populate = {}) {
     if (!documentId) return null;
 
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            documentId: {
-                $eq: documentId,
+    const directQuery = qs.stringify(
+        {
+            status: "published",
+            populate,
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const directRes = await fetchData(`${endpoint}/${documentId}`, directQuery);
+
+    if (directRes?.data) return directRes.data;
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                documentId: {
+                    $eq: documentId,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
             },
         },
-        populate,
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData(endpoint, query);
     return res?.data?.[0] || null;
 }
 
 async function findApiByNameAndCategory(name, categoryDocumentId) {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            name: {
-                $eqi: name,
-            },
-            product_category: {
-                documentId: {
-                    $eq: categoryDocumentId,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                name: {
+                    $eqi: name,
+                },
+                product_category: {
+                    documentId: {
+                        $eq: categoryDocumentId,
+                    },
                 },
             },
+            populate: {
+                product_category: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
         },
-        populate: {
-            product_category: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData("apis", query);
     return res?.data?.[0] || null;
 }
 
 async function findSaeByNameAndApi(name, apiDocumentId) {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            name: {
-                $eqi: name,
-            },
-            api: {
-                documentId: {
-                    $eq: apiDocumentId,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                name: {
+                    $eqi: name,
+                },
+                api: {
+                    documentId: {
+                        $eq: apiDocumentId,
+                    },
                 },
             },
+            populate: {
+                api: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
         },
-        populate: {
-            api: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData("sae-grades", query);
     return res?.data?.[0] || null;
+}
+
+async function getSaeGradeWithProducts(saeGradeId) {
+    if (!saeGradeId) return null;
+
+    return getByDocumentId("sae-grades", saeGradeId, {
+        api: true,
+        products: {
+            fields: ["title", "slug"],
+            populate: {
+                product_categories: true,
+                sae_grades: true,
+                api: true,
+                dosages: true,
+            },
+        },
+        aceas: {
+            fields: ["name"],
+        },
+        ilsacs: {
+            fields: ["title"],
+        },
+        oems: {
+            fields: ["title"],
+        },
+    });
+}
+
+async function productIsInSaeGrade(saeGradeId, productId) {
+    const saeGrade = await getSaeGradeWithProducts(saeGradeId);
+    const products = getRelationArray(saeGrade, "products");
+
+    return relationHasId(products, productId);
+}
+
+async function connectProductToSaeGrade(saeGradeId, productId) {
+    const saeGrade = await getSaeGradeWithProducts(saeGradeId);
+
+    if (!saeGrade) {
+        return {
+            ok: false,
+            status: 404,
+            data: {
+                error: "SAE Grade not found",
+            },
+        };
+    }
+
+    const existingProducts = getRelationArray(saeGrade, "products");
+    const existingIds = relationIds(existingProducts);
+
+    const nextProductIds = Array.from(
+        new Set([...existingIds.map(String), String(productId)])
+    );
+
+    return strapiPut(`sae-grades/${saeGradeId}?status=published`, {
+        data: {
+            products: nextProductIds,
+        },
+    });
+}
+
+async function removeProductFromSaeGrade(saeGradeId, productId) {
+    const saeGrade = await getSaeGradeWithProducts(saeGradeId);
+
+    if (!saeGrade) {
+        return {
+            ok: false,
+            status: 404,
+            data: {
+                error: "SAE Grade not found",
+            },
+        };
+    }
+
+    const existingProducts = getRelationArray(saeGrade, "products");
+
+    const nextProductIds = relationIds(existingProducts).filter((id) => {
+        return String(id) !== String(productId);
+    });
+
+    return strapiPut(`sae-grades/${saeGradeId}?status=published`, {
+        data: {
+            products: nextProductIds,
+        },
+    });
 }
 
 async function findLeafByTitleAndSaeAndProduct({
@@ -289,80 +599,126 @@ async function findLeafByTitleAndSaeAndProduct({
     saeGradeId,
     productId,
 }) {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            [field]: {
-                $eqi: title,
-            },
-            sae_grade: {
-                documentId: {
-                    $eq: saeGradeId,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                [field]: {
+                    $eqi: title,
+                },
+                sae_grade: {
+                    documentId: {
+                        $eq: saeGradeId,
+                    },
+                },
+                product: {
+                    documentId: {
+                        $eq: productId,
+                    },
                 },
             },
-            product: {
-                documentId: {
-                    $eq: productId,
-                },
+            populate: {
+                sae_grade: true,
+                product: true,
+            },
+            pagination: {
+                pageSize: 1,
             },
         },
-        populate: {
-            sae_grade: true,
-            product: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData(endpoint, query);
     return res?.data?.[0] || null;
 }
 
-async function getProductDosage(productId) {
-    if (!productId) return null;
-
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            product: {
-                documentId: {
-                    $eq: productId,
+async function getLeafCountBySaeAndProduct({ endpoint, saeGradeId, productId }) {
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                sae_grade: {
+                    documentId: {
+                        $eq: saeGradeId,
+                    },
+                },
+                product: {
+                    documentId: {
+                        $eq: productId,
+                    },
                 },
             },
+            pagination: {
+                pageSize: 500,
+            },
         },
-        fields: ["title"],
-        populate: {
-            product: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-        sort: ["createdAt:asc"],
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
-    const res = await fetchData("product-dosages", query);
+    const res = await fetchData(endpoint, query);
+    return res?.data?.length || 0;
+}
+
+/* ---------------- DOSAGE COLLECTION ---------------- */
+
+async function getDosageRecord({ apiId, saeGradeId, productId }) {
+    if (!apiId || !saeGradeId || !productId) return null;
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                sys_apis: {
+                    documentId: {
+                        $eq: apiId,
+                    },
+                },
+                sys_sae_grades: {
+                    documentId: {
+                        $eq: saeGradeId,
+                    },
+                },
+                products: {
+                    documentId: {
+                        $eq: productId,
+                    },
+                },
+            },
+            fields: ["dosage"],
+            populate: {
+                sys_apis: true,
+                sys_sae_grades: true,
+                products: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
+            sort: ["createdAt:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("dosages", query);
     return res?.data?.[0] || null;
 }
 
-async function getDeleteCheck(type, documentId) {
+async function getDeleteCheck(type, documentId, saeGradeId = "") {
     if (type === "product") {
+        if (!saeGradeId) {
+            return {
+                blocked: true,
+                message: "SAE Grade is missing. Please select SAE Grade first.",
+            };
+        }
+
         const item = await getByDocumentId("products", documentId, {
             product_categories: true,
-            api: true,
-            sae_grade: true,
-            product_dosages: {
-                fields: ["title"],
-            },
-            sys_aceas: {
-                fields: ["name"],
-            },
-            sys_ilsacs: {
-                fields: ["title"],
-            },
-            sys_oems: {
-                fields: ["title"],
-            },
         });
 
         if (!item) {
@@ -372,21 +728,51 @@ async function getDeleteCheck(type, documentId) {
             };
         }
 
-        const aceaCount = getRelationArray(item, "sys_aceas").length;
-        const ilsacCount = getRelationArray(item, "sys_ilsacs").length;
-        const oemCount = getRelationArray(item, "sys_oems").length;
+        if (!productBelongsToStaticCategory(item)) {
+            return {
+                blocked: true,
+                message: "Product does not belong to Gasoline/PCMO category.",
+            };
+        }
+
+        const linkedWithSaeGrade = await productIsInSaeGrade(saeGradeId, documentId);
+
+        if (!linkedWithSaeGrade) {
+            return {
+                blocked: true,
+                message: "This Product is not connected with selected SAE Grade.",
+            };
+        }
+
+        const aceaCount = await getLeafCountBySaeAndProduct({
+            endpoint: "aceas",
+            saeGradeId,
+            productId: documentId,
+        });
+
+        const ilsacCount = await getLeafCountBySaeAndProduct({
+            endpoint: "ilsacs",
+            saeGradeId,
+            productId: documentId,
+        });
+
+        const oemCount = await getLeafCountBySaeAndProduct({
+            endpoint: "oems",
+            saeGradeId,
+            productId: documentId,
+        });
 
         if (aceaCount || ilsacCount || oemCount) {
             return {
                 blocked: true,
-                message: `This Product has relation data (${aceaCount} ACEA, ${ilsacCount} ILSAC, ${oemCount} OEM). First remove relation data, then remove Product relation from SAE Grade.`,
+                message: `This Product has relation data for selected SAE Grade (${aceaCount} ACEA, ${ilsacCount} ILSAC, ${oemCount} OEM). First remove relation data, then remove Product relation from SAE Grade.`,
             };
         }
 
         return {
             blocked: false,
             message:
-                "This will not delete Product. It only removes API and SAE Grade relation from Product.",
+                "This will not delete Product. It only removes Product relation from selected SAE Grade.",
         };
     }
 
@@ -405,6 +791,9 @@ async function getDeleteCheck(type, documentId) {
             products: {
                 fields: ["title"],
             },
+            dosages: {
+                fields: ["dosage"],
+            },
         });
 
         if (!item) {
@@ -416,11 +805,12 @@ async function getDeleteCheck(type, documentId) {
 
         const saeCount = getRelationArray(item, "sae_grades").length;
         const productCount = getRelationArray(item, "products").length;
+        const dosageCount = getRelationArray(item, "dosages").length;
 
-        if (saeCount || productCount) {
+        if (saeCount || productCount || dosageCount) {
             return {
                 blocked: true,
-                message: `This API has relation data (${saeCount} SAE Grade, ${productCount} Product). First remove relation data, then delete it.`,
+                message: `This API has relation data (${saeCount} SAE Grade, ${productCount} Product, ${dosageCount} Dosage). First remove relation data, then delete it.`,
             };
         }
 
@@ -443,6 +833,9 @@ async function getDeleteCheck(type, documentId) {
             oems: {
                 fields: ["title"],
             },
+            dosages: {
+                fields: ["dosage"],
+            },
         });
 
         if (!item) {
@@ -456,11 +849,12 @@ async function getDeleteCheck(type, documentId) {
         const aceaCount = getRelationArray(item, "aceas").length;
         const ilsacCount = getRelationArray(item, "ilsacs").length;
         const oemCount = getRelationArray(item, "oems").length;
+        const dosageCount = getRelationArray(item, "dosages").length;
 
-        if (productCount || aceaCount || ilsacCount || oemCount) {
+        if (productCount || aceaCount || ilsacCount || oemCount || dosageCount) {
             return {
                 blocked: true,
-                message: `This SAE Grade has relation data (${productCount} Product, ${aceaCount} ACEA, ${ilsacCount} ILSAC, ${oemCount} OEM). First remove relation data, then delete it.`,
+                message: `This SAE Grade has relation data (${productCount} Product, ${aceaCount} ACEA, ${ilsacCount} ILSAC, ${oemCount} OEM, ${dosageCount} Dosage). First remove relation data, then delete it.`,
             };
         }
 
@@ -511,7 +905,7 @@ export async function GET(req) {
                 return errorJson("type or documentId is missing", 400);
             }
 
-            return okJson(await getDeleteCheck(type, documentId));
+            return okJson(await getDeleteCheck(type, documentId, saeGradeId));
         }
 
         if (mode === "static-category") {
@@ -521,27 +915,31 @@ export async function GET(req) {
                 item: {
                     id: category?.id,
                     documentId: category?.documentId,
-                    label: getField(category, "title"),
-                    slug: getField(category, "slug"),
+                    label: getField(category, "title") || STATIC_CATEGORY.title,
+                    slug: getField(category, "slug") || STATIC_CATEGORY.slug,
                 },
             });
         }
 
         if (mode === "dosage") {
-            if (!productId) {
+            if (!apiId || !saeGradeId || !productId) {
                 return okJson({
                     item: null,
                 });
             }
 
-            const dosage = await getProductDosage(productId);
+            const dosage = await getDosageRecord({
+                apiId,
+                saeGradeId,
+                productId: productId,
+            });
 
             return okJson({
                 item: dosage
                     ? {
                         id: dosage?.id,
                         documentId: dosage?.documentId,
-                        title: getField(dosage, "title"),
+                        title: getField(dosage, "dosage"),
                     }
                     : null,
             });
@@ -557,24 +955,29 @@ export async function GET(req) {
                 });
             }
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    product_category: {
-                        documentId: {
-                            $eq: categoryDocumentId,
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    filters: {
+                        product_category: {
+                            documentId: {
+                                $eq: categoryDocumentId,
+                            },
                         },
                     },
+                    fields: ["name"],
+                    populate: {
+                        product_category: true,
+                    },
+                    pagination: {
+                        pageSize: 500,
+                    },
+                    sort: ["name:asc"],
                 },
-                fields: ["name"],
-                populate: {
-                    product_category: true,
-                },
-                pagination: {
-                    pageSize: 500,
-                },
-                sort: ["name:asc"],
-            });
+                {
+                    encodeValuesOnly: true,
+                }
+            );
 
             const res = await fetchData("apis", query);
             const items = res?.data || [];
@@ -594,24 +997,29 @@ export async function GET(req) {
                 });
             }
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    api: {
-                        documentId: {
-                            $eq: apiId,
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    filters: {
+                        api: {
+                            documentId: {
+                                $eq: apiId,
+                            },
                         },
                     },
+                    fields: ["name"],
+                    populate: {
+                        api: true,
+                    },
+                    pagination: {
+                        pageSize: 500,
+                    },
+                    sort: ["name:asc"],
                 },
-                fields: ["name"],
-                populate: {
-                    api: true,
-                },
-                pagination: {
-                    pageSize: 500,
-                },
-                sort: ["name:asc"],
-            });
+                {
+                    encodeValuesOnly: true,
+                }
+            );
 
             const res = await fetchData("sae-grades", query);
             const items = res?.data || [];
@@ -631,37 +1039,14 @@ export async function GET(req) {
                 });
             }
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    product_categories: {
-                        slug: {
-                            $eq: STATIC_CATEGORY.slug,
-                        },
-                    },
-                    sae_grade: {
-                        documentId: {
-                            $eq: saeGradeId,
-                        },
-                    },
-                },
-                fields: ["title", "slug"],
-                populate: {
-                    product_categories: true,
-                    sae_grade: true,
-                    api: true,
-                    product_dosages: true,
-                },
-                pagination: {
-                    pageSize: 1000,
-                },
-                sort: ["title:asc"],
-            });
+            const saeGrade = await getSaeGradeWithProducts(saeGradeId);
 
-            const res = await fetchData("products", query);
+            const products = getRelationArray(saeGrade, "products").filter(
+                productBelongsToStaticCategory
+            );
 
             return okJson({
-                items: mapProductItems((res?.data || []).filter(productBelongsToStaticCategory)),
+                items: mapProductItems(products),
             });
         }
 
@@ -672,33 +1057,33 @@ export async function GET(req) {
                 });
             }
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    product_categories: {
-                        slug: {
-                            $eq: STATIC_CATEGORY.slug,
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    filters: {
+                        product_categories: {
+                            slug: {
+                                $eq: STATIC_CATEGORY.slug,
+                            },
                         },
                     },
+                    fields: ["title", "slug"],
+                    populate: {
+                        product_categories: true,
+                    },
+                    pagination: {
+                        pageSize: 1000,
+                    },
+                    sort: ["title:asc"],
                 },
-                fields: ["title", "slug"],
-                populate: {
-                    product_categories: true,
-                    sae_grade: true,
-                    api: true,
-                    product_dosages: true,
-                },
-                pagination: {
-                    pageSize: 1000,
-                },
-                sort: ["title:asc"],
-            });
+                {
+                    encodeValuesOnly: true,
+                }
+            );
 
             const res = await fetchData("products", query);
 
-            const items = (res?.data || [])
-                .filter(productBelongsToStaticCategory)
-            //.filter((product) => !productHasAnySaeGrade(product));
+            const items = (res?.data || []).filter(productBelongsToStaticCategory);
 
             return okJson({
                 items: mapProductItems(items),
@@ -733,30 +1118,35 @@ export async function GET(req) {
             const isAll = mode.startsWith("all-");
             const cfg = TYPE_CONFIG[normalizedType];
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    sae_grade: {
-                        documentId: {
-                            $eq: saeGradeId,
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    filters: {
+                        sae_grade: {
+                            documentId: {
+                                $eq: saeGradeId,
+                            },
+                        },
+                        product: {
+                            documentId: {
+                                $eq: productId,
+                            },
                         },
                     },
-                    product: {
-                        documentId: {
-                            $eq: productId,
-                        },
+                    fields: [cfg.field],
+                    populate: {
+                        sae_grade: true,
+                        product: true,
                     },
+                    pagination: {
+                        pageSize: 500,
+                    },
+                    sort: [`${cfg.field}:asc`],
                 },
-                fields: [cfg.field],
-                populate: {
-                    sae_grade: true,
-                    product: true,
-                },
-                pagination: {
-                    pageSize: 500,
-                },
-                sort: [`${cfg.field}:asc`],
-            });
+                {
+                    encodeValuesOnly: true,
+                }
+            );
 
             const res = await fetchData(cfg.endpoint, query);
             const items = res?.data || [];
@@ -770,7 +1160,7 @@ export async function GET(req) {
 
         return errorJson("Invalid mode", 400);
     } catch (err) {
-        console.log("[GET ERROR]", err);
+        console.log("[gasoline GET ERROR]", err);
         return errorJson(err.message || "Server error", 500);
     }
 }
@@ -797,60 +1187,103 @@ export async function POST(req) {
         }
 
         if (type === "dosage") {
-            if (!productId) {
-                return errorJson("productId is missing", 400);
+            if (!apiId || !saeGradeId || !productId) {
+                return errorJson("apiId, saeGradeId or productId is missing", 400);
             }
 
             if (!title?.trim()) {
-                return errorJson("Dosage title is missing", 400);
+                return errorJson("Dosage value is missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                product_dosages: true,
+            const api = await getByDocumentId("apis", apiId, {
+                product_category: true,
             });
+
+            if (!api) {
+                return errorJson("API not found", 404);
+            }
+
+            const saeGrade = await getByDocumentId("sae-grades", saeGradeId, {
+                api: true,
+                products: true,
+            });
+
+            if (!saeGrade) {
+                return errorJson("SAE Grade not found", 404);
+            }
+
+            const product = await findGasolineProductForSave(productId, saeGradeId);
 
             if (!product) {
                 return errorJson("Product not found", 404);
             }
 
+            const productDocumentId = product?.documentId || productId;
+
             if (!productBelongsToStaticCategory(product)) {
-                return errorJson("Product does not belong to PCMO/Gasoline category", 400);
+                return errorJson("Product does not belong to Gasoline/PCMO category", 400);
             }
 
-            let existingDosage = null;
+            const linkedWithSaeGrade = await productIsInSaeGrade(saeGradeId, productDocumentId);
 
-            if (dosageId) {
-                existingDosage = await getByDocumentId("product-dosages", dosageId, {
-                    product: true,
+            if (!linkedWithSaeGrade) {
+                return errorJson("Selected product is not connected with selected SAE Grade", 400);
+            }
+
+            /*
+                Important:
+                First search existing dosage by relation combination:
+                API + SAE Grade + Product
+
+                This prevents creating a new Dosage row every time the user edits
+                the same Gasoline/PCMO dosage value. dosageId is only a fallback.
+            */
+            let existingDosage = await getDosageRecord({
+                apiId,
+                saeGradeId,
+                productId: productDocumentId,
+            });
+
+            if (!existingDosage && dosageId) {
+                existingDosage = await getByDocumentId("dosages", dosageId, {
+                    sys_apis: true,
+                    sys_sae_grades: true,
+                    products: true,
                 });
-            }
-
-            if (!existingDosage) {
-                existingDosage = await getProductDosage(productId);
             }
 
             if (existingDosage?.documentId) {
-                const updated = await strapiPut(`product-dosages/${existingDosage.documentId}?status=published`, {
-                    data: {
-                        title: title.trim(),
-                        product: productId,
-                    },
-                });
+                const updated = await strapiPut(
+                    `dosages/${existingDosage.documentId}?status=published`,
+                    {
+                        data: {
+                            dosage: title.trim(),
+                            sys_apis: [apiId],
+                            sys_sae_grades: [saeGradeId],
+                            products: [productDocumentId],
+                        },
+                    }
+                );
 
                 if (!updated.ok) {
                     return errorJson("Failed to update Dosage", updated.status, updated.data);
                 }
 
                 return okJson({
-                    item: updated.data?.data || null,
+                    item: updated.data?.data || {
+                        id: existingDosage?.id,
+                        documentId: existingDosage?.documentId,
+                        dosage: title.trim(),
+                    },
                 });
             }
 
-            const created = await strapiPost("product-dosages?status=published", {
+            const created = await strapiPost("dosages?status=published", {
                 data: {
-                    title: title.trim(),
-                    product: productId,
+                    dosage: title.trim(),
+                    sys_apis: [apiId],
+                    sys_sae_grades: [saeGradeId],
+                    products: [productDocumentId],
                 },
             });
 
@@ -921,42 +1354,36 @@ export async function POST(req) {
                 return errorJson("apiId, saeGradeId or productId missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                sae_grade: true,
-                api: true,
-            });
+            const product = await findGasolineProductForSave(productId, saeGradeId);
 
             if (!product) {
-                return errorJson("Product not found in published PCMO/Gasoline category", 404);
+                return errorJson("Product not found in published Gasoline/PCMO category", 404);
             }
+
+            const productDocumentId = product?.documentId || productId;
 
             if (!productBelongsToStaticCategory(product)) {
-                return errorJson("Product does not belong to PCMO/Gasoline category", 400);
+                return errorJson("Product does not belong to Gasoline/PCMO category", 400);
             }
 
-            /* if (productHasAnySaeGrade(product)) {
-                 return errorJson("Product already has SAE Grade", 409);
-                 
-             }*/
+            const alreadyLinked = await productIsInSaeGrade(saeGradeId, productDocumentId);
 
-            const updated = await strapiPut(`products/${productId}?status=published`, {
-                data: {
-                    api: apiId,
-                    sae_grade: saeGradeId,
-                },
-            });
+            if (alreadyLinked) {
+                return errorJson("This Product already exists in selected SAE Grade", 409);
+            }
+
+            const updated = await connectProductToSaeGrade(saeGradeId, productDocumentId);
 
             if (!updated.ok) {
                 return errorJson(
-                    "Failed to connect Product with API and SAE Grade",
+                    "Failed to connect Product with SAE Grade",
                     updated.status,
                     updated.data
                 );
             }
 
             return okJson({
-                item: updated.data?.data || null,
+                item: updated.data?.data || product,
             });
         }
 
@@ -967,23 +1394,21 @@ export async function POST(req) {
 
             const cfg = TYPE_CONFIG[type];
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                sae_grade: true,
-            });
+            const product = await findGasolineProductForSave(productId, saeGradeId);
 
             if (!product) {
                 return errorJson("Product not found", 404);
             }
 
+            const productDocumentId = product?.documentId || productId;
+
             if (!productBelongsToStaticCategory(product)) {
-                return errorJson("Product does not belong to PCMO/Gasoline category", 400);
+                return errorJson("Product does not belong to Gasoline/PCMO category", 400);
             }
 
-            const productSae = getRelationObject(product, "sae_grade");
-            const productSaeDocumentId = productSae?.documentId || productSae?.id;
+            const linkedWithSaeGrade = await productIsInSaeGrade(saeGradeId, productDocumentId);
 
-            if (String(productSaeDocumentId) !== String(saeGradeId)) {
+            if (!linkedWithSaeGrade) {
                 return errorJson("Selected product is not connected with selected SAE Grade", 400);
             }
 
@@ -992,7 +1417,7 @@ export async function POST(req) {
                 field: cfg.field,
                 title,
                 saeGradeId,
-                productId,
+                productId: productDocumentId,
             });
 
             if (duplicate) {
@@ -1006,7 +1431,7 @@ export async function POST(req) {
                 data: {
                     [cfg.field]: title,
                     sae_grade: saeGradeId,
-                    product: productId,
+                    product: productDocumentId,
                 },
             });
 
@@ -1021,7 +1446,7 @@ export async function POST(req) {
 
         return errorJson("Invalid type", 400);
     } catch (err) {
-        console.log("[POST ERROR]", err);
+        console.log("[gasoline POST ERROR]", err);
         return errorJson(err.message || "Server error", 500);
     }
 }
@@ -1029,7 +1454,7 @@ export async function POST(req) {
 export async function DELETE(req) {
     try {
         const body = await req.json();
-        const { type, documentId } = body;
+        const { type, documentId, saeGradeId } = body;
 
         if (!type || !documentId) {
             return errorJson("type or documentId is missing", 400);
@@ -1039,19 +1464,18 @@ export async function DELETE(req) {
             return errorJson("Invalid delete type", 400);
         }
 
-        const check = await getDeleteCheck(type, documentId);
+        const check = await getDeleteCheck(type, documentId, saeGradeId);
 
         if (check.blocked) {
             return errorJson(check.message || "This item cannot be deleted", 409);
         }
 
         if (type === "product") {
-            const updated = await strapiPut(`products/${documentId}?status=published`, {
-                data: {
-                    api: null,
-                    sae_grade: null,
-                },
-            });
+            if (!saeGradeId) {
+                return errorJson("saeGradeId is missing for product relation remove", 400);
+            }
+
+            const updated = await removeProductFromSaeGrade(saeGradeId, documentId);
 
             if (!updated.ok) {
                 return errorJson(
@@ -1078,7 +1502,7 @@ export async function DELETE(req) {
             item: deleted.data?.data || null,
         });
     } catch (err) {
-        console.log("[DELETE ERROR]", err);
+        console.log("[gasoline DELETE ERROR]", err);
         return errorJson(err.message || "Server error", 500);
     }
 }

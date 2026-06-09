@@ -236,16 +236,22 @@ export default function DrivelinePage() {
         setAllProducts(all?.items || []);
     }
 
-    async function loadDosage(productId) {
+    async function loadDosage(productId, typeId = selectedType, apiId = selectedApi) {
         setDosageDocId("");
         setDosageTitle("");
 
-        if (!productId) return;
+        if (!typeId || !apiId || !productId) return;
 
         try {
             setLoadingDosage(true);
 
-            const data = await fetchJson(apiUrl("dosage", { productId }));
+            const data = await fetchJson(
+                apiUrl("dosage", {
+                    typeId,
+                    apiId,
+                    productId,
+                })
+            );
 
             setDosageDocId(data?.item?.documentId || "");
             setDosageTitle(data?.item?.title || "");
@@ -358,7 +364,7 @@ export default function DrivelinePage() {
 
                 if (selectedProduct) {
                     await Promise.all([
-                        loadDosage(selectedProduct),
+                        loadDosage(selectedProduct, selectedType, selectedApi),
                         loadOems(selectedProduct),
                     ]);
                 }
@@ -368,7 +374,7 @@ export default function DrivelinePage() {
         }
 
         run();
-    }, [selectedProduct]);
+    }, [selectedProduct, selectedType, selectedApi]);
 
     function setSelectedAddValue(type, value) {
         setSelectedAdd((prev) => ({
@@ -388,8 +394,8 @@ export default function DrivelinePage() {
         try {
             resetMessage();
 
-            if (!selectedProduct) {
-                throw new Error("Please select Product first");
+            if (!selectedType || !selectedApi || !selectedProduct) {
+                throw new Error("Please select Type, API and Product first");
             }
 
             if (!dosageTitle.trim()) {
@@ -405,6 +411,8 @@ export default function DrivelinePage() {
                 },
                 body: JSON.stringify({
                     type: "dosage",
+                    typeId: selectedType,
+                    apiId: selectedApi,
                     productId: selectedProduct,
                     title: dosageTitle.trim(),
                     dosageId: dosageDocId || null,
@@ -956,7 +964,7 @@ export default function DrivelinePage() {
                     </h3>
 
                     <p className="text-[11px] text-gray-500">
-                        Product dosage is saved in ProductDosage collection and linked with selected Product.
+                        Dosage is loaded and saved by the selected relation values for this category.
                     </p>
                 </div>
 

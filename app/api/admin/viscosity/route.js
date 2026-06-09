@@ -37,6 +37,126 @@ function getSsiEnum() {
     return ENUMS.ViscositySSI || [];
 }
 
+
+const productPopulate = {
+    product_categories: true,
+    sae_grades: true,
+    types: true,
+    api: true,
+    dosages: true,
+    ssis: true,
+};
+
+function entityId(item) {
+    return String(item?.documentId || item?.id || "");
+}
+
+function sameEntity(item, selectedId) {
+    if (!item || !selectedId) return false;
+
+    return (
+        String(item?.documentId || "") === String(selectedId) ||
+        String(item?.id || "") === String(selectedId)
+    );
+}
+
+async function getByAnyId(endpoint, selectedId, populate = {}) {
+    if (!selectedId) return null;
+
+    const wanted = String(selectedId);
+
+    const directQuery = qs.stringify(
+        {
+            status: "published",
+            populate,
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const directRes = await fetchData(`${endpoint}/${wanted}`, directQuery);
+
+    if (directRes?.data) {
+        return directRes.data;
+    }
+
+    const documentIdQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                documentId: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const documentIdRes = await fetchData(endpoint, documentIdQuery);
+
+    if (documentIdRes?.data?.[0]) {
+        return documentIdRes.data[0];
+    }
+
+    const idQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                id: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const idRes = await fetchData(endpoint, idQuery);
+
+    return idRes?.data?.[0] || null;
+}
+
+async function findProductForSave(productId) {
+    if (!productId) return null;
+
+    const direct = await getByAnyId("products", productId, productPopulate);
+
+    if (direct) {
+        return direct;
+    }
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            populate: productPopulate,
+            pagination: {
+                pageSize: 1000,
+            },
+            sort: ["title:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("products", query);
+    const products = res?.data || [];
+
+    return products.find((product) => sameEntity(product, productId)) || null;
+}
+
 function joinUrl(base, endpoint) {
     const cleanBase = String(base || "").trim().replace(/\/$/, "");
     const cleanEndpoint = String(endpoint || "").trim().replace(/^\//, "");
@@ -211,8 +331,14 @@ function filterEnumByExisting(enumValues = [], existingItems = [], field = "titl
 function getRelationArray(item, relationName) {
     const rel = item?.[relationName] || item?.attributes?.[relationName];
 
+    if (!rel) return [];
     if (Array.isArray(rel)) return rel;
     if (Array.isArray(rel?.data)) return rel.data;
+    if (rel?.data && typeof rel.data === "object") return [rel.data];
+
+    if (rel && typeof rel === "object" && (rel.id || rel.documentId)) {
+        return [rel];
+    }
 
     return [];
 }
@@ -222,8 +348,10 @@ function getRelationObject(item, relationName) {
 
     if (!rel) return null;
     if (rel?.data) return rel.data;
+    if (Array.isArray(rel)) return rel[0] || null;
+    if (rel && typeof rel === "object" && (rel.id || rel.documentId)) return rel;
 
-    return rel;
+    return null;
 }
 
 function relationId(item) {
@@ -242,9 +370,96 @@ function typeBelongsToStaticCategory(typeItem) {
     return getField(category, "slug") === STATIC_CATEGORY.slug;
 }
 
-function productTypeId(product) {
-    const type = getRelationObject(product, "type");
-    return relationId(type);
+function productTypeIds(product) {
+    return getRelationArray(product, "types")
+        .map((typeItem) => relationId(typeItem))
+        .filter(Boolean);
+}
+
+function productHasSelectedType(product, selectedTypeId) {
+    if (!selectedTypeId) return true;
+
+    return productTypeIds(product).some((id) => String(id) === String(selectedTypeId));
+}
+
+
+async function getTypeWithProducts(typeId) {
+    if (!typeId) return null;
+
+    return getByAnyId("types", typeId, {
+        product_category: true,
+        products: {
+            populate: productPopulate,
+        },
+        ssis: true,
+    });
+}
+
+function getProductsFromTypeRecord(typeItem) {
+    return getRelationArray(typeItem, "products");
+}
+
+async function loadProductsForSelectedType(typeId) {
+    if (!typeId) return [];
+
+    const typeItem = await getTypeWithProducts(typeId);
+
+    const fromType = getProductsFromTypeRecord(typeItem).filter(productBelongsToStaticCategory);
+
+    if (fromType.length) {
+        console.log("[vi products] source: type.products", fromType.length);
+        return fromType;
+    }
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            fields: ["title", "slug"],
+            populate: productPopulate,
+            pagination: {
+                pageSize: 1000,
+            },
+            sort: ["title:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("products", query);
+
+    const products = (res?.data || [])
+        .filter(productBelongsToStaticCategory)
+        .filter((product) => productHasSelectedType(product, typeId));
+
+    console.log("[vi products] source: products filtered by types", products.length);
+
+    return products;
+}
+
+async function loadAllViscosityProducts() {
+    const query = qs.stringify(
+        {
+            status: "published",
+            fields: ["title", "slug"],
+            populate: productPopulate,
+            pagination: {
+                pageSize: 1000,
+            },
+            sort: ["title:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("products", query);
+
+    const products = (res?.data || []).filter(productBelongsToStaticCategory);
+
+    console.log("[vi all-products] source: product_categories", products.length);
+
+    return products;
 }
 
 async function getStaticCategory() {
@@ -404,38 +619,68 @@ async function getSsiCountForProduct(productId) {
     return res?.data?.length || 0;
 }
 
-async function getProductDosage(productId) {
-    if (!productId) return null;
+async function getProductDosage({ typeId = "", productId }) {
+    if (!typeId || !productId) return null;
 
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            product: {
-                documentId: {
-                    $eq: productId,
-                },
+    /*
+        Type based category flow:
+        Type → Product → Dosage
+
+        Correct dosage matching is:
+        Type + Product
+
+        Dosage relation fields:
+        - sys_types
+        - products
+
+        Important:
+        Do not read dosage from the Product record relation array.
+        Always query the Dosage collection by the selected flow values.
+    */
+    const product = await findProductForSave(productId);
+    const productDocumentId = product?.documentId || productId;
+
+    const filters = {
+        products: {
+            documentId: {
+                $eq: productDocumentId,
             },
         },
-        fields: ["title"],
-        populate: {
-            product: true,
+        sys_types: {
+            documentId: {
+                $eq: typeId,
+            },
         },
-        pagination: {
-            pageSize: 1,
-        },
-        sort: ["createdAt:asc"],
-    });
+    };
 
-    const res = await fetchData("product-dosages", query);
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters,
+            fields: ["dosage"],
+            populate: {
+                products: true,
+                sys_types: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
+            sort: ["updatedAt:desc", "createdAt:desc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("dosages", query);
     return res?.data?.[0] || null;
 }
-
 async function getDeleteCheck(type, documentId) {
     if (type === "product") {
         const product = await getByDocumentId("products", documentId, {
             product_categories: true,
-            type: true,
-            product_dosages: {
+            types: true,
+            dosages: {
                 fields: ["title"],
             },
             ssis: {
@@ -457,9 +702,9 @@ async function getDeleteCheck(type, documentId) {
             };
         }
 
-        const currentTypeId = productTypeId(product);
+        const currentTypeIds = productTypeIds(product);
 
-        if (!currentTypeId) {
+        if (!currentTypeIds.length) {
             return {
                 blocked: true,
                 message: "This Product is not connected with any Type.",
@@ -584,20 +829,23 @@ export async function GET(req) {
         }
 
         if (mode === "dosage") {
-            if (!productId) {
+            if (!typeId || !productId) {
                 return okJson({
                     item: null,
                 });
             }
 
-            const dosage = await getProductDosage(productId);
+            const dosage = await getProductDosage({
+                typeId,
+                productId,
+            });
 
             return okJson({
                 item: dosage
                     ? {
                         id: dosage?.id,
                         documentId: dosage?.documentId,
-                        title: getField(dosage, "title"),
+                        title: getField(dosage, "dosage") || getField(dosage, "title"),
                     }
                     : null,
             });
@@ -642,30 +890,7 @@ export async function GET(req) {
                 });
             }
 
-            const query = qs.stringify({
-                status: "published",
-                fields: ["title", "slug"],
-                populate: {
-                    product_categories: true,
-                    type: true,
-                    product_dosages: true,
-                    ssis: {
-                        fields: ["title"],
-                    },
-                },
-                pagination: {
-                    pageSize: 1000,
-                },
-                sort: ["title:asc"],
-            });
-
-            const res = await fetchData("products", query);
-
-            const products = (res?.data || [])
-                .filter(productBelongsToStaticCategory)
-                .filter((product) => {
-                    return productTypeId(product) === String(typeId);
-                });
+            const products = await loadProductsForSelectedType(typeId);
 
             return okJson({
                 items: mapProductItems(products),
@@ -673,27 +898,7 @@ export async function GET(req) {
         }
 
         if (mode === "all-products") {
-            const query = qs.stringify({
-                status: "published",
-                fields: ["title", "slug"],
-                populate: {
-                    product_categories: true,
-                    type: true,
-                    product_dosages: true,
-                    ssis: {
-                        fields: ["title"],
-                    },
-                },
-                pagination: {
-                    pageSize: 1000,
-                },
-                sort: ["title:asc"],
-            });
-
-            const res = await fetchData("products", query);
-
-            const items = (res?.data || [])
-                .filter(productBelongsToStaticCategory);
+            const items = await loadAllViscosityProducts();
 
             return okJson({
                 items: mapProductItems(items),
@@ -768,75 +973,100 @@ export async function POST(req) {
         }
 
         if (type === "dosage") {
-            if (!productId) {
-                return errorJson("productId is missing", 400);
+            if (!typeId || !productId) {
+                return errorJson("typeId or productId is missing", 400);
             }
 
             if (!title?.trim()) {
-                return errorJson("Dosage title is missing", 400);
+                return errorJson("Dosage value is missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                product_dosages: true,
-            });
+            const product = await findProductForSave(productId);
 
             if (!product) {
                 return errorJson("Product not found", 404);
             }
 
-            if (!productBelongsToStaticCategory(product)) {
-                return errorJson(
-                    "Product does not belong to Viscosity Index Improvers category",
-                    400
-                );
+            const category = await getStaticCategory();
+
+            if (typeof productBelongsToStaticCategory === "function" && !productBelongsToStaticCategory(product, category)) {
+                return errorJson("Product does not belong to selected category", 400);
             }
 
-            let existingDosage = null;
+            const productDocumentId = product?.documentId || productId;
 
-            if (dosageId) {
-                existingDosage = await getByDocumentId("product-dosages", dosageId, {
-                    product: true,
+            const dosagePayload = {
+                dosage: title.trim(),
+                products: [productDocumentId],
+                ...(typeId ? { sys_types: [typeId] } : {}),
+            };
+
+            /*
+                Important:
+                First search existing dosage by relation combination:
+                Type + Product
+
+                This prevents creating a new Dosage row every time the user edits
+                the same dosage value. dosageId is only a fallback.
+            */
+            let existingDosage = await getProductDosage({
+                typeId,
+                productId: productDocumentId,
+            });
+
+            if (!existingDosage && dosageId) {
+                existingDosage = await getByAnyId("dosages", dosageId, {
+                    products: true,
+                    sys_types: true,
                 });
             }
 
-            if (!existingDosage) {
-                existingDosage = await getProductDosage(productId);
-            }
+            if (existingDosage?.documentId || existingDosage?.id) {
+                const dosageDocumentId = existingDosage.documentId || existingDosage.id;
 
-            if (existingDosage?.documentId) {
-                const updated = await strapiPut(
-                    `product-dosages/${existingDosage.documentId}?status=published`,
-                    {
-                        data: {
-                            title: title.trim(),
-                            product: productId,
-                        },
-                    }
-                );
+                const updated = await strapiPut(`dosages/${dosageDocumentId}?status=published`, {
+                    data: dosagePayload,
+                });
 
                 if (!updated.ok) {
                     return errorJson("Failed to update Dosage", updated.status, updated.data);
                 }
 
+                const updatedItem = updated.data?.data || null;
+
                 return okJson({
-                    item: updated.data?.data || null,
+                    item: updatedItem
+                        ? {
+                            id: updatedItem?.id,
+                            documentId: updatedItem?.documentId || updatedItem?.id,
+                            title: getField(updatedItem, "dosage") || title.trim(),
+                        }
+                        : {
+                            id: dosageDocumentId,
+                            documentId: dosageDocumentId,
+                            title: title.trim(),
+                        },
                 });
             }
 
-            const created = await strapiPost("product-dosages?status=published", {
-                data: {
-                    title: title.trim(),
-                    product: productId,
-                },
+            const created = await strapiPost("dosages?status=published", {
+                data: dosagePayload,
             });
 
             if (!created.ok) {
                 return errorJson("Failed to create Dosage", created.status, created.data);
             }
 
+            const createdItem = created.data?.data || null;
+
             return okJson({
-                item: created.data?.data || null,
+                item: createdItem
+                    ? {
+                        id: createdItem?.id,
+                        documentId: createdItem?.documentId || createdItem?.id,
+                        title: getField(createdItem, "dosage") || title.trim(),
+                    }
+                    : null,
             });
         }
 
@@ -876,10 +1106,7 @@ export async function POST(req) {
                 return errorJson("typeId or productId missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                type: true,
-            });
+            const product = await findProductForSave(productId);
 
             if (!product) {
                 return errorJson(
@@ -895,7 +1122,7 @@ export async function POST(req) {
                 );
             }
 
-            const currentTypeId = productTypeId(product);
+            const currentTypeIds = productTypeIds(product);
 
             /*  if (currentTypeId && String(currentTypeId) === String(typeId)) {
                   return errorJson("This Product already exists in selected Type", 409);
@@ -906,9 +1133,16 @@ export async function POST(req) {
                  
              } */
 
-            const updated = await strapiPut(`products/${productId}?status=published`, {
+            const productDocumentId = product?.documentId || productId;
+
+            const existingTypeIds = productTypeIds(product);
+            const nextTypeIds = Array.from(
+                new Set([...existingTypeIds.map(String), String(typeId)])
+            );
+
+            const updated = await strapiPut(`products/${productDocumentId}?status=published`, {
                 data: {
-                    type: typeId,
+                    types: nextTypeIds,
                 },
             });
 
@@ -938,10 +1172,7 @@ export async function POST(req) {
                 return errorJson("Type not found", 404);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                type: true,
-            });
+            const product = await findProductForSave(productId);
 
             if (!product) {
                 return errorJson("Product not found", 404);
@@ -954,9 +1185,9 @@ export async function POST(req) {
                 );
             }
 
-            const currentTypeId = productTypeId(product);
+            const currentTypeIds = productTypeIds(product);
 
-            if (String(currentTypeId) !== String(typeId)) {
+            if (!productHasSelectedType(product, typeId)) {
                 return errorJson(
                     "Selected Product is not connected with selected Type",
                     400
@@ -979,7 +1210,7 @@ export async function POST(req) {
             const created = await strapiPost("ssis?status=published", {
                 data: {
                     [SSI_FIELD]: title,
-                    type: typeId,
+                    type: [typeId],
                     product: productId,
                 },
             });
@@ -1027,7 +1258,7 @@ export async function DELETE(req) {
         if (type === "product") {
             const product = await getByDocumentId("products", documentId, {
                 product_categories: true,
-                type: true,
+                types: true,
                 ssis: {
                     fields: ["title"],
                 },
@@ -1044,9 +1275,9 @@ export async function DELETE(req) {
                 );
             }
 
-            const currentTypeId = productTypeId(product);
+            const currentTypeIds = productTypeIds(product);
 
-            if (!currentTypeId) {
+            if (!currentTypeIds.length) {
                 return errorJson("This Product is not connected with any Type.", 400);
             }
 
@@ -1059,9 +1290,11 @@ export async function DELETE(req) {
                 );
             }
 
-            const updated = await strapiPut(`products/${documentId}?status=published`, {
+            const productDocumentId = product?.documentId || documentId;
+
+            const updated = await strapiPut(`products/${productDocumentId}?status=published`, {
                 data: {
-                    type: null,
+                    types: [],
                 },
             });
 

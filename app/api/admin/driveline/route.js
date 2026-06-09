@@ -30,6 +30,125 @@ const TYPE_CONFIG = {
     },
 };
 
+
+const productPopulate = {
+    product_categories: true,
+    sae_grades: true,
+    types: true,
+    api: true,
+    dosages: true,
+};
+
+function entityId(item) {
+    return String(item?.documentId || item?.id || "");
+}
+
+function sameEntity(item, selectedId) {
+    if (!item || !selectedId) return false;
+
+    return (
+        String(item?.documentId || "") === String(selectedId) ||
+        String(item?.id || "") === String(selectedId)
+    );
+}
+
+async function getByAnyId(endpoint, selectedId, populate = {}) {
+    if (!selectedId) return null;
+
+    const wanted = String(selectedId);
+
+    const directQuery = qs.stringify(
+        {
+            status: "published",
+            populate,
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const directRes = await fetchData(`${endpoint}/${wanted}`, directQuery);
+
+    if (directRes?.data) {
+        return directRes.data;
+    }
+
+    const documentIdQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                documentId: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const documentIdRes = await fetchData(endpoint, documentIdQuery);
+
+    if (documentIdRes?.data?.[0]) {
+        return documentIdRes.data[0];
+    }
+
+    const idQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                id: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const idRes = await fetchData(endpoint, idQuery);
+
+    return idRes?.data?.[0] || null;
+}
+
+async function findProductForSave(productId) {
+    if (!productId) return null;
+
+    const direct = await getByAnyId("products", productId, productPopulate);
+
+    if (direct) {
+        return direct;
+    }
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            populate: productPopulate,
+            pagination: {
+                pageSize: 1000,
+            },
+            sort: ["title:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("products", query);
+    const products = res?.data || [];
+
+    return products.find((product) => sameEntity(product, productId)) || null;
+}
+
 function joinUrl(base, endpoint) {
     const cleanBase = String(base || "").trim().replace(/\/$/, "");
     const cleanEndpoint = String(endpoint || "").trim().replace(/^\//, "");
@@ -175,8 +294,14 @@ function filterEnumByExisting(enumValues = [], existingItems = [], field = "name
 function getRelationArray(item, relationName) {
     const rel = item?.[relationName] || item?.attributes?.[relationName];
 
+    if (!rel) return [];
     if (Array.isArray(rel)) return rel;
     if (Array.isArray(rel?.data)) return rel.data;
+    if (rel?.data && typeof rel.data === "object") return [rel.data];
+
+    if (rel && typeof rel === "object" && (rel.id || rel.documentId)) {
+        return [rel];
+    }
 
     return [];
 }
@@ -186,8 +311,10 @@ function getRelationObject(item, relationName) {
 
     if (!rel) return null;
     if (rel?.data) return rel.data;
+    if (Array.isArray(rel)) return rel[0] || null;
+    if (rel && typeof rel === "object" && (rel.id || rel.documentId)) return rel;
 
-    return rel;
+    return null;
 }
 
 function productBelongsToStaticCategory(product) {
@@ -209,10 +336,13 @@ function productHasSelectedApi(product, apiId) {
 }
 
 function productHasSelectedType(product, typeId) {
-    const type = getRelationObject(product, "type");
-    const currentTypeId = type?.documentId || type?.id;
+    if (!typeId) return true;
 
-    return String(currentTypeId || "") === String(typeId || "");
+    const types = getRelationArray(product, "types");
+
+    return types.some((item) => {
+        return String(item?.documentId || item?.id || "") === String(typeId || "");
+    });
 }
 
 function getEnumForType(type) {
@@ -350,41 +480,74 @@ async function findOemByTitleAndProduct(title, productId) {
     return res?.data?.[0] || null;
 }
 
-async function getProductDosage(productId) {
-    if (!productId) return null;
+async function getProductDosage({ typeId = "", apiId = "", productId }) {
+    if (!typeId || !apiId || !productId) return null;
 
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            product: {
-                documentId: {
-                    $eq: productId,
-                },
+    /*
+        Driveline flow:
+        Type → API → Product → Dosage / OEM
+
+        There is NO SAE Grade in Driveline.
+        Correct dosage matching is:
+        Type + API + Product
+
+        Dosage relation fields:
+        - sys_types
+        - sys_apis
+        - products
+    */
+    const product = await findProductForSave(productId);
+    const productDocumentId = product?.documentId || productId;
+
+    const filters = {
+        products: {
+            documentId: {
+                $eq: productDocumentId,
             },
         },
-        fields: ["title"],
-        populate: {
-            product: true,
+        sys_types: {
+            documentId: {
+                $eq: typeId,
+            },
         },
-        pagination: {
-            pageSize: 1,
+        sys_apis: {
+            documentId: {
+                $eq: apiId,
+            },
         },
-        sort: ["createdAt:asc"],
-    });
+    };
 
-    const res = await fetchData("product-dosages", query);
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters,
+            fields: ["dosage"],
+            populate: {
+                products: true,
+                sys_types: true,
+                sys_apis: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
+            sort: ["updatedAt:desc", "createdAt:desc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("dosages", query);
     return res?.data?.[0] || null;
 }
-
 async function getDeleteCheck(type, documentId) {
     if (type === "product") {
         const item = await getByDocumentId("products", documentId, {
             product_categories: true,
-            type: true,
+            sae_grades: true,
             api: true,
-            product_dosages: {
-                fields: ["title"],
-            },
+            types: true,
+            dosages: true,
             sys_oems: {
                 fields: ["title"],
             },
@@ -542,20 +705,24 @@ export async function GET(req) {
         }
 
         if (mode === "dosage") {
-            if (!productId) {
+            if (!typeId || !apiId || !productId) {
                 return okJson({
                     item: null,
                 });
             }
 
-            const dosage = await getProductDosage(productId);
+            const dosage = await getProductDosage({
+                typeId,
+                apiId,
+                productId,
+            });
 
             return okJson({
                 item: dosage
                     ? {
                         id: dosage?.id,
                         documentId: dosage?.documentId,
-                        title: getField(dosage, "title"),
+                        title: getField(dosage, "dosage") || getField(dosage, "title"),
                     }
                     : null,
             });
@@ -651,9 +818,9 @@ export async function GET(req) {
                 fields: ["title", "slug"],
                 populate: {
                     product_categories: true,
-                    type: true,
+                    types: true,
                     api: true,
-                    product_dosages: true,
+                    dosages: true,
                 },
                 pagination: {
                     pageSize: 1000,
@@ -665,6 +832,7 @@ export async function GET(req) {
 
             const items = (res?.data || [])
                 .filter(productBelongsToStaticCategory)
+                .filter((product) => productHasSelectedType(product, typeId))
                 .filter((product) => productHasSelectedApi(product, apiId));
 
             return okJson({
@@ -684,9 +852,9 @@ export async function GET(req) {
                 fields: ["title", "slug"],
                 populate: {
                     product_categories: true,
-                    type: true,
+                    types: true,
                     api: true,
-                    product_dosages: true,
+                    dosages: true,
                 },
                 pagination: {
                     pageSize: 1000,
@@ -768,18 +936,15 @@ export async function POST(req) {
         }
 
         if (type === "dosage") {
-            if (!productId) {
-                return errorJson("productId is missing", 400);
+            if (!typeId || !apiId || !productId) {
+                return errorJson("typeId, apiId or productId is missing", 400);
             }
 
             if (!title?.trim()) {
-                return errorJson("Dosage title is missing", 400);
+                return errorJson("Dosage value is missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                product_dosages: true,
-            });
+            const product = await findProductForSave(productId);
 
             if (!product) {
                 return errorJson("Product not found", 404);
@@ -789,48 +954,83 @@ export async function POST(req) {
                 return errorJson("Product does not belong to Driveline Additives category", 400);
             }
 
-            let existingDosage = null;
+            const productDocumentId = product?.documentId || productId;
 
-            if (dosageId) {
-                existingDosage = await getByDocumentId("product-dosages", dosageId, {
-                    product: true,
+            const dosagePayload = {
+                dosage: title.trim(),
+                products: [productDocumentId],
+                ...(apiId ? { sys_apis: [apiId] } : {}),
+                ...(typeId ? { sys_types: [typeId] } : {}),
+            };
+
+            /*
+                Important:
+                First search existing dosage by relation combination:
+                Type + API + Product
+
+                This prevents creating a new Dosage row every time the user edits
+                the same dosage value. dosageId is only a fallback.
+            */
+            let existingDosage = await getProductDosage({
+                typeId,
+                apiId,
+                productId: productDocumentId,
+            });
+
+            if (!existingDosage && dosageId) {
+                existingDosage = await getByAnyId("dosages", dosageId, {
+                    products: true,
+                    sys_apis: true,
+                    sys_types: true,
                 });
             }
 
-            if (!existingDosage) {
-                existingDosage = await getProductDosage(productId);
-            }
+            if (existingDosage?.documentId || existingDosage?.id) {
+                const dosageDocumentId = existingDosage.documentId || existingDosage.id;
 
-            if (existingDosage?.documentId) {
-                const updated = await strapiPut(`product-dosages/${existingDosage.documentId}?status=published`, {
-                    data: {
-                        title: title.trim(),
-                        product: productId,
-                    },
+                const updated = await strapiPut(`dosages/${dosageDocumentId}?status=published`, {
+                    data: dosagePayload,
                 });
 
                 if (!updated.ok) {
                     return errorJson("Failed to update Dosage", updated.status, updated.data);
                 }
 
+                const updatedItem = updated.data?.data || null;
+
                 return okJson({
-                    item: updated.data?.data || null,
+                    item: updatedItem
+                        ? {
+                            id: updatedItem?.id,
+                            documentId: updatedItem?.documentId || updatedItem?.id,
+                            title: getField(updatedItem, "dosage") || getField(updatedItem, "title") || title.trim(),
+                        }
+                        : {
+                            id: dosageDocumentId,
+                            documentId: dosageDocumentId,
+                            title: title.trim(),
+                        },
                 });
             }
 
-            const created = await strapiPost("product-dosages?status=published", {
-                data: {
-                    title: title.trim(),
-                    product: productId,
-                },
+            const created = await strapiPost("dosages?status=published", {
+                data: dosagePayload,
             });
 
             if (!created.ok) {
                 return errorJson("Failed to create Dosage", created.status, created.data);
             }
 
+            const createdItem = created.data?.data || null;
+
             return okJson({
-                item: created.data?.data || null,
+                item: createdItem
+                    ? {
+                        id: createdItem?.id,
+                        documentId: createdItem?.documentId || createdItem?.id,
+                        title: getField(createdItem, "dosage") || getField(createdItem, "title") || title.trim(),
+                    }
+                    : null,
             });
         }
 
@@ -885,7 +1085,7 @@ export async function POST(req) {
             const created = await strapiPost("apis?status=published", {
                 data: {
                     name: title,
-                    type: typeId,
+                    type: [typeId],
                     product_category: categoryDocumentId,
                 },
             });
@@ -904,27 +1104,30 @@ export async function POST(req) {
                 return errorJson("typeId, apiId or productId missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                type: true,
-                api: true,
-            });
+            const product = await findProductForSave(productId);
 
             if (!product) {
-                return errorJson("Product not found in published Driveline Additives category", 404);
+                return errorJson("Product not found in published Driveline Additives category (product not found)", 404);
             }
 
             if (!productBelongsToStaticCategory(product)) {
                 return errorJson("Product does not belong to Driveline Additives category", 400);
             }
 
-            /*  if (productHasAnyApi(product)) {
-                  return errorJson("Product already has API", 409);
-              }  */
+            const productDocumentId = product?.documentId || productId;
 
-            const updated = await strapiPut(`products/${productId}?status=published`, {
+            const existingTypeIds = getRelationArray(product, "types")
+                .map((item) => item?.documentId || item?.id)
+                .filter(Boolean)
+                .map(String);
+
+            const nextTypeIds = Array.from(
+                new Set([...existingTypeIds, String(typeId)])
+            );
+
+            const updated = await strapiPut(`products/${productDocumentId}?status=published`, {
                 data: {
-                    type: typeId,
+                    types: nextTypeIds,
                     api: apiId,
                 },
             });
@@ -947,21 +1150,19 @@ export async function POST(req) {
                 return errorJson("productId or title is missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                type: true,
-                api: true,
-            });
+            const product = await findProductForSave(productId);
 
             if (!product) {
                 return errorJson("Product not found", 404);
             }
 
+            const productDocumentId = product?.documentId || productId;
+
             if (!productBelongsToStaticCategory(product)) {
                 return errorJson("Product does not belong to Driveline Additives category", 400);
             }
 
-            const duplicate = await findOemByTitleAndProduct(title, productId);
+            const duplicate = await findOemByTitleAndProduct(title, productDocumentId);
 
             if (duplicate) {
                 return errorJson("This OEM already exists for this Product", 409);
@@ -970,7 +1171,7 @@ export async function POST(req) {
             const created = await strapiPost("oems?status=published", {
                 data: {
                     title,
-                    product: productId,
+                    product: productDocumentId,
                 },
             });
 
@@ -1012,7 +1213,7 @@ export async function DELETE(req) {
         if (type === "product") {
             const updated = await strapiPut(`products/${documentId}?status=published`, {
                 data: {
-                    type: null,
+                    types: [],
                     api: null,
                 },
             });

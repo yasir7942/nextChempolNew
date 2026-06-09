@@ -9,7 +9,10 @@ import {
     ComboboxOptions,
 } from "@headlessui/react";
 
-const STATIC_CATEGORY = { title: "PCMO/Gasoline", slug: "pcmo-gasoline" };
+const STATIC_CATEGORY = {
+    title: "Gasoline/PCMO",
+    slug: "pcmo-gasoline",
+};
 
 const ADD_LABELS = {
     api: "API",
@@ -75,7 +78,7 @@ function toDropdownOptions(items = []) {
 }
 
 function getItemValue(item) {
-    return String(item?.documentId || item?.id || item?.value || "");
+    return String(item?.value || item?.documentId || item?.id || "");
 }
 
 function findSelected(options, value) {
@@ -173,7 +176,7 @@ export default function GasolinePage() {
     }
 
     function showError(error) {
-        console.log("[page] error:", error);
+        console.log("[gasoline page] error:", error);
 
         setMessage({
             type: "error",
@@ -201,8 +204,8 @@ export default function GasolinePage() {
         try {
             data = JSON.parse(text);
         } catch (error) {
-            console.log("[page] JSON parse error:", error);
-            console.log("[page] response text:", text);
+            console.log("[gasoline page] JSON parse error:", error);
+            console.log("[gasoline page] response text:", text);
 
             throw new Error("Invalid JSON from API route");
         }
@@ -245,6 +248,9 @@ export default function GasolinePage() {
             fetchJson(apiUrl("allapis")),
         ]);
 
+        console.log("[GasolinePage] API dropdown items:", data?.items || []);
+        console.log("[GasolinePage] API add dropdown items:", all?.items || []);
+
         setApis(data?.items || []);
         setAllApis(all?.items || []);
     }
@@ -286,16 +292,22 @@ export default function GasolinePage() {
         setAllProducts(all?.items || []);
     }
 
-    async function loadDosage(productId) {
+    async function loadDosage(apiId, saeGradeId, productId) {
         setDosageDocId("");
         setDosageTitle("");
 
-        if (!productId) return;
+        if (!apiId || !saeGradeId || !productId) return;
 
         try {
             setLoadingDosage(true);
 
-            const data = await fetchJson(apiUrl("dosage", { productId }));
+            const data = await fetchJson(
+                apiUrl("dosage", {
+                    apiId,
+                    saeGradeId,
+                    productId,
+                })
+            );
 
             setDosageDocId(data?.item?.documentId || "");
             setDosageTitle(data?.item?.title || "");
@@ -437,9 +449,9 @@ export default function GasolinePage() {
                 setDosageDocId("");
                 setDosageTitle("");
 
-                if (selectedSaeGrade && selectedProduct) {
+                if (selectedApi && selectedSaeGrade && selectedProduct) {
                     await Promise.all([
-                        loadDosage(selectedProduct),
+                        loadDosage(selectedApi, selectedSaeGrade, selectedProduct),
                         loadLeaf(selectedSaeGrade, selectedProduct),
                     ]);
                 }
@@ -469,6 +481,14 @@ export default function GasolinePage() {
         try {
             resetMessage();
 
+            if (!selectedApi) {
+                throw new Error("Please select API first");
+            }
+
+            if (!selectedSaeGrade) {
+                throw new Error("Please select SAE Grade first");
+            }
+
             if (!selectedProduct) {
                 throw new Error("Please select Product first");
             }
@@ -486,6 +506,8 @@ export default function GasolinePage() {
                 },
                 body: JSON.stringify({
                     type: "dosage",
+                    apiId: selectedApi,
+                    saeGradeId: selectedSaeGrade,
                     productId: selectedProduct,
                     title: dosageTitle.trim(),
                     dosageId: dosageDocId || null,
@@ -494,8 +516,8 @@ export default function GasolinePage() {
 
             setDosageDocId(data?.item?.documentId || dosageDocId || "");
 
-            if (data?.item?.title) {
-                setDosageTitle(data.item.title);
+            if (data?.item?.dosage) {
+                setDosageTitle(data.item.dosage);
             }
 
             showSuccess("Dosage saved successfully");
@@ -556,34 +578,38 @@ export default function GasolinePage() {
             if (type === "api") {
                 await loadApis();
 
-                if (data?.item?.documentId) {
-                    setSelectedApi(String(data.item.documentId));
+                if (data?.item?.documentId || data?.item?.id) {
+                    setSelectedApi(String(data.item.documentId || data.item.id));
                 }
             }
 
             if (type === "saeGrade") {
                 await loadSaeGrades(selectedApi);
 
-                if (data?.item?.documentId) {
-                    setSelectedSaeGrade(String(data.item.documentId));
+                if (data?.item?.documentId || data?.item?.id) {
+                    setSelectedSaeGrade(String(data.item.documentId || data.item.id));
                 }
             }
 
             if (type === "product") {
                 await loadProducts(selectedSaeGrade);
 
-                if (data?.item?.documentId) {
-                    setSelectedProduct(String(data.item.documentId));
+                if (data?.item?.documentId || data?.item?.id) {
+                    setSelectedProduct(String(data.item.documentId || data.item.id));
+                } else if (selectedValue) {
+                    setSelectedProduct(String(selectedValue));
                 }
             }
 
             if (["acea", "ilsac", "oem"].includes(type)) {
                 await loadLeaf(selectedSaeGrade, selectedProduct);
 
-                if (data?.item?.documentId) {
-                    if (type === "acea") setSelectedAcea(String(data.item.documentId));
-                    if (type === "ilsac") setSelectedIlsac(String(data.item.documentId));
-                    if (type === "oem") setSelectedOem(String(data.item.documentId));
+                if (data?.item?.documentId || data?.item?.id) {
+                    const nextId = String(data.item.documentId || data.item.id);
+
+                    if (type === "acea") setSelectedAcea(nextId);
+                    if (type === "ilsac") setSelectedIlsac(nextId);
+                    if (type === "oem") setSelectedOem(nextId);
                 }
             }
 
@@ -612,6 +638,7 @@ export default function GasolinePage() {
                 apiUrl("delete-check", {
                     type,
                     documentId,
+                    saeGradeId: type === "product" ? selectedSaeGrade : "",
                 })
             );
 
@@ -625,7 +652,7 @@ export default function GasolinePage() {
 
             const confirmText =
                 type === "product"
-                    ? `Remove Product relation from SAE Grade?\n\nProduct will NOT be deleted from Product collection.\nOnly API and SAE Grade relation will be removed from this Product.\n\nProduct: ${label}`
+                    ? `Remove Product relation from SAE Grade?\n\nProduct will NOT be deleted from Product collection.\nOnly selected SAE Grade relation will be removed from this Product.\n\nProduct: ${label}`
                     : `Delete ${ADD_LABELS[type]}: ${label}?`;
 
             if (!window.confirm(confirmText)) {
@@ -640,6 +667,7 @@ export default function GasolinePage() {
                 body: JSON.stringify({
                     type,
                     documentId,
+                    saeGradeId: type === "product" ? selectedSaeGrade : null,
                 }),
             });
 
@@ -713,12 +741,29 @@ export default function GasolinePage() {
         return (
             <div
                 className={`mb-3 rounded-lg border px-3 py-2 text-sm font-medium ${message.type === "error"
-                    ? "border-red-200 bg-red-50 text-red-700"
-                    : "border-green-200 bg-green-50 text-green-700"
+                        ? "border-red-200 bg-red-50 text-red-700"
+                        : "border-green-200 bg-green-50 text-green-700"
                     }`}
             >
                 {message.text}
             </div>
+        );
+    }
+
+    function DropdownArrow() {
+        return (
+            <svg
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+            >
+                <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                />
+            </svg>
         );
     }
 
@@ -731,6 +776,7 @@ export default function GasolinePage() {
         disabled = false,
     }) {
         const [query, setQuery] = useState("");
+        const [open, setOpen] = useState(false);
 
         const dropdownList = toDropdownOptions(options);
         const selectedItem = findSelected(dropdownList, value);
@@ -738,13 +784,13 @@ export default function GasolinePage() {
         const filteredList =
             query.trim() === ""
                 ? dropdownList
-                : dropdownList.filter((item) => {
-                    return item.label.toLowerCase().includes(query.trim().toLowerCase());
-                });
+                : dropdownList.filter((item) =>
+                    item.label.toLowerCase().includes(query.trim().toLowerCase())
+                );
 
         if (disabled) {
             return (
-                <div className="flex h-9 w-full items-center rounded-lg border border-gray-200 bg-gray-100 px-3 text-sm text-gray-500">
+                <div className="flex h-10 w-full items-center rounded-lg border border-gray-200 bg-gray-100 px-3 text-sm text-gray-500">
                     {placeholder}
                 </div>
             );
@@ -756,90 +802,110 @@ export default function GasolinePage() {
                 onChange={(item) => {
                     onChange(item?.value || "");
                     setQuery("");
+                    setOpen(false);
                 }}
             >
                 <div className="relative w-full">
                     <ComboboxInput
-                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-12 text-sm font-medium text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         displayValue={(item) => item?.label || ""}
-                        onChange={(event) => setQuery(event.target.value)}
-                        onFocus={() => setQuery("")}
+                        onChange={(event) => {
+                            setQuery(event.target.value);
+                            setOpen(true);
+                        }}
+                        onFocus={() => {
+                            setQuery("");
+                            setOpen(true);
+                        }}
+                        onBlur={() => {
+                            setTimeout(() => setOpen(false), 150);
+                        }}
                         placeholder={placeholder}
                     />
 
-                    <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                        <span className="text-lg leading-none">⌄</span>
+                    <ComboboxButton
+                        type="button"
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            setOpen((prev) => !prev);
+                        }}
+                        className="absolute inset-y-0 right-0 flex items-center pr-4 pl-3 text-gray-500"
+                    >
+                        <DropdownArrow />
                     </ComboboxButton>
 
-                    <ComboboxOptions className="absolute z-50 mt-1 max-h-64 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
-                        <div className="border-b border-gray-100 bg-gray-50 px-3 py-2 text-[11px] font-medium text-gray-500">
-                            Type to search
-                        </div>
+                    {open && (
+                        <ComboboxOptions
+                            static
+                            className="absolute z-50 mt-1 max-h-64 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl"
+                        >
+                            <div className="border-b border-gray-100 bg-gray-50 px-3 py-2 text-[11px] font-medium text-gray-500">
+                                {dropdownList.length
+                                    ? `Type to search — ${dropdownList.length} value(s)`
+                                    : "No values loaded"}
+                            </div>
 
-                        <div className="max-h-56 overflow-y-auto p-1">
-                            {filteredList.length === 0 ? (
-                                <div className="px-3 py-2 text-sm text-gray-500">
-                                    No matching values found
-                                </div>
-                            ) : (
-                                filteredList.map((item) => (
-                                    <ComboboxOption
-                                        key={item.value}
-                                        value={item}
-                                        className={({ active, selected }) =>
-                                            `rounded-md px-3 py-2 text-sm ${active
-                                                ? "bg-blue-50 text-blue-700"
-                                                : "text-gray-700"
-                                            } ${selected
-                                                ? "bg-blue-50 font-semibold text-blue-700"
-                                                : "font-normal"
-                                            }`
-                                        }
-                                    >
-                                        <div className="flex items-center justify-between gap-2">
-                                            <span className="min-w-0 flex-1 truncate">
-                                                {item.label}
-                                            </span>
+                            <div className="max-h-56 overflow-y-auto p-1">
+                                {filteredList.length === 0 ? (
+                                    <div className="px-3 py-2 text-sm text-gray-500">
+                                        No matching values found
+                                    </div>
+                                ) : (
+                                    filteredList.map((item) => (
+                                        <ComboboxOption
+                                            key={item.value}
+                                            value={item}
+                                            className={({ active, selected }) =>
+                                                `cursor-pointer rounded-md px-3 py-2 text-sm ${active
+                                                    ? "bg-blue-50 text-blue-700"
+                                                    : "text-gray-700"
+                                                } ${selected
+                                                    ? "bg-blue-50 font-semibold text-blue-700"
+                                                    : "font-normal"
+                                                }`
+                                            }
+                                        >
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="min-w-0 flex-1 truncate">
+                                                    {item.label}
+                                                </span>
 
-                                            <button
-                                                type="button"
-                                                title={
-                                                    type === "product"
-                                                        ? "Remove relation from SAE Grade"
-                                                        : `Delete ${ADD_LABELS[type]}`
-                                                }
-                                                disabled={deletingType === type}
-                                                onMouseDown={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                }}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    handleDelete(type, item);
-                                                }}
-                                                className="flex h-6 w-6 items-center justify-center rounded-full text-red-500 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
-                                    </ComboboxOption>
-                                ))
-                            )}
-                        </div>
-                    </ComboboxOptions>
+                                                <button
+                                                    type="button"
+                                                    title={
+                                                        type === "product"
+                                                            ? "Remove relation from SAE Grade"
+                                                            : `Delete ${ADD_LABELS[type]}`
+                                                    }
+                                                    disabled={deletingType === type}
+                                                    onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                    }}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleDelete(type, item);
+                                                    }}
+                                                    className="flex h-6 w-6 items-center justify-center rounded-full text-red-500 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        </ComboboxOption>
+                                    ))
+                                )}
+                            </div>
+                        </ComboboxOptions>
+                    )}
                 </div>
             </Combobox>
         );
     }
 
-    function AddDropdown({
-        type,
-        options,
-        value,
-        disabled = false,
-    }) {
+    function AddDropdown({ type, options, value, disabled = false }) {
         const [query, setQuery] = useState("");
+        const [open, setOpen] = useState(false);
 
         const dropdownList = toDropdownOptions(options);
 
@@ -849,13 +915,13 @@ export default function GasolinePage() {
         const filteredList =
             query.trim() === ""
                 ? dropdownList
-                : dropdownList.filter((item) => {
-                    return item.label.toLowerCase().includes(query.trim().toLowerCase());
-                });
+                : dropdownList.filter((item) =>
+                    item.label.toLowerCase().includes(query.trim().toLowerCase())
+                );
 
         if (disabled) {
             return (
-                <div className="flex h-9 items-center rounded-lg border border-gray-200 bg-gray-100 px-3 text-sm text-gray-500">
+                <div className="flex h-10 items-center rounded-lg border border-gray-200 bg-gray-100 px-3 text-sm text-gray-500">
                     Select parent value first
                 </div>
             );
@@ -863,7 +929,7 @@ export default function GasolinePage() {
 
         if (!dropdownList.length) {
             return (
-                <div className="flex h-9 items-center rounded-lg border border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-700">
+                <div className="flex h-10 items-center rounded-lg border border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-700">
                     No values available
                 </div>
             );
@@ -875,62 +941,80 @@ export default function GasolinePage() {
                 onChange={(item) => {
                     setSelectedAddValue(type, item?.value || "");
                     setQuery("");
+                    setOpen(false);
                 }}
             >
                 <div className="relative w-full">
                     <ComboboxInput
-                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-12 text-sm font-medium text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         displayValue={(item) => item?.label || ""}
-                        onChange={(event) => setQuery(event.target.value)}
-                        onFocus={() => setQuery("")}
+                        onChange={(event) => {
+                            setQuery(event.target.value);
+                            setOpen(true);
+                        }}
+                        onFocus={() => {
+                            setQuery("");
+                            setOpen(true);
+                        }}
+                        onBlur={() => {
+                            setTimeout(() => setOpen(false), 150);
+                        }}
                         placeholder={`Search / select ${ADD_LABELS[type]}`}
                     />
 
-                    <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                        <span className="text-lg leading-none">⌄</span>
+                    <ComboboxButton
+                        type="button"
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            setOpen((prev) => !prev);
+                        }}
+                        className="absolute inset-y-0 right-0 flex items-center pr-4 pl-3 text-gray-500"
+                    >
+                        <DropdownArrow />
                     </ComboboxButton>
 
-                    <ComboboxOptions className="absolute z-50 mt-1 max-h-64 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
-                        <div className="border-b border-gray-100 bg-gray-50 px-3 py-2 text-[11px] font-medium text-gray-500">
-                            Type to search
-                        </div>
+                    {open && (
+                        <ComboboxOptions
+                            static
+                            className="absolute z-50 mt-1 max-h-64 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl"
+                        >
+                            <div className="border-b border-gray-100 bg-gray-50 px-3 py-2 text-[11px] font-medium text-gray-500">
+                                Type to search — {dropdownList.length} value(s)
+                            </div>
 
-                        <div className="max-h-56 overflow-y-auto p-1">
-                            {filteredList.length === 0 ? (
-                                <div className="px-3 py-2 text-sm text-gray-500">
-                                    No matching values found
-                                </div>
-                            ) : (
-                                filteredList.map((item) => (
-                                    <ComboboxOption
-                                        key={item.value}
-                                        value={item}
-                                        className={({ active, selected }) =>
-                                            `cursor-pointer rounded-md px-3 py-2 text-sm ${active
-                                                ? "bg-blue-50 text-blue-700"
-                                                : "text-gray-700"
-                                            } ${selected
-                                                ? "bg-blue-50 font-semibold text-blue-700"
-                                                : "font-normal"
-                                            }`
-                                        }
-                                    >
-                                        {item.label}
-                                    </ComboboxOption>
-                                ))
-                            )}
-                        </div>
-                    </ComboboxOptions>
+                            <div className="max-h-56 overflow-y-auto p-1">
+                                {filteredList.length === 0 ? (
+                                    <div className="px-3 py-2 text-sm text-gray-500">
+                                        No matching values found
+                                    </div>
+                                ) : (
+                                    filteredList.map((item) => (
+                                        <ComboboxOption
+                                            key={item.value}
+                                            value={item}
+                                            className={({ active, selected }) =>
+                                                `cursor-pointer rounded-md px-3 py-2 text-sm ${active
+                                                    ? "bg-blue-50 text-blue-700"
+                                                    : "text-gray-700"
+                                                } ${selected
+                                                    ? "bg-blue-50 font-semibold text-blue-700"
+                                                    : "font-normal"
+                                                }`
+                                            }
+                                        >
+                                            {item.label}
+                                        </ComboboxOption>
+                                    ))
+                                )}
+                            </div>
+                        </ComboboxOptions>
+                    )}
                 </div>
             </Combobox>
         );
     }
 
-    function AddPanel({
-        type,
-        options,
-        disabled = false,
-    }) {
+    function AddPanel({ type, options, disabled = false }) {
         const selectedValue = selectedAdd[type];
         const dropdownList = toDropdownOptions(options);
 
@@ -942,7 +1026,7 @@ export default function GasolinePage() {
                     </h4>
 
                     <p className="text-[11px] leading-4 text-gray-500">
-                        Product list is filtered by published status and PCMO/Gasoline category.
+                        Product list is filtered by published status and Gasoline/PCMO category.
                     </p>
                 </div>
 
@@ -963,7 +1047,7 @@ export default function GasolinePage() {
                             !selectedValue ||
                             !dropdownList.length
                         }
-                        className="h-9 rounded-lg bg-green-600 px-5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-10 rounded-lg bg-green-600 px-5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {savingType === type ? "Saving..." : "Save"}
                     </button>
@@ -998,7 +1082,7 @@ export default function GasolinePage() {
 
                         {type === "product" && (
                             <p className="text-[11px] text-gray-500">
-                                Select product first, then Dosage / ACEA / ILSAC / OEM will open.
+                                Select Product first, then Dosage / ACEA / ILSAC / OEM will open.
                             </p>
                         )}
                     </div>
@@ -1008,8 +1092,8 @@ export default function GasolinePage() {
                         onClick={() => toggleAdd(type)}
                         disabled={disabled}
                         className={`h-8 rounded-lg px-3 text-xs font-semibold text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${addMode[type]
-                            ? "bg-red-500 hover:bg-red-600"
-                            : "bg-blue-600 hover:bg-blue-700"
+                                ? "bg-red-500 hover:bg-red-600"
+                                : "bg-blue-600 hover:bg-blue-700"
                             }`}
                     >
                         {addMode[type] ? "Cancel" : meta.addText}
@@ -1026,18 +1110,14 @@ export default function GasolinePage() {
                 />
 
                 {addMode[type] && (
-                    <AddPanel
-                        type={type}
-                        options={addOptions}
-                        disabled={disabled}
-                    />
+                    <AddPanel type={type} options={addOptions} disabled={disabled} />
                 )}
             </section>
         );
     }
 
     function renderDosageSection() {
-        const disabled = !selectedProduct;
+        const disabled = !selectedApi || !selectedSaeGrade || !selectedProduct;
 
         return (
             <section className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
@@ -1047,13 +1127,13 @@ export default function GasolinePage() {
                     </h3>
 
                     <p className="text-[11px] text-gray-500">
-                        Product dosage is saved in ProductDosage collection and linked with selected Product.
+                        Dosage is saved in Dosage collection and depends on selected API, SAE Grade and Product.
                     </p>
                 </div>
 
                 {disabled ? (
-                    <div className="flex h-9 w-full items-center rounded-lg border border-gray-200 bg-gray-100 px-3 text-sm text-gray-500">
-                        Select Product first
+                    <div className="flex h-10 w-full items-center rounded-lg border border-gray-200 bg-gray-100 px-3 text-sm text-gray-500">
+                        Select API, SAE Grade and Product first
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
@@ -1062,15 +1142,15 @@ export default function GasolinePage() {
                             value={dosageTitle}
                             onChange={(e) => setDosageTitle(e.target.value)}
                             disabled={loadingDosage || savingDosage}
-                            placeholder={loadingDosage ? "Loading dosage..." : "Enter product dosage"}
-                            className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+                            placeholder={loadingDosage ? "Loading dosage..." : "Enter dosage"}
+                            className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-900 outline-none placeholder:text-gray-400 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
 
                         <button
                             type="button"
                             onClick={handleSaveDosage}
                             disabled={loadingDosage || savingDosage || !dosageTitle.trim()}
-                            className="h-9 rounded-lg bg-green-600 px-5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="h-10 rounded-lg bg-green-600 px-5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {savingDosage ? "Saving..." : dosageDocId ? "Update" : "Save"}
                         </button>
@@ -1086,7 +1166,7 @@ export default function GasolinePage() {
                 <div className="mb-3 overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
                     <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-4 text-white">
                         <h1 className="mt-1 text-2xl font-bold">
-                            PCMO/Gasoline
+                            Gasoline/PCMO
                         </h1>
 
                         <p className="mt-1 text-sm text-blue-50">
@@ -1224,7 +1304,7 @@ export default function GasolinePage() {
                             </div>
 
                             <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-700">
-                                Product × only removes Product relation from API / SAE Grade. It does not delete Product collection record.
+                                Product × only removes Product relation from selected SAE Grade. It does not delete Product collection record.
                             </div>
                         </aside>
 

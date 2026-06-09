@@ -276,16 +276,29 @@ export default function HeavyDutyPage() {
         setAllProducts(all?.items || []);
     }
 
-    async function loadDosage(productId) {
+    async function loadDosage(productId, apiId = selectedApi, saeGradeId = selectedSaeGrade) {
         setDosageDocId("");
         setDosageTitle("");
 
-        if (!productId) return;
+        if (!apiId || !saeGradeId || !productId) return;
 
         try {
             setLoadingDosage(true);
 
-            const data = await fetchJson(apiUrl("dosage", { productId }));
+            /*
+                Heavy Duty dosage depends on:
+                API + SAE Grade + Product
+
+                Backend expects all three values so it can load the correct dosage
+                instead of any old product dosage relation.
+            */
+            const data = await fetchJson(
+                apiUrl("dosage", {
+                    apiId,
+                    saeGradeId,
+                    productId,
+                })
+            );
 
             setDosageDocId(data?.item?.documentId || "");
             setDosageTitle(data?.item?.title || "");
@@ -414,7 +427,7 @@ export default function HeavyDutyPage() {
 
                 if (selectedSaeGrade && selectedProduct) {
                     await Promise.all([
-                        loadDosage(selectedProduct),
+                        loadDosage(selectedProduct, selectedApi, selectedSaeGrade),
                         loadLeaf(selectedSaeGrade, selectedProduct),
                     ]);
                 }
@@ -424,7 +437,7 @@ export default function HeavyDutyPage() {
         }
 
         run();
-    }, [selectedProduct]);
+    }, [selectedProduct, selectedApi, selectedSaeGrade]);
 
     function setSelectedAddValue(type, value) {
         setSelectedAdd((prev) => ({
@@ -444,8 +457,8 @@ export default function HeavyDutyPage() {
         try {
             resetMessage();
 
-            if (!selectedProduct) {
-                throw new Error("Please select Product first");
+            if (!selectedApi || !selectedSaeGrade || !selectedProduct) {
+                throw new Error("Please select API, SAE Grade and Product first");
             }
 
             if (!dosageTitle.trim()) {
@@ -461,6 +474,8 @@ export default function HeavyDutyPage() {
                 },
                 body: JSON.stringify({
                     type: "dosage",
+                    apiId: selectedApi,
+                    saeGradeId: selectedSaeGrade,
                     productId: selectedProduct,
                     title: dosageTitle.trim(),
                     dosageId: dosageDocId || null,
@@ -1022,7 +1037,7 @@ export default function HeavyDutyPage() {
                     </h3>
 
                     <p className="text-[11px] text-gray-500">
-                        Product dosage is saved in ProductDosage collection and linked with selected Product.
+                        Dosage is loaded and saved by selected API + SAE Grade + Product.
                     </p>
                 </div>
 

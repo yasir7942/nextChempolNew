@@ -37,6 +37,128 @@ function getOemEnum() {
     return ENUMS.OEM || [];
 }
 
+
+const productPopulate = {
+    product_categories: true,
+    sae_grades: true,
+    types: true,
+    api: true,
+    dosages: true,
+    sys_oems: true,
+};
+
+function entityId(item) {
+    return String(item?.documentId || item?.id || "");
+}
+
+function sameEntity(item, selectedId) {
+    if (!item || !selectedId) return false;
+
+    return (
+        String(item?.documentId || "") === String(selectedId) ||
+        String(item?.id || "") === String(selectedId)
+    );
+}
+
+async function getByAnyId(endpoint, selectedId, populate = {}) {
+    if (!selectedId) return null;
+
+    const wanted = String(selectedId);
+
+    const directQuery = qs.stringify(
+        {
+            status: "published",
+            populate,
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const directRes = await fetchData(`${endpoint}/${wanted}`, directQuery);
+
+    if (directRes?.data) {
+        return directRes.data;
+    }
+
+    const documentIdQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                documentId: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const documentIdRes = await fetchData(endpoint, documentIdQuery);
+
+    if (documentIdRes?.data?.[0]) {
+        return documentIdRes.data[0];
+    }
+
+    const idQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                id: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const idRes = await fetchData(endpoint, idQuery);
+
+    return idRes?.data?.[0] || null;
+}
+
+async function findProductForSave(productId) {
+    if (!productId) return null;
+
+
+    console.log(productPopulate);
+    const direct = await getByAnyId("products", productId, productPopulate);
+
+    if (direct) {
+        return direct;
+    }
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            populate: productPopulate,
+            pagination: {
+                pageSize: 1000,
+            },
+            sort: ["title:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const res = await fetchData("products", query);
+    const products = res?.data || [];
+
+    return products.find((product) => sameEntity(product, productId)) || null;
+}
+
 function joinUrl(base, endpoint) {
     const cleanBase = String(base || "").trim().replace(/\/$/, "");
     const cleanEndpoint = String(endpoint || "").trim().replace(/^\//, "");
@@ -229,8 +351,14 @@ function filterEnumByExisting(enumValues = [], existingItems = [], field = "titl
 function getRelationArray(item, relationName) {
     const rel = item?.[relationName] || item?.attributes?.[relationName];
 
+    if (!rel) return [];
     if (Array.isArray(rel)) return rel;
     if (Array.isArray(rel?.data)) return rel.data;
+    if (rel?.data && typeof rel.data === "object") return [rel.data];
+
+    if (rel && typeof rel === "object" && (rel.id || rel.documentId)) {
+        return [rel];
+    }
 
     return [];
 }
@@ -240,8 +368,10 @@ function getRelationObject(item, relationName) {
 
     if (!rel) return null;
     if (rel?.data) return rel.data;
+    if (Array.isArray(rel)) return rel[0] || null;
+    if (rel && typeof rel === "object" && (rel.id || rel.documentId)) return rel;
 
-    return rel;
+    return null;
 }
 
 function relationId(item) {
@@ -301,9 +431,20 @@ function typeBelongsToStaticCategory(typeItem, category = null) {
     return false;
 }
 
-function productTypeId(product) {
-    const type = getRelationObject(product, "type");
-    return relationId(type);
+function productTypeIds(product) {
+    return getRelationArray(product, "types")
+        .map((typeItem) => relationId(typeItem))
+        .filter(Boolean);
+}
+
+function productHasSelectedType(product, selectedTypeId) {
+    if (!selectedTypeId) return true;
+
+    return productTypeIds(product).some((id) => String(id) === String(selectedTypeId));
+}
+
+function getPrimaryProductTypeId(product) {
+    return productTypeIds(product)[0] || "";
 }
 
 async function getStaticCategory() {
@@ -437,37 +578,62 @@ async function getByDocumentId(endpoint, documentId, populate = {}) {
     return null;
 }
 
-async function getProductDosage(productId) {
-    if (!productId) return null;
+async function getProductDosage({ typeId = "", productId }) {
+    if (!typeId || !productId) return null;
+
+    /*
+        Type based category flow:
+        Type → Product → Dosage
+
+        Correct dosage matching is:
+        Type + Product
+
+        Dosage relation fields:
+        - sys_types
+        - products
+
+        Important:
+        Do not read dosage from the Product record relation array.
+        Always query the Dosage collection by the selected flow values.
+    */
+    const product = await findProductForSave(productId);
+    const productDocumentId = product?.documentId || productId;
+
+    const filters = {
+        products: {
+            documentId: {
+                $eq: productDocumentId,
+            },
+        },
+        sys_types: {
+            documentId: {
+                $eq: typeId,
+            },
+        },
+    };
 
     const query = qs.stringify(
         {
             status: "published",
-            filters: {
-                product: {
-                    documentId: {
-                        $eq: productId,
-                    },
-                },
-            },
-            fields: ["title"],
+            filters,
+            fields: ["dosage"],
             populate: {
-                product: true,
+                products: true,
+                sys_types: true,
             },
             pagination: {
                 pageSize: 1,
             },
-            sort: ["createdAt:asc"],
+            sort: ["updatedAt:desc", "createdAt:desc"],
         },
         {
             encodeValuesOnly: true,
         }
     );
 
-    const res = await fetchData("product-dosages", query);
+    const res = await fetchData("dosages", query);
     return res?.data?.[0] || null;
 }
-
 async function findTypeByTitleAndCategory(title) {
     const category = await getStaticCategory();
 
@@ -689,13 +855,9 @@ async function getDeleteCheck(type, documentId) {
         const product = await getByDocumentId("products", documentId, {
             product_categories: true,
             product_category: true,
-            type: true,
-            product_dosages: {
-                fields: ["title"],
-            },
-            oems: {
-                fields: ["title"],
-            },
+            types: true,
+            dosages: true,
+            sys_oems: true,
         });
 
         if (!product) {
@@ -712,7 +874,7 @@ async function getDeleteCheck(type, documentId) {
             };
         }
 
-        const currentTypeId = productTypeId(product);
+        const currentTypeId = getPrimaryProductTypeId(product);
 
         if (!currentTypeId) {
             return {
@@ -853,20 +1015,23 @@ export async function GET(req) {
         }
 
         if (mode === "dosage") {
-            if (!productId) {
+            if (!typeId || !productId) {
                 return okJson({
                     item: null,
                 });
             }
 
-            const dosage = await getProductDosage(productId);
+            const dosage = await getProductDosage({
+                typeId,
+                productId,
+            });
 
             return okJson({
                 item: dosage
                     ? {
                         id: dosage?.id,
                         documentId: dosage?.documentId,
-                        title: getField(dosage, "title"),
+                        title: getField(dosage, "dosage"),
                     }
                     : null,
             });
@@ -951,9 +1116,7 @@ export async function GET(req) {
 
             const products = (res?.data || [])
                 .filter((product) => productBelongsToStaticCategory(product, category))
-                .filter((product) => {
-                    return productTypeId(product) === String(typeId);
-                });
+                .filter((product) => productHasSelectedType(product, typeId));
 
             return okJson({
                 items: mapProductItems(products),
@@ -985,7 +1148,7 @@ export async function GET(req) {
             });
 
             /* const items = categoryProducts.filter((product) => {
-                 const currentTypeId = productTypeId(product);
+                 const currentTypeId = getPrimaryProductTypeId(product);
  
                  if (!currentTypeId) return true;
  
@@ -1081,19 +1244,15 @@ export async function POST(req) {
         }
 
         if (type === "dosage") {
-            if (!productId) {
-                return errorJson("productId is missing", 400);
+            if (!typeId || !productId) {
+                return errorJson("typeId or productId is missing", 400);
             }
 
             if (!title?.trim()) {
-                return errorJson("Dosage title is missing", 400);
+                return errorJson("Dosage value is missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                product_category: true,
-                product_dosages: true,
-            });
+            const product = await findProductForSave(productId);
 
             if (!product) {
                 return errorJson("Product not found", 404);
@@ -1101,58 +1260,84 @@ export async function POST(req) {
 
             const category = await getStaticCategory();
 
-            if (!productBelongsToStaticCategory(product, category)) {
-                return errorJson(
-                    "Product does not belong to Industrial Additives category",
-                    400
-                );
+            if (typeof productBelongsToStaticCategory === "function" && !productBelongsToStaticCategory(product, category)) {
+                return errorJson("Product does not belong to selected category", 400);
             }
 
-            let existingDosage = null;
+            const productDocumentId = product?.documentId || productId;
 
-            if (dosageId) {
-                existingDosage = await getByDocumentId("product-dosages", dosageId, {
-                    product: true,
+            const dosagePayload = {
+                dosage: title.trim(),
+                products: [productDocumentId],
+                ...(typeId ? { sys_types: [typeId] } : {}),
+            };
+
+            /*
+                Important:
+                First search existing dosage by relation combination:
+                Type + Product
+
+                This prevents creating a new Dosage row every time the user edits
+                the same dosage value. dosageId is only a fallback.
+            */
+            let existingDosage = await getProductDosage({
+                typeId,
+                productId: productDocumentId,
+            });
+
+            if (!existingDosage && dosageId) {
+                existingDosage = await getByAnyId("dosages", dosageId, {
+                    products: true,
+                    sys_types: true,
                 });
             }
 
-            if (!existingDosage) {
-                existingDosage = await getProductDosage(productId);
-            }
+            if (existingDosage?.documentId || existingDosage?.id) {
+                const dosageDocumentId = existingDosage.documentId || existingDosage.id;
 
-            if (existingDosage?.documentId) {
-                const updated = await strapiPut(
-                    `product-dosages/${existingDosage.documentId}?status=published`,
-                    {
-                        data: {
-                            title: title.trim(),
-                            product: productId,
-                        },
-                    }
-                );
+                const updated = await strapiPut(`dosages/${dosageDocumentId}?status=published`, {
+                    data: dosagePayload,
+                });
 
                 if (!updated.ok) {
                     return errorJson("Failed to update Dosage", updated.status, updated.data);
                 }
 
+                const updatedItem = updated.data?.data || null;
+
                 return okJson({
-                    item: updated.data?.data || null,
+                    item: updatedItem
+                        ? {
+                            id: updatedItem?.id,
+                            documentId: updatedItem?.documentId || updatedItem?.id,
+                            title: getField(updatedItem, "dosage") || title.trim(),
+                        }
+                        : {
+                            id: dosageDocumentId,
+                            documentId: dosageDocumentId,
+                            title: title.trim(),
+                        },
                 });
             }
 
-            const created = await strapiPost("product-dosages?status=published", {
-                data: {
-                    title: title.trim(),
-                    product: productId,
-                },
+            const created = await strapiPost("dosages?status=published", {
+                data: dosagePayload,
             });
 
             if (!created.ok) {
                 return errorJson("Failed to create Dosage", created.status, created.data);
             }
 
+            const createdItem = created.data?.data || null;
+
             return okJson({
-                item: created.data?.data || null,
+                item: createdItem
+                    ? {
+                        id: createdItem?.id,
+                        documentId: createdItem?.documentId || createdItem?.id,
+                        title: getField(createdItem, "dosage") || title.trim(),
+                    }
+                    : null,
             });
         }
 
@@ -1193,11 +1378,9 @@ export async function POST(req) {
                 return errorJson("typeId or productId missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                product_category: true,
-                type: true,
-            });
+
+
+            const product = await findProductForSave(productId);
 
             if (!product) {
                 return errorJson(
@@ -1215,21 +1398,23 @@ export async function POST(req) {
                 );
             }
 
-            const currentTypeId = productTypeId(product);
+            const productDocumentId = product?.documentId || productId;
 
-            if (currentTypeId && String(currentTypeId) === String(typeId)) {
+            const existingTypeIds = productTypeIds(product).map(String);
+
+            if (existingTypeIds.includes(String(typeId))) {
                 return okJson({
                     item: product,
                 });
             }
 
-            /*  if (currentTypeId && String(currentTypeId) !== String(typeId)) {
-                  return errorJson("This Product already has another Type", 409);
-              }  */
+            const nextTypeIds = Array.from(
+                new Set([...existingTypeIds, String(typeId)])
+            );
 
-            const updated = await strapiPut(`products/${productId}?status=published`, {
+            const updated = await strapiPut(`products/${productDocumentId}?status=published`, {
                 data: {
-                    type: typeId,
+                    types: nextTypeIds,
                 },
             });
 
@@ -1269,11 +1454,7 @@ export async function POST(req) {
                 );
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                product_category: true,
-                type: true,
-            });
+            const product = await findProductForSave(productId);
 
             if (!product) {
                 return errorJson("Product not found", 404);
@@ -1286,9 +1467,7 @@ export async function POST(req) {
                 );
             }
 
-            const currentTypeId = productTypeId(product);
-
-            if (String(currentTypeId) !== String(typeId)) {
+            if (!productHasSelectedType(product, typeId)) {
                 return errorJson(
                     "Selected Product is not connected with selected Type",
                     400
@@ -1311,7 +1490,7 @@ export async function POST(req) {
             const created = await strapiPost("oems?status=published", {
                 data: {
                     [OEM_FIELD]: title,
-                    type: typeId,
+                    type: [typeId],
                     product: productId,
                 },
             });
@@ -1363,10 +1542,8 @@ export async function DELETE(req) {
             const product = await getByDocumentId("products", documentId, {
                 product_categories: true,
                 product_category: true,
-                type: true,
-                oems: {
-                    fields: ["title"],
-                },
+                types: true,
+                sys_oems: true,
             });
 
             if (!product) {
@@ -1382,7 +1559,7 @@ export async function DELETE(req) {
                 );
             }
 
-            const currentTypeId = productTypeId(product);
+            const currentTypeId = getPrimaryProductTypeId(product);
 
             if (!currentTypeId) {
                 return errorJson("This Product is not connected with any Type.", 400);
@@ -1399,9 +1576,11 @@ export async function DELETE(req) {
                 );
             }
 
-            const updated = await strapiPut(`products/${documentId}?status=published`, {
+            const productDocumentId = product?.documentId || documentId;
+
+            const updated = await strapiPut(`products/${productDocumentId}?status=published`, {
                 data: {
-                    type: null,
+                    types: [],
                 },
             });
 

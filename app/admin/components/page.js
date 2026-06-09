@@ -207,16 +207,21 @@ export default function LubricantComponentsPage() {
         setAllProducts(all?.items || []);
     }
 
-    async function loadDosage(productId) {
+    async function loadDosage(productId, typeId = selectedType) {
         setDosageDocId("");
         setDosageTitle("");
 
-        if (!productId) return;
+        if (!typeId || !productId) return;
 
         try {
             setLoadingDosage(true);
 
-            const data = await fetchJson(apiUrl("dosage", { productId }));
+            const data = await fetchJson(
+                apiUrl("dosage", {
+                    typeId,
+                    productId,
+                })
+            );
 
             setDosageDocId(data?.item?.documentId || "");
             setDosageTitle(data?.item?.title || "");
@@ -285,7 +290,7 @@ export default function LubricantComponentsPage() {
         }
 
         run();
-    }, [selectedProduct]);
+    }, [selectedProduct, selectedType]);
 
     function setSelectedAddValue(type, value) {
         setSelectedAdd((prev) => ({
@@ -305,8 +310,8 @@ export default function LubricantComponentsPage() {
         try {
             resetMessage();
 
-            if (!selectedProduct) {
-                throw new Error("Please select Product first");
+            if (!selectedType || !selectedProduct) {
+                throw new Error("Please select Type and Product first");
             }
 
             if (!dosageTitle.trim()) {
@@ -322,6 +327,7 @@ export default function LubricantComponentsPage() {
                 },
                 body: JSON.stringify({
                     type: "dosage",
+                    typeId: selectedType,
                     productId: selectedProduct,
                     title: dosageTitle.trim(),
                     dosageId: dosageDocId || null,
@@ -825,7 +831,7 @@ export default function LubricantComponentsPage() {
                     </h3>
 
                     <p className="text-[11px] text-gray-500">
-                        Product dosage is saved in ProductDosage collection and linked with selected Product.
+                        Dosage is loaded and saved by the selected relation values for this category.
                     </p>
                 </div>
 

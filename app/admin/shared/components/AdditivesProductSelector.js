@@ -184,6 +184,18 @@ function filterParams(category, filters, untilField = null) {
     return params;
 }
 
+function selectedFilterParams(category, filters) {
+    const params = {};
+
+    [...category.flow, ...category.refine].forEach((field) => {
+        if (filters[field]) {
+            params[field] = filters[field];
+        }
+    });
+
+    return params;
+}
+
 function hasMinimumFilters(category, filters) {
     const required = category.requiredForProducts || [];
 
@@ -268,8 +280,6 @@ export default function AdditivesProductSelector({
                     ...filterParams(nextCategory, nextFilters, field),
                 });
 
-                console.log("Loading options for", API_ROUTE, "with query:", query);
-
                 const data = await fetchJson(`${API_ROUTE}?${query}`);
                 optionResults[field] = data?.items || [];
             }
@@ -299,7 +309,7 @@ export default function AdditivesProductSelector({
             const query = buildQuery({
                 mode: "products",
                 categorySlug: nextCategory.slug,
-                ...nextFilters,
+                ...selectedFilterParams(nextCategory, nextFilters),
             });
 
             const data = await fetchJson(`${API_ROUTE}?${query}`);
@@ -338,12 +348,8 @@ export default function AdditivesProductSelector({
             [field]: value,
         };
 
-        console.log(field, value, nextFilters);
-
         const order = activeFields;
         const currentIndex = order.indexOf(field);
-
-        console.log("order", order, "currentIndex", currentIndex);
 
         order.forEach((item, index) => {
             if (index > currentIndex) {
@@ -534,7 +540,10 @@ export default function AdditivesProductSelector({
                 ) : products.length ? (
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                         {products.map((product) => (
-                            <ProductCard key={product.documentId || product.id} product={product} />
+                            <ProductCard
+                                key={product.documentId || product.id}
+                                product={product}
+                            />
                         ))}
                     </div>
                 ) : (
@@ -581,25 +590,21 @@ function ProductCard({ product }) {
     return (
         <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md">
             <div className="flex gap-3">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
-                    {product.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                {product.image ? (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={product.image}
-                            alt={product.title}
+                            alt={product.title || "Product Image"}
                             className="h-full w-full rounded-xl object-contain"
                         />
-                    ) : (
-                        <span className="text-xl">🛢️</span>
-                    )}
-                </div>
+                    </div>
+                ) : null}
 
                 <div className="min-w-0 flex-1">
                     <h4 className="line-clamp-2 text-sm font-bold text-gray-900">
                         {product.title || "Untitled Product"}
                     </h4>
-
-
 
                     {product.dosage ? (
                         <p className="mt-1 truncate text-xs font-semibold text-gray-700">

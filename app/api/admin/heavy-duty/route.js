@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import qs from "qs";
 import ENUMS from "../../../admin/config/enums.json";
 
+export const runtime = "nodejs";
+
 const STATIC_CATEGORY = {
     title: "Heavy Duty /HDDEO",
     slug: "heavy-duty-hddeo",
 };
+
+const CATEGORY_TITLE_ALIASES = [
+    "Heavy Duty /HDDEO",
+    "Heavy Duty/HDDEO",
+    "Heavy Duty HDDEO",
+    "HDDEO",
+];
 
 const TYPE_CONFIG = {
     api: {
@@ -35,6 +44,14 @@ const TYPE_CONFIG = {
     },
 };
 
+const productPopulate = {
+    product_categories: true,
+    sae_grades: true,
+    api: true,
+    dosages: true,
+};
+
+
 function joinUrl(base, endpoint) {
     const cleanBase = String(base || "").trim().replace(/\/$/, "");
     const cleanEndpoint = String(endpoint || "").trim().replace(/^\//, "");
@@ -49,9 +66,7 @@ async function parseResponse(res) {
     try {
         data = JSON.parse(text);
     } catch {
-        data = {
-            raw: text,
-        };
+        data = { raw: text };
     }
 
     return {
@@ -68,7 +83,7 @@ async function fetchData(endpoint, query = "") {
     const url = `${joinUrl(baseUrl, endpoint)}${query ? `?${query}` : ""}`;
 
     console.log("==================================================");
-    console.log("[fetchData] URL:", url);
+    console.log("[heavy-duty fetchData] URL:", url);
 
     try {
         const res = await fetch(url, {
@@ -81,12 +96,15 @@ async function fetchData(endpoint, query = "") {
 
         const parsed = await parseResponse(res);
 
-        console.log("[fetchData] status:", parsed.status);
-        console.log("[fetchData] first 800 chars:", JSON.stringify(parsed.data).slice(0, 800));
+        console.log("[heavy-duty fetchData] status:", parsed.status);
+        console.log(
+            "[heavy-duty fetchData] first 1200 chars:",
+            JSON.stringify(parsed.data).slice(0, 1200)
+        );
 
         return parsed.data;
     } catch (err) {
-        console.log("[fetchData] ERROR:", err);
+        console.log("[heavy-duty fetchData] ERROR:", err);
         return null;
     }
 }
@@ -95,7 +113,16 @@ async function strapiRequest(method, endpoint, payload = null) {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     const token = process.env.API_TOKEN;
 
-    const res = await fetch(joinUrl(baseUrl, endpoint), {
+    const url = joinUrl(baseUrl, endpoint);
+
+    console.log("==================================================");
+    console.log(`[heavy-duty ${method}] URL:`, url);
+
+    if (payload) {
+        console.log(`[heavy-duty ${method}] payload:`, JSON.stringify(payload, null, 2));
+    }
+
+    const res = await fetch(url, {
         method,
         headers: {
             "Content-Type": "application/json",
@@ -106,7 +133,12 @@ async function strapiRequest(method, endpoint, payload = null) {
         cache: "no-store",
     });
 
-    return parseResponse(res);
+    const parsed = await parseResponse(res);
+
+    console.log(`[heavy-duty ${method}] status:`, parsed.status);
+    console.log(`[heavy-duty ${method}] response:`, JSON.stringify(parsed.data).slice(0, 1200));
+
+    return parsed;
 }
 
 const strapiPost = (endpoint, payload) => strapiRequest("POST", endpoint, payload);
@@ -127,21 +159,34 @@ function errorJson(error, status = 400, details = null) {
             error,
             ...(details ? { details } : {}),
         },
-        {
-            status,
-        }
+        { status }
     );
 }
 
 function getField(item, field) {
     if (!item) return "";
+
     if (item[field] !== undefined) return item[field];
     if (item?.attributes?.[field] !== undefined) return item.attributes[field];
+
     return "";
 }
 
 function sameText(a, b) {
     return String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
+}
+
+function getId(item) {
+    return String(item?.documentId || item?.id || "");
+}
+
+function sameId(item, selectedId) {
+    if (!item || !selectedId) return false;
+
+    return (
+        String(item?.documentId || "") === String(selectedId) ||
+        String(item?.id || "") === String(selectedId)
+    );
 }
 
 function enumItems(values = []) {
@@ -154,23 +199,46 @@ function enumItems(values = []) {
 }
 
 function mapItems(items = [], field = "name") {
-    return items.map((item) => ({
+    return uniqueByIdOrLabel(items).map((item) => ({
         id: item?.id,
-        documentId: item?.documentId,
+        documentId: item?.documentId || item?.id,
         label: getField(item, field),
     }));
 }
 
 function mapProductItems(items = []) {
-    return items.map((item) => ({
-        id: item?.id,
-        documentId: item?.documentId,
-        label:
-            getField(item, "title") ||
-            getField(item, "name") ||
-            getField(item, "slug") ||
-            `Product ${item?.id || ""}`,
-    }));
+    return uniqueByIdOrLabel(items)
+        .map((item) => ({
+            id: item?.id,
+            documentId: item?.documentId || item?.id,
+            label:
+                getField(item, "title") ||
+                getField(item, "name") ||
+                getField(item, "slug") ||
+                `Product ${item?.id || ""}`,
+        }))
+        .filter((item) => item.label);
+}
+
+function uniqueByIdOrLabel(items = []) {
+    const map = new Map();
+
+    (Array.isArray(items) ? items : []).forEach((item) => {
+        if (!item) return;
+
+        const key =
+            String(item?.documentId || "") ||
+            String(item?.id || "") ||
+            String(getField(item, "title") || getField(item, "name") || getField(item, "slug") || "");
+
+        if (!key) return;
+
+        if (!map.has(key)) {
+            map.set(key, item);
+        }
+    });
+
+    return Array.from(map.values());
 }
 
 function filterEnumByExisting(enumValues = [], existingItems = [], field = "name") {
@@ -184,8 +252,17 @@ function filterEnumByExisting(enumValues = [], existingItems = [], field = "name
 function getRelationArray(item, relationName) {
     const rel = item?.[relationName] || item?.attributes?.[relationName];
 
+    if (!rel) return [];
+
     if (Array.isArray(rel)) return rel;
+
     if (Array.isArray(rel?.data)) return rel.data;
+
+    if (rel?.data && typeof rel.data === "object") return [rel.data];
+
+    if (rel && typeof rel === "object" && (rel.id || rel.documentId)) {
+        return [rel];
+    }
 
     return [];
 }
@@ -194,20 +271,54 @@ function getRelationObject(item, relationName) {
     const rel = item?.[relationName] || item?.attributes?.[relationName];
 
     if (!rel) return null;
+
     if (rel?.data) return rel.data;
 
-    return rel;
+    if (Array.isArray(rel)) return rel[0] || null;
+
+    if (rel && typeof rel === "object" && (rel.id || rel.documentId)) return rel;
+
+    return null;
+}
+
+function getRelationsByNames(item, names = []) {
+    const found = [];
+
+    names.forEach((name) => {
+        getRelationArray(item, name).forEach((rel) => found.push(rel));
+
+        const obj = getRelationObject(item, name);
+
+        if (obj) found.push(obj);
+    });
+
+    return uniqueByIdOrLabel(found);
+}
+
+function categoryMatches(category) {
+    if (!category) return false;
+
+    const slug = getField(category, "slug");
+    const title = getField(category, "title") || getField(category, "name");
+
+    if (slug === STATIC_CATEGORY.slug) return true;
+
+    if (sameText(title, STATIC_CATEGORY.title)) return true;
+
+    return CATEGORY_TITLE_ALIASES.some((alias) => sameText(title, alias));
 }
 
 function productBelongsToStaticCategory(product) {
-    return getRelationArray(product, "product_categories").some((category) => {
-        return getField(category, "slug") === STATIC_CATEGORY.slug;
-    });
-}
+    const categories = [
+        ...getRelationArray(product, "product_categories"),
+        ...getRelationArray(product, "product_category"),
+    ];
 
-function productHasAnySaeGrade(product) {
-    const saeGrade = getRelationObject(product, "sae_grade");
-    return Boolean(saeGrade?.documentId || saeGrade?.id);
+    if (!categories.length) {
+        return false;
+    }
+
+    return categories.some(categoryMatches);
 }
 
 function getEnumForType(type) {
@@ -219,90 +330,172 @@ function getEnumForType(type) {
 }
 
 async function getStaticCategory() {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            slug: {
-                $eq: STATIC_CATEGORY.slug,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                $or: [
+                    {
+                        slug: {
+                            $eq: STATIC_CATEGORY.slug,
+                        },
+                    },
+                    {
+                        title: {
+                            $eqi: STATIC_CATEGORY.title,
+                        },
+                    },
+                    ...CATEGORY_TITLE_ALIASES.map((title) => ({
+                        title: {
+                            $eqi: title,
+                        },
+                    })),
+                ],
+            },
+            populate: {
+                apis: true,
+                products: {
+                    populate: productPopulate,
+                },
+            },
+            pagination: {
+                pageSize: 1,
             },
         },
-        populate: {
-            apis: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData("product-categories", query);
     return res?.data?.[0] || null;
 }
 
-async function getByDocumentId(endpoint, documentId, populate = {}) {
-    if (!documentId) return null;
+async function getByAnyId(endpoint, selectedId, populate = {}) {
+    if (!selectedId) return null;
 
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            documentId: {
-                $eq: documentId,
+    const wanted = String(selectedId);
+
+    const directQuery = qs.stringify(
+        {
+            status: "published",
+            populate,
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const directRes = await fetchData(`${endpoint}/${wanted}`, directQuery);
+
+    if (directRes?.data) return directRes.data;
+
+    const documentIdQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                documentId: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
             },
         },
-        populate,
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
-    const res = await fetchData(endpoint, query);
-    return res?.data?.[0] || null;
+    const documentIdRes = await fetchData(endpoint, documentIdQuery);
+
+    if (documentIdRes?.data?.[0]) {
+        return documentIdRes.data[0];
+    }
+
+    const idQuery = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                id: {
+                    $eq: wanted,
+                },
+            },
+            populate,
+            pagination: {
+                pageSize: 1,
+            },
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const idRes = await fetchData(endpoint, idQuery);
+
+    return idRes?.data?.[0] || null;
+}
+
+async function getByDocumentId(endpoint, documentId, populate = {}) {
+    return getByAnyId(endpoint, documentId, populate);
 }
 
 async function findApiByNameAndCategory(name, categoryDocumentId) {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            name: {
-                $eqi: name,
-            },
-            product_category: {
-                documentId: {
-                    $eq: categoryDocumentId,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                name: {
+                    $eqi: name,
+                },
+                product_category: {
+                    documentId: {
+                        $eq: categoryDocumentId,
+                    },
                 },
             },
+            populate: {
+                product_category: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
         },
-        populate: {
-            product_category: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData("apis", query);
     return res?.data?.[0] || null;
 }
 
 async function findSaeByNameAndApi(name, apiDocumentId) {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            name: {
-                $eqi: name,
-            },
-            api: {
-                documentId: {
-                    $eq: apiDocumentId,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                name: {
+                    $eqi: name,
+                },
+                api: {
+                    documentId: {
+                        $eq: apiDocumentId,
+                    },
                 },
             },
+            populate: {
+                api: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
         },
-        populate: {
-            api: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData("sae-grades", query);
     return res?.data?.[0] || null;
@@ -315,71 +508,290 @@ async function findLeafByTitleAndSaeAndProduct({
     saeGradeId,
     productId,
 }) {
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            [field]: {
-                $eqi: title,
-            },
-            sae_grade: {
-                documentId: {
-                    $eq: saeGradeId,
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters: {
+                [field]: {
+                    $eqi: title,
+                },
+                sae_grade: {
+                    documentId: {
+                        $eq: saeGradeId,
+                    },
+                },
+                product: {
+                    documentId: {
+                        $eq: productId,
+                    },
                 },
             },
-            product: {
-                documentId: {
-                    $eq: productId,
-                },
+            populate: {
+                sae_grade: true,
+                product: true,
+            },
+            pagination: {
+                pageSize: 1,
             },
         },
-        populate: {
-            sae_grade: true,
-            product: true,
-        },
-        pagination: {
-            pageSize: 1,
-        },
-    });
+        {
+            encodeValuesOnly: true,
+        }
+    );
 
     const res = await fetchData(endpoint, query);
     return res?.data?.[0] || null;
 }
 
-async function getProductDosage(productId) {
-    if (!productId) return null;
+async function getProductDosage({ apiId = "", saeGradeId = "", productId }) {
+    if (!apiId || !saeGradeId || !productId) return null;
 
-    const query = qs.stringify({
-        status: "published",
-        filters: {
-            product: {
-                documentId: {
-                    $eq: productId,
-                },
+    /*
+        Important:
+        Do NOT use product.dosages[0].
+        Dosage has many-to-many relation with Product.
+
+        Correct Heavy Duty / HDDEO dosage depends on:
+        Product + API + SAE Grade
+    */
+    const product = await findHeavyDutyProductForSave(productId);
+    const productDocumentId = product?.documentId || productId;
+
+    const filters = {
+        products: {
+            documentId: {
+                $eq: productDocumentId,
             },
         },
-        fields: ["title"],
-        populate: {
-            product: true,
+    };
+
+    if (apiId) {
+        filters.sys_apis = {
+            documentId: {
+                $eq: apiId,
+            },
+        };
+    }
+
+    if (saeGradeId) {
+        filters.sys_sae_grades = {
+            documentId: {
+                $eq: saeGradeId,
+            },
+        };
+    }
+
+
+
+    const query = qs.stringify(
+        {
+            status: "published",
+            filters,
+            fields: ["dosage"],
+            populate: {
+                products: true,
+                sys_apis: true,
+                sys_sae_grades: true,
+            },
+            pagination: {
+                pageSize: 1,
+            },
+            sort: ["updatedAt:desc", "createdAt:desc"],
         },
-        pagination: {
-            pageSize: 1,
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+
+
+    const res = await fetchData("dosages", query);
+
+
+
+    return res?.data?.[0] || null;
+}
+
+async function getSaeGradeWithProducts(saeGradeId) {
+    if (!saeGradeId) return null;
+
+    return getByAnyId("sae-grades", saeGradeId, {
+        api: true,
+        products: {
+            populate: productPopulate,
         },
-        sort: ["createdAt:asc"],
+        aceas: true,
+        oems: true,
+    });
+}
+
+function getProductsFromSaeGradeRecord(saeGrade) {
+    return getRelationsByNames(saeGrade, ["products", "product"]);
+}
+
+function productHasSelectedSae(product, saeGradeId) {
+    if (!saeGradeId) return true;
+
+    const rels = getRelationsByNames(product, [
+        "sae_grades",
+        "sae_grade",
+        "saeGrades",
+        "saeGrade",
+    ]);
+
+    return rels.some((rel) => sameId(rel, saeGradeId));
+}
+
+async function loadAllHeavyDutyProducts() {
+    const category = await getStaticCategory();
+
+    const fromCategory = getRelationsByNames(category, ["products", "product"]).filter(
+        productBelongsToStaticCategory
+    );
+
+    if (fromCategory.length) {
+
+        return fromCategory;
+    }
+
+    const queries = [
+        {
+            label: "product_categories.slug",
+            query: qs.stringify(
+                {
+                    status: "published",
+                    filters: {
+                        product_categories: {
+                            slug: {
+                                $eq: STATIC_CATEGORY.slug,
+                            },
+                        },
+                    },
+                    fields: ["title", "slug"],
+                    populate: productPopulate,
+                    pagination: {
+                        pageSize: 1000,
+                    },
+                    sort: ["title:asc"],
+                },
+                {
+                    encodeValuesOnly: true,
+                }
+            ),
+        },
+        {
+            label: "product_category.slug",
+            query: qs.stringify(
+                {
+                    status: "published",
+                    filters: {
+                        product_category: {
+                            slug: {
+                                $eq: STATIC_CATEGORY.slug,
+                            },
+                        },
+                    },
+                    fields: ["title", "slug"],
+                    populate: productPopulate,
+                    pagination: {
+                        pageSize: 1000,
+                    },
+                    sort: ["title:asc"],
+                },
+                {
+                    encodeValuesOnly: true,
+                }
+            ),
+        },
+    ];
+
+    for (const item of queries) {
+        const res = await fetchData("products", item.query);
+        const rows = (res?.data || []).filter(productBelongsToStaticCategory);
+
+        console.log(`[heavy-duty all-products] source: ${item.label}`, rows.length);
+
+        if (rows.length) {
+            return rows;
+        }
+    }
+
+    const allQuery = qs.stringify(
+        {
+            status: "published",
+            fields: ["title", "slug"],
+            populate: productPopulate,
+            pagination: {
+                pageSize: 1000,
+            },
+            sort: ["title:asc"],
+        },
+        {
+            encodeValuesOnly: true,
+        }
+    );
+
+    const allRes = await fetchData("products", allQuery);
+    const allRows = allRes?.data || [];
+    const filtered = allRows.filter(productBelongsToStaticCategory);
+
+    console.log("[heavy-duty all-products] source: all-products JS filter", filtered.length);
+
+    return filtered;
+}
+
+
+async function findHeavyDutyProductForSave(productId) {
+    if (!productId) return null;
+
+
+    const allHeavyDutyProducts = await loadAllHeavyDutyProducts();
+
+    const fromList = allHeavyDutyProducts.find((product) => sameId(product, productId));
+
+    if (fromList) {
+        console.log("[heavy-duty save product] found from allHeavyDutyProducts:", getId(fromList));
+        return fromList;
+    }
+
+    const direct = await getByAnyId("products", productId, productPopulate);
+
+    if (direct && productBelongsToStaticCategory(direct)) {
+        console.log("[heavy-duty save product] found by direct lookup:", getId(direct));
+        return direct;
+    }
+
+    console.log("[heavy-duty save product] product not found for productId:", productId);
+    return null;
+}
+
+async function loadProductsForSelectedSaeGrade(saeGradeId) {
+    if (!saeGradeId) return [];
+
+    const saeGrade = await getSaeGradeWithProducts(saeGradeId);
+
+    const fromSaeGrade = getProductsFromSaeGradeRecord(saeGrade).filter((product) => {
+        return productBelongsToStaticCategory(product);
     });
 
-    const res = await fetchData("product-dosages", query);
-    return res?.data?.[0] || null;
+    if (fromSaeGrade.length) {
+        console.log("[heavy-duty products] source: saeGrade.products", fromSaeGrade.length);
+        return fromSaeGrade;
+    }
+
+    const allHeavyDutyProducts = await loadAllHeavyDutyProducts();
+
+    const filtered = allHeavyDutyProducts.filter((product) => productHasSelectedSae(product, saeGradeId));
+
+    console.log("[heavy-duty products] source: all-heavy-duty filtered by sae", filtered.length);
+
+    return filtered;
 }
 
 async function getDeleteCheck(type, documentId) {
     if (type === "product") {
         const item = await getByDocumentId("products", documentId, {
-            product_categories: true,
-            api: true,
-            sae_grade: true,
-            product_dosages: {
-                fields: ["title"],
-            },
+            ...productPopulate,
             sys_aceas: {
                 fields: ["name"],
             },
@@ -525,10 +937,10 @@ export async function GET(req) {
         const documentId = searchParams.get("documentId");
 
         console.log("==================================================");
-        console.log("[GET] mode:", mode);
-        console.log("[GET] apiId:", apiId);
-        console.log("[GET] saeGradeId:", saeGradeId);
-        console.log("[GET] productId:", productId);
+        console.log("[heavy-duty GET] mode:", mode);
+        console.log("[heavy-duty GET] apiId:", apiId);
+        console.log("[heavy-duty GET] saeGradeId:", saeGradeId);
+        console.log("[heavy-duty GET] productId:", productId);
 
         if (mode === "delete-check") {
             if (!type || !documentId) {
@@ -544,28 +956,34 @@ export async function GET(req) {
             return okJson({
                 item: {
                     id: category?.id,
-                    documentId: category?.documentId,
-                    label: getField(category, "title"),
-                    slug: getField(category, "slug"),
+                    documentId: category?.documentId || category?.id,
+                    label: getField(category, "title") || STATIC_CATEGORY.title,
+                    slug: getField(category, "slug") || STATIC_CATEGORY.slug,
                 },
             });
         }
 
         if (mode === "dosage") {
-            if (!productId) {
+            if (!apiId || !saeGradeId || !productId) {
                 return okJson({
                     item: null,
                 });
             }
+            console.log("[heavy-duty GET dosage] fetching dosage for productId:", productId, "apiId:", apiId, "saeGradeId:", saeGradeId);
+            const dosage = await getProductDosage({
+                apiId,
+                saeGradeId,
+                productId,
+            });
 
-            const dosage = await getProductDosage(productId);
+            console.log("[heavy-duty GET dosage] found dosage:", dosage);
 
             return okJson({
                 item: dosage
                     ? {
                         id: dosage?.id,
-                        documentId: dosage?.documentId,
-                        title: getField(dosage, "title"),
+                        documentId: dosage?.documentId || dosage?.id,
+                        title: getField(dosage, "dosage") || getField(dosage, "title"),
                     }
                     : null,
             });
@@ -573,7 +991,7 @@ export async function GET(req) {
 
         if (mode === "allapis" || mode === "apis") {
             const category = await getStaticCategory();
-            const categoryDocumentId = category?.documentId;
+            const categoryDocumentId = category?.documentId || category?.id;
 
             if (!categoryDocumentId) {
                 return okJson({
@@ -581,24 +999,29 @@ export async function GET(req) {
                 });
             }
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    product_category: {
-                        documentId: {
-                            $eq: categoryDocumentId,
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    filters: {
+                        product_category: {
+                            documentId: {
+                                $eq: categoryDocumentId,
+                            },
                         },
                     },
+                    fields: ["name"],
+                    populate: {
+                        product_category: true,
+                    },
+                    pagination: {
+                        pageSize: 500,
+                    },
+                    sort: ["name:asc"],
                 },
-                fields: ["name"],
-                populate: {
-                    product_category: true,
-                },
-                pagination: {
-                    pageSize: 500,
-                },
-                sort: ["name:asc"],
-            });
+                {
+                    encodeValuesOnly: true,
+                }
+            );
 
             const res = await fetchData("apis", query);
             const items = res?.data || [];
@@ -618,24 +1041,29 @@ export async function GET(req) {
                 });
             }
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    api: {
-                        documentId: {
-                            $eq: apiId,
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    filters: {
+                        api: {
+                            documentId: {
+                                $eq: apiId,
+                            },
                         },
                     },
+                    fields: ["name"],
+                    populate: {
+                        api: true,
+                    },
+                    pagination: {
+                        pageSize: 500,
+                    },
+                    sort: ["name:asc"],
                 },
-                fields: ["name"],
-                populate: {
-                    api: true,
-                },
-                pagination: {
-                    pageSize: 500,
-                },
-                sort: ["name:asc"],
-            });
+                {
+                    encodeValuesOnly: true,
+                }
+            );
 
             const res = await fetchData("sae-grades", query);
             const items = res?.data || [];
@@ -655,77 +1083,18 @@ export async function GET(req) {
                 });
             }
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    product_categories: {
-                        slug: {
-                            $eq: STATIC_CATEGORY.slug,
-                        },
-                    },
-                    sae_grade: {
-                        documentId: {
-                            $eq: saeGradeId,
-                        },
-                    },
-                },
-                fields: ["title", "slug"],
-                populate: {
-                    product_categories: true,
-                    sae_grade: true,
-                    api: true,
-                    product_dosages: true,
-                },
-                pagination: {
-                    pageSize: 1000,
-                },
-                sort: ["title:asc"],
-            });
-
-            const res = await fetchData("products", query);
+            const products = await loadProductsForSelectedSaeGrade(saeGradeId);
 
             return okJson({
-                items: mapProductItems((res?.data || []).filter(productBelongsToStaticCategory)),
+                items: mapProductItems(products),
             });
         }
 
         if (mode === "all-products") {
-            if (!saeGradeId) {
-                return okJson({
-                    items: [],
-                });
-            }
-
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    product_categories: {
-                        slug: {
-                            $eq: STATIC_CATEGORY.slug,
-                        },
-                    },
-                },
-                fields: ["title", "slug"],
-                populate: {
-                    product_categories: true,
-                    sae_grade: true,
-                    api: true,
-                    product_dosages: true,
-                },
-                pagination: {
-                    pageSize: 1000,
-                },
-                sort: ["title:asc"],
-            });
-
-            const res = await fetchData("products", query);
-
-            const items = (res?.data || [])
-                .filter(productBelongsToStaticCategory)
-            // .filter((product) => !productHasAnySaeGrade(product));
+            const allProducts = await loadAllHeavyDutyProducts();
 
             return okJson({
-                items: mapProductItems(items),
+                items: mapProductItems(allProducts),
             });
         }
 
@@ -749,30 +1118,35 @@ export async function GET(req) {
             const isAll = mode.startsWith("all-");
             const cfg = TYPE_CONFIG[normalizedType];
 
-            const query = qs.stringify({
-                status: "published",
-                filters: {
-                    sae_grade: {
-                        documentId: {
-                            $eq: saeGradeId,
+            const query = qs.stringify(
+                {
+                    status: "published",
+                    filters: {
+                        sae_grade: {
+                            documentId: {
+                                $eq: saeGradeId,
+                            },
+                        },
+                        product: {
+                            documentId: {
+                                $eq: productId,
+                            },
                         },
                     },
-                    product: {
-                        documentId: {
-                            $eq: productId,
-                        },
+                    fields: [cfg.field],
+                    populate: {
+                        sae_grade: true,
+                        product: true,
                     },
+                    pagination: {
+                        pageSize: 500,
+                    },
+                    sort: [`${cfg.field}:asc`],
                 },
-                fields: [cfg.field],
-                populate: {
-                    sae_grade: true,
-                    product: true,
-                },
-                pagination: {
-                    pageSize: 500,
-                },
-                sort: [`${cfg.field}:asc`],
-            });
+                {
+                    encodeValuesOnly: true,
+                }
+            );
 
             const res = await fetchData(cfg.endpoint, query);
             const items = res?.data || [];
@@ -786,7 +1160,7 @@ export async function GET(req) {
 
         return errorJson("Invalid mode", 400);
     } catch (err) {
-        console.log("[GET ERROR]", err);
+        console.log("[heavy-duty GET ERROR]", err);
         return errorJson(err.message || "Server error", 500);
     }
 }
@@ -805,7 +1179,7 @@ export async function POST(req) {
         } = body;
 
         console.log("==================================================");
-        console.log("[POST] body:", body);
+        console.log("[heavy-duty POST] body:", body);
 
         if (!type) {
             return errorJson("type is missing", 400);
@@ -816,75 +1190,118 @@ export async function POST(req) {
         }
 
         if (type === "dosage") {
-            if (!productId) {
-                return errorJson("productId is missing", 400);
+            if (!apiId || !saeGradeId || !productId) {
+                return errorJson("apiId, saeGradeId or productId is missing", 400);
             }
 
             if (!title?.trim()) {
-                return errorJson("Dosage title is missing", 400);
+                return errorJson("Dosage value is missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                product_dosages: true,
-            });
+            /*
+                Important:
+                Do not use direct getByDocumentId here.
+                The selected product came from Add Product dropdown, so use the same
+                reliable Heavy Duty product source.
+            */
+            const product = await findHeavyDutyProductForSave(productId);
 
             if (!product) {
-                return errorJson("Product not found", 404);
+                return errorJson(
+                    "Product not found. Dosage save could not verify selected Heavy Duty product.",
+                    404
+                );
             }
 
-            if (!productBelongsToStaticCategory(product)) {
-                return errorJson("Product does not belong to Heavy Duty /HDDEO category", 400);
-            }
+            const productDocumentId = product?.documentId || productId;
 
-            let existingDosage = null;
+            const dosagePayload = {
+                dosage: title.trim(),
+                products: [productDocumentId],
+                ...(apiId ? { sys_apis: [apiId] } : {}),
+                ...(saeGradeId ? { sys_sae_grades: [saeGradeId] } : {}),
+            };
 
-            if (dosageId) {
-                existingDosage = await getByDocumentId("product-dosages", dosageId, {
-                    product: true,
+            // console.log("[heavy-duty POST dosage] dosagePayload:", dosagePayload);
+
+
+            /*
+                Important:
+                First search existing dosage by relation combination:
+                API + SAE Grade + Product
+
+                This prevents creating a new Dosage row every time the user edits
+                the same Heavy Duty dosage value. dosageId is only a fallback.
+            */
+            let existingDosage = await getProductDosage({
+                apiId,
+                saeGradeId,
+                productId: productDocumentId,
+            });
+
+            if (!existingDosage && dosageId) {
+                existingDosage = await getByAnyId("dosages", dosageId, {
+                    products: true,
+                    sys_apis: true,
+                    sys_sae_grades: true,
                 });
             }
 
-            if (!existingDosage) {
-                existingDosage = await getProductDosage(productId);
-            }
+            if (existingDosage?.documentId || existingDosage?.id) {
+                const dosageDocumentId = existingDosage.documentId || existingDosage.id;
 
-            if (existingDosage?.documentId) {
-                const updated = await strapiPut(`product-dosages/${existingDosage.documentId}?status=published`, {
-                    data: {
-                        title: title.trim(),
-                        product: productId,
-                    },
-                });
+                const updated = await strapiPut(
+                    `dosages/${dosageDocumentId}?status=published`,
+                    {
+                        data: dosagePayload,
+                    }
+                );
 
                 if (!updated.ok) {
                     return errorJson("Failed to update Dosage", updated.status, updated.data);
                 }
 
+                const updatedItem = updated.data?.data || null;
+
                 return okJson({
-                    item: updated.data?.data || null,
+                    item: updatedItem
+                        ? {
+                            id: updatedItem?.id,
+                            documentId: updatedItem?.documentId || updatedItem?.id,
+                            title: getField(updatedItem, "dosage") || title.trim(),
+                        }
+                        : {
+                            id: dosageDocumentId,
+                            documentId: dosageDocumentId,
+                            title: title.trim(),
+                        },
                 });
             }
 
-            const created = await strapiPost("product-dosages?status=published", {
-                data: {
-                    title: title.trim(),
-                    product: productId,
-                },
+            const created = await strapiPost("dosages?status=published", {
+                data: dosagePayload,
             });
 
             if (!created.ok) {
                 return errorJson("Failed to create Dosage", created.status, created.data);
             }
 
+            const createdItem = created.data?.data || null;
+
             return okJson({
-                item: created.data?.data || null,
+                item: createdItem
+                    ? {
+                        id: createdItem?.id,
+                        documentId: createdItem?.documentId || createdItem?.id,
+                        title: getField(createdItem, "dosage") || title.trim(),
+                    }
+                    : null,
             });
         }
 
         if (type === "api") {
             const category = await getStaticCategory();
-            const categoryDocumentId = category?.documentId;
+            const categoryDocumentId = category?.documentId || category?.id;
 
             if (!categoryDocumentId) {
                 return errorJson("Product category not found", 404);
@@ -940,29 +1357,35 @@ export async function POST(req) {
                 return errorJson("apiId, saeGradeId or productId missing", 400);
             }
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                sae_grade: true,
-                api: true,
-            });
+            const product = await findHeavyDutyProductForSave(productId);
 
             if (!product) {
-                return errorJson("Product not found in published Heavy Duty /HDDEO category", 404);
+                return errorJson(
+                    "Product not found in Heavy Duty /HDDEO category. Product is visible in dropdown but save lookup failed. Check product_categories relation and published status.",
+                    404
+                );
             }
 
-            if (!productBelongsToStaticCategory(product)) {
-                return errorJson("Product does not belong to Heavy Duty /HDDEO category", 400);
-            }
+            const productDocumentId = product?.documentId || productId;
 
-            /* if (productHasAnySaeGrade(product)) {
-                 return errorJson("Product already has SAE Grade", 409);
-             }*/
+            const existingSaeGradeIds = getRelationsByNames(product, [
+                "sae_grades",
+                "sae_grade",
+                "saeGrades",
+                "saeGrade",
+            ])
+                .map((item) => item?.documentId || item?.id)
+                .filter(Boolean)
+                .map(String);
 
+            const nextSaeGradeIds = Array.from(
+                new Set([...existingSaeGradeIds, String(saeGradeId)])
+            );
 
-            const updated = await strapiPut(`products/${productId}?status=published`, {
+            const updated = await strapiPut(`products/${productDocumentId}?status=published`, {
                 data: {
                     api: apiId,
-                    sae_grade: saeGradeId,
+                    sae_grades: nextSaeGradeIds,
                 },
             });
 
@@ -975,7 +1398,7 @@ export async function POST(req) {
             }
 
             return okJson({
-                item: updated.data?.data || null,
+                item: updated.data?.data || product,
             });
         }
 
@@ -986,23 +1409,19 @@ export async function POST(req) {
 
             const cfg = TYPE_CONFIG[type];
 
-            const product = await getByDocumentId("products", productId, {
-                product_categories: true,
-                sae_grade: true,
-            });
+            const product = await findHeavyDutyProductForSave(productId);
 
             if (!product) {
                 return errorJson("Product not found", 404);
             }
 
+            const productDocumentId = product?.documentId || productId;
+
             if (!productBelongsToStaticCategory(product)) {
                 return errorJson("Product does not belong to Heavy Duty /HDDEO category", 400);
             }
 
-            const productSae = getRelationObject(product, "sae_grade");
-            const productSaeDocumentId = productSae?.documentId || productSae?.id;
-
-            if (String(productSaeDocumentId) !== String(saeGradeId)) {
+            if (!productHasSelectedSae(product, saeGradeId)) {
                 return errorJson("Selected product is not connected with selected SAE Grade", 400);
             }
 
@@ -1025,7 +1444,7 @@ export async function POST(req) {
                 data: {
                     [cfg.field]: title,
                     sae_grade: saeGradeId,
-                    product: productId,
+                    product: productDocumentId,
                 },
             });
 
@@ -1040,7 +1459,7 @@ export async function POST(req) {
 
         return errorJson("Invalid type", 400);
     } catch (err) {
-        console.log("[POST ERROR]", err);
+        console.log("[heavy-duty POST ERROR]", err);
         return errorJson(err.message || "Server error", 500);
     }
 }
@@ -1048,7 +1467,6 @@ export async function POST(req) {
 export async function DELETE(req) {
     try {
         const body = await req.json();
-
         const { type, documentId } = body;
 
         if (!type || !documentId) {
@@ -1066,10 +1484,13 @@ export async function DELETE(req) {
         }
 
         if (type === "product") {
-            const updated = await strapiPut(`products/${documentId}?status=published`, {
+            const product = await getByAnyId("products", documentId, productPopulate);
+            const productDocumentId = product?.documentId || documentId;
+
+            const updated = await strapiPut(`products/${productDocumentId}?status=published`, {
                 data: {
                     api: null,
-                    sae_grade: null,
+                    sae_grades: [],
                 },
             });
 
@@ -1098,7 +1519,7 @@ export async function DELETE(req) {
             item: deleted.data?.data || null,
         });
     } catch (err) {
-        console.log("[DELETE ERROR]", err);
+        console.log("[heavy-duty DELETE ERROR]", err);
         return errorJson(err.message || "Server error", 500);
     }
 }
