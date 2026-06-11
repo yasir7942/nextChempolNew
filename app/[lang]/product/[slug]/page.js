@@ -372,88 +372,80 @@ const SingleProductPage = async (props) => {
                   </div>
 
                 </div>
+
+
                 {/* Dosage Table section */}
 
                 {Array.isArray(productData?.data?.[0]?.Dosage) &&
                   productData.data[0].Dosage.length > 0 && (
-                    <div className="font-light text-[var(--primary)] text-base mt-5 md:pl-8 w-full md:pr-2 ">
+                    <div className="font-light text-[var(--primary)] text-base mt-5 md:pl-8 w-full md:pr-2">
                       <div className="mt-4">
                         <div className="text-xl font-semibold py-2 uppercase">
                           {dictionary.productPage.dosage}
                         </div>
 
                         {(() => {
-                          const rows = productData.data[0].Dosage;
+                          const rows = productData.data[0].Dosage || [];
 
-                          // Turn a Strapi row into an array of up to 7 cells in order
-                          const toCells = (r = {}) => [
-                            r?.performance ?? "",
-                            r?.Sae ?? "",
-                            r?.dosage ?? "",
-
+                          const columns = [
+                            {
+                              key: "performance",
+                              label: "Performance Level",
+                            },
+                            {
+                              key: "Sae",
+                              label: "Viscosity Grade",
+                            },
+                            {
+                              key: "dosage",
+                              label: "Dosage (m%)",
+                            },
                           ];
 
-                          // Trim trailing empty cells ("" / null / undefined)
-                          const trimTrailing = (arr) => {
-                            let end = arr.length - 1;
-                            while (
-                              end >= 0 &&
-                              (arr[end] === null ||
-                                arr[end] === undefined ||
-                                String(arr[end]).trim() === "")
-                            ) {
-                              end--;
-                            }
-                            return arr.slice(0, end + 1);
+                          const hasValue = (value) => {
+                            return (
+                              value !== null &&
+                              value !== undefined &&
+                              String(value).trim() !== ""
+                            );
                           };
 
-                          // Header from first row
-                          const headerAll = toCells(rows[0]);
-                          const header = trimTrailing(headerAll);
-                          const colCount = Math.min(7, header.length || 0);
+                          // Keep only columns where at least one row has value
+                          const visibleColumns = columns.filter((col) =>
+                            rows.some((row) => hasValue(row?.[col.key]))
+                          );
 
-                          // If first row is completely empty, don't render table
-                          if (colCount === 0) return null;
-
-                          const body = rows.slice(1);
+                          // If all columns are empty, do not render table
+                          if (visibleColumns.length === 0) return null;
 
                           return (
                             <table className="w-full lg:w-[100%] xl:w-[100%] 2xl:w-[100%] text-left border-collapse border-black rtl:text-right">
                               <thead>
-                                <tr className="bg-[var(--primary)] text-white ">
-
-                                  <th className="p-2 font-normal border capitalize">
-                                    Performance level SAE
-                                  </th>
-                                  <th className="p-2 font-normal border capitalize">
-                                    Viscosity Grade
-                                  </th>
-                                  <th className="p-2 font-normal border capitalize">
-                                    Dosage (m%)
-                                  </th>
-
+                                <tr className="bg-[var(--primary)] text-white">
+                                  {visibleColumns.map((col) => (
+                                    <th
+                                      key={col.key}
+                                      className="p-2 font-normal border capitalize"
+                                    >
+                                      {col.label}
+                                    </th>
+                                  ))}
                                 </tr>
                               </thead>
 
                               <tbody>
-                                {body.map((row, rIdx) => {
-                                  const cells = toCells(row).slice(0, colCount);
-                                  // pad to match header length
-                                  while (cells.length < colCount) cells.push("");
-
-                                  return (
-                                    <tr
-                                      key={rIdx}
-                                      className={rIdx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                                    >
-                                      {cells.map((c, cIdx) => (
-                                        <td key={cIdx} className="p-2 border text-black">
-                                          {c}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  );
-                                })}
+                                {rows.map((row, rIdx) => (
+                                  <tr
+                                    key={rIdx}
+                                    className={rIdx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                                  >
+                                    {visibleColumns.map((col) => (
+                                      <td key={col.key} className="p-2 border text-black">
+                                        {hasValue(row?.[col.key]) ? row[col.key] : ""}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
                               </tbody>
                             </table>
                           );
