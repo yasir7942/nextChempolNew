@@ -60,7 +60,8 @@ function Slider({ locale, diction }) {
               src={locale === 'ar' ? "/images/banner-1-ar.jpg" : "/images/banner-1.jpg"}
               alt="Our Viscosity Index Improvers"
               fill
-              quality={100}
+              quality={75}
+              sizes="100vw"
               className="z-0 object-cover object-center bg-cover bg-center"
             />
             <div className="flex w-full z-10  justify-start pl-16 items-start    text-4xl font-bold ">
@@ -84,7 +85,8 @@ function Slider({ locale, diction }) {
               src="/images/banner-2.jpg"
               alt="Best Chemical Speciality Providers"
               fill
-              quality={100}
+              quality={75}
+              sizes="100vw"
               className="z-0 object-cover object-center bg-cover bg-center"
             />
             <div className="flex flex-col w-full z-10 justify-center items-center text-4xl font-bold">

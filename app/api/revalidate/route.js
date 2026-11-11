@@ -5,7 +5,7 @@ import path from "path";
 import { NextResponse, after } from "next/server";
 import { flattenAttributes } from "@/libs/data-utils";
 import { syncRedirects } from "@/libs/redirects/sync";
-import { revalidateBoth, revalidateLocales, revalidateSite, revalidateVideoPages } from "@/libs/revalidate-pages";
+import { revalidateBoth, revalidateLocales, revalidateProductSearch, revalidateSite, revalidateVideoPages } from "@/libs/revalidate-pages";
 
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_ADMIN_BASE_URL + ""; // direct strapi api call
 const VALID_TOKEN = process.env.ADMIN_TOKEN;
@@ -159,6 +159,7 @@ async function revalidate(req, model, slug) {
         if (SITE_WIDE_MODELS.includes(model)) {
             // header menu / footer content is on every page
             revalidateSite();
+            revalidateProductSearch(); // category titles are searchable
         }
         else if (model == 'post') {
             console.log("revalidate post");
@@ -167,6 +168,7 @@ async function revalidate(req, model, slug) {
             if (slug) revalidateLocales(`blog/${slug}`);
         }
         else if (model == 'product') {
+            revalidateProductSearch(); // search bar and search page
             for (const loc of locales) {
                 if (slug) revalidateBoth(`/${loc}/product/${slug}/`);
                 let categorySlug = slug ? await getProductCategoryBySlug(loc, slug) : null;

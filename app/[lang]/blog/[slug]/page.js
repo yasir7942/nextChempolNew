@@ -91,7 +91,10 @@ const SingleBlogPage = async props => {
 
 
   const postData = await cachedGeSinglePost(lang, params.slug);
-  const faq = postData.data[0]?.faq ? postData.data[0]?.faq : [];
+  // Only entries with both a question and an answer; with none left, the FAQ section and the FAQ schema are left out
+  const faq = (Array.isArray(postData.data[0]?.faq) ? postData.data[0].faq : []).filter(
+    (item) => String(item?.question ?? "").trim() && String(item?.answer ?? "").trim()
+  );
 
 
 
@@ -168,7 +171,7 @@ const SingleBlogPage = async props => {
 
 
 
-          {!!faq?.length && <SingleTab heading={dictionary.navigation.faq} faqList={faq} />}
+          {!!faq?.length && <SingleTab heading={dictionary.navigation.faq} faqList={faq} defaultOpen />}
 
 
         </div>

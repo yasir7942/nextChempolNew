@@ -10,7 +10,7 @@ export const ADMIN_PAGES = [
     href: "/admin/product-report/",
     title: "Product Report",
     description:
-      "Product category placement, empty categories, missing category media and uncategorized products.",
+      "Product category placement, empty categories and uncategorized products.",
     Icon: FileBarChart2,
   },
   {

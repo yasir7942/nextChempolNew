@@ -1,129 +1,88 @@
+// Contact form (app/[lang]/components/elements/contact-form.js) → email to info@chempol.co.uk
+//
+// Checks, in order:
+// 1. the request comes from a page of this site (Origin header)
+// 2. honeypot: a hidden field only bots fill in; those requests get a fake success
+// 3. required fields, length limits, email format, no URLs or spam words
+// 4. rate limit per visitor IP
+// 5. Google reCAPTCHA, issued for this site's hostname
+// Errors return a `code` the form turns into a translated message; details stay in the server log.
+// The checks themselves are in libs/form-security.js (shared with app/api/inquiry).
 
 import { EmailTemplate } from "@/app/[lang]/components/elements/email-template";
-import fetch from "node-fetch";
+import { Resend } from "resend";
+import { isRateLimited, isSameSite, reply, singleLine, verifyCaptcha, visitorIp } from "@/libs/form-security";
 
-import { Resend } from 'resend';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const MAX_LENGTH = { fullName: 100, phoneNumber: 30, email: 254, country: 100, message: 5000 };
+
+const urlPattern = /https?:\/\/[^\s]+|www\.[^\s]+|href\s*=\s*["'][^\s]+["']/i;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const spamWords = ['crypto', 'win prize', 'free money', 'investment', 'click here', 'grils', 'girl', 'https', 'http', 'href'];
+
 export async function POST(request) {
-
-    console.log("Request..................")
-    // console.log(request)
-
-    // Check for API key in headers
-    const apiKey = request.headers.get('Authorization') + '7JtBCBL777KkUJp';
-
-    if (apiKey !== `Bearer ${process.env.CONTACT_API_KEY}`) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    if (!isSameSite(request)) {
+        console.warn("Contact form: blocked, not sent from this site. Origin:", request.headers.get("origin"));
+        return reply(403, "forbidden");
     }
 
-    console.log("........Pass Auth local.................")
-    const { fullName, phoneNumber, email, country, message, isCaptchaCode } = await request.json();
-
-
-
-    // Validate input data
-    if (!fullName || !phoneNumber || !email || !country || !message || !isCaptchaCode) {
-        return new Response(JSON.stringify({ error: 'Invalid input or Missing Values' }), { status: 400 });
+    let data;
+    try {
+        data = await request.json();
+    } catch {
+        return reply(400, "invalid");
     }
 
-    console.log("........Pass data Empty Data validation................")
-
-
-    // Regular expression to detect URLs
-    const urlPattern = /https?:\/\/[^\s]+|www\.[^\s]+|href\s*=\s*["'][^\s]+["']/i;
-
-    // Regular expression to validate email addresses
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    // Function to validate email addresses
-    const isValidEmail = email => emailPattern.test(email);
-
-
-    // Function to check for URLs
-    const containsUrl = message => urlPattern.test(message);
-
-    // List of spammy or unwanted words
-    const spamWords = ['crypto', 'win prize', 'free money', 'investment', 'click here', 'grils', 'girl', 'https', 'http', 'href'];
-
-    // Function to check for spammy words
-    const containsSpam = message => spamWords.some(word => message.toLowerCase().includes(word.toLowerCase()));
-
-    if (!isValidEmail(email)) {  // Check if the email is valid
-        return new Response(JSON.stringify({ error: 'Invalid email address.' }), { status: 400 });
+    // Honeypot filled in: a bot. Pretend it worked so it does not try again.
+    if (data?.website) {
+        console.warn("Contact form: honeypot filled, dropped");
+        return reply(200, "sent");
     }
 
+    const fullName = singleLine(data?.fullName);
+    const phoneNumber = singleLine(data?.phoneNumber);
+    const email = singleLine(data?.email);
+    const country = singleLine(data?.country);
+    const message = String(data?.message ?? "").trim();
+    const captchaToken = String(data?.isCaptchaCode ?? "");
 
-    console.log("........Pass Email validation................")
+    const fields = { fullName, phoneNumber, email, country, message };
+    if (Object.values(fields).some((value) => !value)) return reply(400, "invalid", "Please fill in every field.");
+    if (Object.entries(MAX_LENGTH).some(([field, max]) => fields[field].length > max)) return reply(400, "too_long");
+    if (!emailPattern.test(email)) return reply(400, "invalid_email");
+    if (urlPattern.test(message)) return reply(400, "url");
+    if (spamWords.some((word) => message.toLowerCase().includes(word))) return reply(400, "spam");
+    if (!captchaToken) return reply(400, "captcha");
 
-    if (containsUrl(message)) {  // Check if the message contains a URL
-        console.log("Message contains a URL, which is not allowed");
-        return new Response(JSON.stringify({ error: 'Message contains a URL, which is not allowed.' }), { status: 400 });
+    const ip = visitorIp(request);
+    if (isRateLimited(ip)) {
+        console.warn("Contact form: rate limit reached for", ip);
+        return reply(429, "rate_limit");
     }
-
-    console.log("........Pass Message URL validation................")
-
-    if (containsSpam(message)) {  // Check if the message contains spammy words
-        console.log("Message contains spammy or unwanted words.");
-        return new Response(JSON.stringify({ error: 'Message contains spammy or unwanted words.' }), { status: 400 });
-    }
-
-    console.log("........Pass Message SPAM WORD validation................")
-
-
 
     try {
+        if (!(await verifyCaptcha(captchaToken, ip))) return reply(400, "captcha");
 
-        //Captcha validation
-        const response = await fetch(
-            `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${isCaptchaCode}`,
-            {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
-                },
-                method: "POST",
-            }
-        );
-        const captchaValidation = await response.json();
+        const { error } = await resend.emails.send({
+            from: "Chempol Site <website@chempol.co.uk>",
+            to: ["info@chempol.co.uk"],
+            replyTo: email,
+            subject: `Chempol Contact Form - ${fullName}`,
+            react: EmailTemplate({ name: fullName, phone: phoneNumber, mail: email, contry: country, msg: message }),
+        });
 
-
-
-        if (captchaValidation.success && process.env.NEXT_PUBLIC_SITE == captchaValidation.hostname) {
-
-
-            console.log("........Pass MGoogle Captcha validation................")
-
-
-            const { data, error } = await resend.emails.send({
-                from: 'Chempol Site <website@chempol.co.uk>',
-                to: ['info@chempol.co.uk'],
-                subject: 'Chempol Contact Form - ' + fullName,
-                react: EmailTemplate({
-                    name: fullName,
-                    phone: phoneNumber,
-                    mail: email,
-                    contry: country,
-                    msg: message
-                })
-            });
-
-            if (error) {
-                console.log("Send API Error");
-                return Response.json({ error }, { status: 500 });
-            }
-
-            return new Response(JSON.stringify({ message: 'Email sent successfully!' }), { status: 200 });
+        if (error) {
+            console.error("Contact form: Resend error", error);
+            return reply(500, "send_failed");
         }
 
-
-        return new Response(JSON.stringify({ message: 'Error In Google Captcha!' }), { status: 500 });
-
-
-
+        return reply(200, "sent", "Email sent successfully!");
     } catch (error) {
-        console.log("api error 2");
-        console.log(error);
-        return Response.json({ error }, { status: 500 });
+        console.error("Contact form: error", error);
+        return reply(500, "send_failed");
     }
 }

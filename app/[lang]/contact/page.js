@@ -96,7 +96,7 @@ const ContactUs = async ({ params }) => {
                     <div className="font-light text-textLightBlue text-base ">
                       {mailtoHref(contact.email) ? <a href={mailtoHref(contact.email)} >{contact.email?.trim()}  </a> : contact.email}
                       {" | "}
-                      {telHref(contact.phone) ? <a href={telHref(contact.phone)} >{contact.phone?.trim()}</a> : contact.phone}
+                      {telHref(contact.phone) ? <a href={telHref(contact.phone)} dir="ltr" className="inline-block">{contact.phone?.trim()}</a> : contact.phone}
                     </div>
                     <div className="font-light text-base  max-w-96">{contact.address}</div>
                     {mapHref(contact.mapUrl, contact.address) && (

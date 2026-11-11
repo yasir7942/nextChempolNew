@@ -45,6 +45,7 @@ const Footer = async ({ locale = "en" }) => {
                 src={locale === 'ar' ? "/images/chempol-ar.png" : "/images/chempol.png"}
                 width={350}
                 height={150}
+                sizes="256px"
                 alt="Chempol Additives and chemical specialty"
               />
 
@@ -94,7 +95,7 @@ const Footer = async ({ locale = "en" }) => {
           <div className="flex flex-col space-y-1   ">
             <div className="capitalize text-textBlue font-medium py-4 text-xl">{dictionary.footer.contactInfo}</div>
             <p className="text-base text-gray-300 font-light max-w-60">{dictionary.footer.contactDescription}</p>
-            <p className="text-base text-gray-300 font-light max-w-60 flex  items-center "><FaPhoneAlt className="text-textBlue mr-2 rtl:ml-2 text-right " /> <a href={telHref("+971-(06)-5264688")}>+971-(06)-5264688</a></p>
+            <p className="text-base text-gray-300 font-light max-w-60 flex  items-center "><FaPhoneAlt className="text-textBlue mr-2 rtl:ml-2 text-right " /> <a href={telHref("+971-(06)-5264688")} dir="ltr">+971-(06)-5264688</a></p>
             <p className="text-base text-gray-300 font-light max-w-60 flex  items-center transition duration-300 ease-in-out hover:underline  hover:text-textBlue">
               <MdEmail className="text-textBlue mr-2 rtl:ml-2 " /> <Link href="mailto:info@chempol.co.uk">info@chempol.co.uk</Link>
             </p>
@@ -131,7 +132,7 @@ const Footer = async ({ locale = "en" }) => {
       </PaddingContainer>
 
       <div className="w-full mt-10 pt-5 border-0 border-t-[1px] border-textBlue font-light text-sm  text-white   bg-[#2D2D2D] text-center">
-        {dictionary.footer.allCopyRights} <Link href={`/${locale}/`} className="text-textBlue text-base rtl:pr-2" >chempol.co.uk</Link>
+        © <a href={`https://chempol.co.uk/${locale}/`} title="Chempol" className="text-textBlue hover:underline">Chempol</a>. {dictionary.footer.allCopyRights}
       </div>
     </footer>
 

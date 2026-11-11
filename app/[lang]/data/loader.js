@@ -130,6 +130,32 @@ export async function getSearchPage(lang) {
   return searchPage
 }
 
+// Posts for the blog block of a product category page: the posts selected in the category first,
+// then the latest posts to fill up to `minimum`. With `minimum` or more selected, only the selected ones.
+export async function getCategoryPosts(lang, categorySlug, minimum = 4) {
+  const populate = ['seo', 'featureImage', 'seo.schema'];
+
+  const selectedQuery = qs.stringify({
+    locale: lang,
+    sort: 'PostDate:desc',
+    filters: { product_category: { slug: { $eq: categorySlug } } },
+    pagination: { page: 1, pageSize: 100 },
+    populate,
+  });
+  const selected = (await fetchData("posts", selectedQuery))?.data ?? [];
+  if (selected.length >= minimum) return { data: selected };
+
+  const latestQuery = qs.stringify({
+    locale: lang,
+    sort: 'PostDate:desc',
+    filters: selected.length ? { id: { $notIn: selected.map((post) => post.id) } } : undefined,
+    pagination: { page: 1, pageSize: minimum - selected.length },
+    populate,
+  });
+  const latest = (await fetchData("posts", latestQuery))?.data ?? [];
+  return { data: [...selected, ...latest] };
+}
+
 export async function getPostLimitedData(lang) {
 
   const blogBlockQuery = qs.stringify({
@@ -437,6 +463,8 @@ export async function getAllProductsSlug(lang = 'en') {
       {
         locale: lang,
         fields: ['slug', 'updatedAt'],
+        // a product without a category has no page (404), so keep it out of the sitemap
+        filters: { product_categories: { id: { $notNull: true } } },
         'pagination[page]': page,
         'pagination[pageSize]': pageSize,
       },
@@ -517,7 +545,7 @@ export async function getProductCategory(lang, slug) {
         $eq: slug,
       },
     },
-    populate: ['image', 'banner', 'banner.webBanner', 'banner.mobileBanner', 'seo', 'seo.schema', 'faq'],
+    populate: ['image', 'banner', 'banner.webBanner', 'banner.mobileBanner', 'seo', 'seo.schema', 'faq', 'CategoryTabel', 'CategoryTabel.product'],
 
   });
   return await fetchData("product-categories", blogBlockQuery);
@@ -586,7 +614,7 @@ export async function getReportProductCategoryList() {
   const blogBlockQuery = qs.stringify({
     locale: "en",
     sort: ['index'],
-    populate: ['image', 'banner', 'banner.webBanner', 'banner.mobileBanner', 'products', 'products.productImage', 'products.TDSFile', 'products.MSDSFile'],
+    populate: ['image', 'banner', 'banner.webBanner', 'banner.mobileBanner', 'products', 'products.productImage', 'products.TDSFile', 'products.MSDSFile', 'products.seo', 'products.faq', 'products.table'],
     pagination: {
       pageSize: 100,
       page: 1,
@@ -594,6 +622,43 @@ export async function getReportProductCategoryList() {
   });
 
   return await fetchDataOrNull("product-categories", blogBlockQuery);
+}
+
+
+// Number of posts linked to each product category: Map of category documentId -> count, or null when Strapi fails
+export async function getCategoryPostCounts() {
+  const query = qs.stringify({
+    locale: "en",
+    fields: ['slug'],
+    populate: { posts: { count: true } },
+    pagination: { pageSize: 100, page: 1 },
+  });
+
+  const response = await fetchDataOrNull("product-categories", query);
+  if (!response) return null;
+
+  return new Map((response.data || []).map((item) => [item.documentId, Number(item.posts?.count ?? 0)]));
+}
+
+
+// Every published product in one language, keyed by documentId (all translated fields), for the
+// translation status in the admin product report. Returns null when Strapi fails.
+export async function getProductsByLocaleForReport(locale) {
+  const byDocumentId = new Map();
+
+  for (let page = 1; ; page++) {
+    const query = qs.stringify({
+      locale,
+      populate: ['seo', 'faq', 'table'],
+      pagination: { pageSize: 100, page },
+    });
+
+    const response = await fetchDataOrNull("products", query);
+    if (!response) return null;
+
+    for (const entry of response.data || []) byDocumentId.set(entry.documentId, entry);
+    if (page >= (response.meta?.pagination?.pageCount || 1)) return byDocumentId;
+  }
 }
 
 
@@ -609,7 +674,7 @@ export async function getUncategorizedProducts() {
           $null: true,
         },
       },
-      populate: ['productImage', 'TDSFile', 'MSDSFile'],
+      populate: ['productImage', 'TDSFile', 'MSDSFile', 'seo', 'faq', 'table'],
       pagination: { pageSize: 100, page },
     });
 

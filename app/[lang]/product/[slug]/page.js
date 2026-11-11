@@ -10,11 +10,13 @@ import { cache } from 'react';
 import { buildBreadcrumbList, buildFaqPage, buildImageObject, buildProduct, pageUrl } from "@/libs/schema/entity";
 import { strapiProductRatings } from "@/libs/schema/strapi";
 import SEOSchema from "../../components/elements/seo-schema";
-import ProductCategoryMenuWrapper from "../../components/layout/ProductCategoryMenuWrapper";
 import Breadcrumbs from "../../components/elements/breadcrumbs";
 import { getDictionary } from "@/libs/getDictionary";
 import { i18n } from "@/i18n.config";
-import FAQs from "../../components/layout/Faqs";
+import { MdCheck, MdFileDownload, MdOutlineDescription, MdOutlineInventory2 } from "react-icons/md";
+import ProductInquiry from "../../components/elements/product-inquiry";
+import ProductQuoteBanner from "../../components/elements/product-quote-banner";
+import ProductSupportCard from "../../components/elements/product-support-card";
 
 
 
@@ -130,13 +132,26 @@ const SingleProductPage = async (props) => {
   const seoDescription = productData.data[0].seo?.seoDesctiption ? productData.data[0].seo?.seoDesctiption : firstDescriptionText;
   const category = productData.data[0].product_categories[0]?.title ? productData.data[0].product_categories[0]?.title : dictionary.navigation.productCategory;
   const categorySlug = productData.data[0].product_categories[0].slug ? productData.data[0].product_categories[0].slug : "#";
-  const faqs = productData.data[0].faq ? productData.data[0].faq : [];
+  // Only entries with both a question and an answer
+  const faqs = (Array.isArray(productData.data[0].faq) ? productData.data[0].faq : []).filter(
+    (item) => String(item?.question ?? "").trim() && String(item?.answer ?? "").trim()
+  );
 
 
 
 
 
 
+
+  const product = productData.data[0];
+  const hasShortDescription = Array.isArray(product.shortDescription) && product.shortDescription.length > 0;
+  const hasContent = Array.isArray(content) && content.length > 0;
+  const applications = String(product.application ?? "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const packing = String(product.tdsPacking ?? "").trim();
+  const documents = [
+    { file: product.TDSFile, label: dictionary.productPage.tds },
+    { file: product.MSDSFile, label: dictionary.productPage.msds },
+  ].filter(({ file }) => file?.url);
 
   const breadcrumbsData = [
     { title: dictionary.navigation.home, url: `/${lang}/` },
@@ -151,7 +166,6 @@ const SingleProductPage = async (props) => {
     breadcrumb, image and FAQ. Strapi seo.schema is used only for types missing here
     or failing validation.
   */
-  const product = productData.data[0];
   const productImageUrl = getImageUrl(product.productImage?.url);
 
   const schemaNodes = [
@@ -189,107 +203,74 @@ const SingleProductPage = async (props) => {
 
         <Breadcrumbs breadcrumbs={breadcrumbsData} />
 
-        <div className="w-full h-auto flex flex-col md:flex-row topPadding">
-          {/* Left Menu Column */}
-          <div className="w-full md:w-3/12 lg:w-[22%]   p-6 md:pl-0 overflow-hidden">
-            {/* Menu content goes here  */}
-            <ProductCategoryMenuWrapper locale={lang} dictionary={dictionary} />
+        {/* Hero: image, category, title, short description, quote / sample buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-[30fr_70fr] gap-8 lg:gap-12 items-start mt-6">
+          <div className="w-full rounded-md bg-[#EAF5FC] flex justify-center items-center p-5 md:p-6 aspect-square max-w-[300px] md:max-w-none">
+            {product.productImage?.url && (
+              <Image
+                priority
+                className="w-full h-full object-contain"
+                src={getImageUrl(product.productImage.url)}
+                height={1000}
+                width={1000}
+                quality={100}
+                alt={product.productImage.alternativeText || product.title || "Product"}
+              />
+            )}
           </div>
 
-          {/* Content Area */}
-          <div className="w-full md:w-9/12 justify-between lg:w-[78%]  flex flex-col  pb-3     ">
-            {/* Content area content goes here */}
-            {/*
-              One H1 for all screens. Mobile: title, image, text stacked.
-              Desktop: image in the left 2/6 column; title above the text in the right 4/6 column.
-            */}
-            <div className="grid grid-cols-1 md:grid-cols-6 md:grid-rows-[auto_1fr] w-full h-auto p-0 lg:p-8">
+          <div className="flex flex-col text-[#172B4D]">
+            <div className="text-sm md:text-base font-bold uppercase tracking-wide text-textBlue border-s-4 border-textBlue ps-2">
+              {category}
+            </div>
+            <h1 className="mt-3 font-bold text-[clamp(22px,2.2vw,32px)] text-[#082653] leading-[1.15]">{product.title}</h1>
 
-              <h1 className="capitalize font-semibold text-2xl pb-5 md:pb-0 md:col-start-3 md:col-span-4 md:row-start-1 text-[var(--primary)] ">
-                {productData.data[0].title}
-              </h1>
-
-
-
-              {/* image section */}
-              <div className="w-full md:col-span-2 md:col-start-1 md:row-start-1 md:row-span-2 items-center  ">
-                <div className="w-full flex flex-col justify-center  items-center text-center">
-                  {productData?.data?.[0]?.productImage?.url && (
-                    <Image
-                      priority
-                      className="relative w-[100%] h-auto text-center"
-                      src={getImageUrl(productData.data[0].productImage.url)}
-                      height={1000}
-                      width={1000}
-                      quality={100}
-                      alt={productData?.data?.[0]?.title || "Product"}
-                    />
-                  )}
-
-
-                </div>
+            {hasShortDescription && (
+              <div className="mt-4 font-light text-[17px] md:text-lg leading-relaxed rich-text">
+                <BodyDataParse content={product.shortDescription} />
               </div>
+            )}
 
+            {/* Get a Quote / Request a Product Sample: popup forms with this product pre-selected */}
+            <ProductInquiry
+              locale={lang}
+              dictionary={dictionary.inquiry}
+              product={{ slug: product.slug, title: product.title }}
+            />
+          </div>
+        </div>
 
-              {/* text section */}
-              <div className="w-full md:col-start-3 md:col-span-4 md:row-start-2 flex flex-col text-gray-800 ">
+        {/* Main content + sidebar. Mobile order: documents, main content, support card */}
+        <div className="grid grid-cols-1 lg:grid-cols-[62fr_38fr] lg:grid-rows-[auto_1fr] gap-8 lg:gap-x-10 mt-12 items-start">
+          <div className="order-2 lg:order-none lg:row-span-2 flex flex-col gap-10 min-w-0">
+            {hasContent && (
+              <section className="font-light text-[#172B4D] text-base leading-relaxed rich-text">
+                <h2 className="text-2xl font-semibold pb-3 text-[#082653]">{dictionary.productPage.overview}</h2>
+                <BodyDataParse content={content} />
+              </section>
+            )}
 
-
-                <div className="font-light text-black text-base mt-5 max-w-xl pr-5 md:pr-2 rich-text">
-                  <div className="text-xl font-semibold py-2 hidden">{dictionary.productPage.application}</div>
-                  {productData.data[0].application}
-                </div>
-
-
-                <div>
-                  {/* Check if either MSDSFile or TDSFile exists */}
-
-                  <div className=" flex flex-col w-full h-auto space-y-2 mt-5 pr-0 md:pr-5 lg:pr-16   ">
-
-                    {/* Check if TDSFile exists */}
-                    {productData.data[0].TDSFile?.url && (
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}${productData.data[0].TDSFile.url}`}
-                        target="_blank"
-                        rel="nofollow"
-                        className=" w-full md:w-3/4 2xl:w-3/6"
-                        download
-                      >
-                        <div className="py-3 bg-white text-black border-[3px] px-4 border-textLightBlue  flex  items-center  font-light text-left">
-                          <div>{dictionary.productPage.tds}
-                            <span className="text-gray-500 pl-3 rtl:pr-3">PDF</span></div>
-
-                        </div>
-                      </a>
-                    )}
-
-                    {/* Check if MSDSFile exists */}
-                    {productData.data[0].MSDSFile?.url && (
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}${productData.data[0].MSDSFile.url}`}
-                        target="_blank"
-                        rel="nofollow"
-                        className=" w-full md:w-3/4 2xl:w-3/6"
-                        download
-                      >
-                        <div className="py-3  bg-white text-black border-[3px] px-4 border-textLightBlue flex  items-center  font-light text-left">
-                          <div>{dictionary.productPage.msds} <span className="text-gray-500 pl-3 rtl:pr-3">PDF</span></div>
-
-                        </div>
-                      </a>
-                    )}
-                  </div>
-
-                </div>
-
+            {applications.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-semibold pb-3 text-[#082653]">{dictionary.productPage.whereToUse}</h2>
+                <ul className="flex flex-col gap-2">
+                  {applications.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-base text-[#172B4D] font-light">
+                      <MdCheck aria-hidden="true" className="mt-0.5 shrink-0 rounded-full bg-[#EAF5FC] p-0.5 text-2xl text-textBlue" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
                 {/* Dosage Table section */}
 
                 {Array.isArray(productData?.data?.[0]?.Dosage) &&
                   productData.data[0].Dosage.length > 0 && (
-                    <div className="font-light text-[var(--primary)] text-base mt-5 md:pl-8 w-full md:pr-2">
+                    <div className="font-light text-[var(--primary)] text-base mt-5 w-full ">
                       <div className="mt-4">
-                        <div className="text-xl font-semibold py-2 uppercase">
+                        <div className="text-2xl font-semibold pb-3 text-[#082653]">
                           {dictionary.productPage.dosage}
                         </div>
 
@@ -328,7 +309,7 @@ const SingleProductPage = async (props) => {
                           if (visibleColumns.length === 0) return null;
 
                           return (
-                            <table className="w-full lg:w-[100%] xl:w-[100%] 2xl:w-[100%] text-left border-collapse border-black rtl:text-right">
+                            <table className="w-full text-left border-collapse border-black rtl:text-right">
                               <thead>
                                 <tr className="bg-[var(--primary)] text-white">
                                   {visibleColumns.map((col) => (
@@ -365,25 +346,13 @@ const SingleProductPage = async (props) => {
 
                 {/* End Dosage Table section */}
 
-
-              </div>
-
-            </div>
-
-            <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full lg:w-[90%]     pr-5 md:pr-2 rich-text">
-              <div className="text-xl font-semibold py-2 uppercase text-[var(--primary)] ">{dictionary.productPage.description}</div>
-              <BodyDataParse content={content} />
-            </div>
-
-
-
             {/* Table of product  */}
             {Array.isArray(productData?.data?.[0]?.table) &&
               productData.data[0].table.length > 0 && (
-                <div className="font-light text-gray-800 text-base mt-5 md:pl-8 w-full md:pr-2">
+                <div className="font-light text-gray-800 text-base mt-5 w-full ">
                   <div className="mt-4">
-                    <div className="text-xl font-semibold py-2 text-[var(--primary)]">
-                      {dictionary.productPage.table}
+                    <div className="text-2xl font-semibold pb-3 text-[#082653]">
+                      {dictionary.productPage.keyProperties}
                     </div>
 
                     {(() => {
@@ -422,11 +391,11 @@ const SingleProductPage = async (props) => {
                       const body = rows.slice(1);
 
                       return (
-                        <table className="w-full lg:w-[90%] xl:w-[80%] 2xl:w-[80%] text-left border-collapse rtl:text-right">
+                        <div className="overflow-x-auto"><table className="w-full text-left border-collapse rtl:text-right text-sm">
                           <thead>
-                            <tr className="bg-[var(--primary)]">
+                            <tr className="bg-textBlue">
                               {header.map((h, i) => (
-                                <th key={i} className="p-2 font-normal border capitalize text-white">
+                                <th key={i} className="p-3 font-semibold border border-textBlue text-start text-white">
                                   {h}
                                 </th>
                               ))}
@@ -442,10 +411,10 @@ const SingleProductPage = async (props) => {
                               return (
                                 <tr
                                   key={rIdx}
-                                  className={rIdx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                                  className={rIdx % 2 === 0 ? "bg-white" : "bg-[#F5F8FC]"}
                                 >
                                   {cells.map((c, cIdx) => (
-                                    <td key={cIdx} className="p-2 border text-black">
+                                    <td key={cIdx} className="p-3 border border-[#CFDCE8] text-[#172B4D]">
                                       {c}
                                     </td>
                                   ))}
@@ -453,30 +422,98 @@ const SingleProductPage = async (props) => {
                               );
                             })}
                           </tbody>
-                        </table>
+                        </table></div>
                       );
                     })()}
                   </div>
                 </div>
               )}
             {/* End Table of product */}
+          </div>
 
-
-
-
-
-            {faqs && faqs.length > 0 && <div className="p-10"><FAQs faqList={faqs} heading={dictionary.navigation.faq} text="" page="product" />
-            </div>}
-
-
-
-            {/* Related Product section */}
-            <div className="w-full flex flex-col justify-center items-center text-gray-300 mt-5  ">
-              <GroupProducts productGroup={productGroup} locale={lang} />
+          {documents.length > 0 && (
+            <div className="order-1 lg:order-none rounded-md bg-[#EAF5FC] p-5 md:p-6">
+              <div className="flex items-center gap-3">
+                <MdOutlineDescription aria-hidden="true" className="text-3xl shrink-0 text-textBlue" />
+                <h2 className="text-xl font-semibold text-[#082653]">{dictionary.productPage.documents}</h2>
+              </div>
+              <ul className="mt-4 flex flex-col gap-3">
+                {documents.map(({ file, label }) => (
+                  <li key={label}>
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}${file.url}`}
+                      target="_blank"
+                      rel="nofollow"
+                      download
+                      aria-label={`${label} PDF - ${dictionary.productPage.download}`}
+                      className="flex items-center gap-3 min-h-[48px] bg-white border border-[#CFDCE8] rounded-md px-3 py-2 text-sm font-semibold text-[#082653] hover:bg-white/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-textBlue transition-colors"
+                    >
+                      <span aria-hidden="true" className="shrink-0 rounded-sm border border-red-400 px-1 text-[10px] font-bold text-red-500">PDF</span>
+                      <span className="flex-1 min-w-0">{label}</span>
+                      <span className="flex items-center gap-1 shrink-0 text-textBlue font-medium">
+                        <MdFileDownload aria-hidden="true" className="text-xl" />
+                        {dictionary.productPage.download}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
+          )}
+
+          <div className="order-3 lg:order-none">
+            <ProductSupportCard
+              locale={lang}
+              dictionary={dictionary.inquiry}
+              product={{ slug: product.slug, title: product.title }}
+              title={dictionary.productPage.supportTitle}
+              text={dictionary.productPage.supportText.replace("{product}", product.title)}
+            />
           </div>
         </div>
+
+        {packing && (
+          <section className="mt-14 -mx-4 md:-mx-6 lg:-mx-16 2xl:-mx-60 bg-[#EAF5FC] px-4 md:px-6 lg:px-16 2xl:px-60 py-10">
+            <h2 className="text-2xl font-semibold pb-4 text-[#082653]">{dictionary.productPage.packagingStorage}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-md p-5 md:p-6 flex gap-4">
+                <MdOutlineInventory2 aria-hidden="true" className="text-4xl shrink-0 text-textBlue" />
+                <div>
+                  <h3 className="text-xl font-semibold text-[#082653]">{dictionary.productPage.packaging}</h3>
+                  <p className="mt-1 text-base font-light text-[#172B4D] whitespace-pre-line">{packing}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {faqs.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-2xl font-semibold pb-4 text-[#082653]">{dictionary.productPage.faqTitle}</h2>
+            <div className="flex flex-col gap-3">
+              {faqs.map((item, idx) => (
+                <div key={item.id ?? idx} className="rounded-md border border-[#CFDCE8] bg-white p-4 md:p-5">
+                  <h3 className="text-lg font-bold text-[#082653]">{item.question}</h3>
+                  <p className="mt-1 text-base font-light text-[#172B4D] whitespace-pre-line">{item.answer}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Related Product section */}
+        <div className="w-full flex flex-col justify-center items-center text-gray-300 mt-5">
+          <GroupProducts productGroup={productGroup} locale={lang} />
+        </div>
       </PaddingContainer >
+      <ProductQuoteBanner
+        locale={lang}
+        dictionary={dictionary.inquiry}
+        product={{ slug: product.slug, title: product.title }}
+        title={dictionary.productPage.bannerTitle}
+        text={dictionary.productPage.bannerText}
+      />
+
     </div >
   );
 };

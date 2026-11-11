@@ -2,7 +2,8 @@ import PaddingContainer from "../components/layout/padding-container"
 
 
 import Image from "next/image";
-import { geProductsBySearchAdvance, getSearchPage } from "../data/loader";
+import { getSearchPage } from "../data/loader";
+import { searchProducts } from "@/libs/product-search";
 
 
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
@@ -57,23 +58,15 @@ const searchPage = async props => {
 
   const pageData = await cachedGetSearchPage(lang);
 
-  const query = searchParams?.s ?? "";
+  const query = String(searchParams?.s ?? "");
 
-  // product show by category
-
-  const productData = await geProductsBySearchAdvance(lang, query);
-
-
-
-
-  console.log("-----------------------search products --------------------------------------------------");
-  // console.dir(productData, { depth: null });
-  // console.log("---------------------------End--------p category---------------end-----------------------");
-  //console.log(productData.data);
-  // if(productData.data.length === 0)  return  <NotFound />
-
-  //console.dir(productData.data.title, { depth:null});
-  // console.log();
+  // matches every language, results in this page's language (libs/product-search.js)
+  const productData = query.trim().length >= 2
+    ? await searchProducts(lang, query, { limit: 60 }).catch((error) => {
+      console.error("Search page:", error.message);
+      return { data: [] };
+    })
+    : { data: [] };
 
   return (
     <div>
@@ -104,11 +97,15 @@ const searchPage = async props => {
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 mt-3    p-3  ">
 
-              {productData.data?.map((product) => (
-                <div key={product.id} className=" pt-0 mt-10 relative text-center flex flex-col  justify-center">
+              {query.trim().length >= 2 && productData.data.length === 0 && (
+                <p className="col-span-full mt-10 text-gray-700">{dictionary.topbar.noResults}</p>
+              )}
+
+              {productData.data.map((product) => (
+                <div key={product.documentId || product.id} className=" pt-0 mt-10 relative text-center flex flex-col  justify-center">
 
                   <div className="w-full      flex justify-center  ">
-                    <Link href={`/${lang}/product/${product.slug}/`} > <Image className="relative w-24 text-center" src={getImageUrl(product?.productImage.url)} height={500} width={500} alt={product.title} /> </Link>
+                    <Link href={`/${lang}/product/${product.slug}/`} > <Image className="relative w-24 text-center" src={getImageUrl(product?.productImage?.url)} height={500} width={500} alt={product?.productImage?.alternativeText || product.title} /> </Link>
                   </div>
                   <div className="flex flex-col w-full h-full " >
                     <h2 className="uppercase text-sm text-textBlue mt-3 leading-1"> <Link href={`/${lang}/product/${product.slug}/`}  >{product.title}</Link> </h2>

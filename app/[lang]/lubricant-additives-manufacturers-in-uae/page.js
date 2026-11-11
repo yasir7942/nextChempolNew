@@ -35,11 +35,13 @@ export async function generateMetadata(props) {
 
 
     const pageData = await cachedGetLubricantAddtives(locale);
+    const dictionary = await getDictionary(locale);
 
     const metadataParams = {
         pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : pageData?.title,
         pageSlug: "lubricant-additives-manufacturers-in-uae",
-        pageDescription: pageData.seo?.seoDesctiption,
+        // used when the Strapi SEO description is empty
+        pageDescription: dictionary.meta?.uaeDescription,
         seoTitle: pageData.seo?.seoTitle,
         seoDescription: pageData.seo?.seoDesctiption,
         rebotStatus: pageData.seo?.preventIndexing,
@@ -112,7 +114,9 @@ const Company = async ({ params }) => {
                             <div> <FaPhone className="text-white border-4 text-6xl rounded-full p-2 border-white rtl:ml-3 " /></div>
                             <div className="text-white pl-4 text-left flex flex-col items-left justify-start rtl:text-right ">
                                 <div className="font-light">{pageData.blockText1}</div>
-                                <div className="font-semibold text-textLightBlue rtl:text-right">+447548378089</div>
+                                <div className="font-semibold rtl:text-right">
+                                    <a href="tel:+447548378089" dir="ltr" className="text-white hover:underline">+447548378089</a>
+                                </div>
                             </div>
                         </div>
                         {/** end block */}
@@ -121,9 +125,11 @@ const Company = async ({ params }) => {
                         <div className="flex flex-row w-96 items-center rounded-md  p-5 mt-5 md:mt-0  justify-start bg-textBlue">
                             <div> <MdEmail className="text-white border-4 text-6xl rounded-full p-2 border-white  rtl:ml-3 " /></div>
                             <div className="text-white pl-4 text-left flex flex-col items-left justify-start rtl:text-right ">
-                                <div className="font-light">{pageData.blockText2}</div>
+                                <div className="font-light">
+                                    <a href="mailto:info@chempol.co.uk" className="hover:underline">{pageData.blockText2}</a>
+                                </div>
                                 <div className="font-semibold">
-                                    <a href="mailto:info@chempol.co.uk" className=" font-semibold text-textLightBlue hover:text-white hover-animation" >info@chempol.co.uk</a>
+                                    <a href="mailto:info@chempol.co.uk" className="font-semibold text-white hover:underline" >info@chempol.co.uk</a>
                                 </div>
                             </div>
                         </div>

@@ -3,6 +3,18 @@ import { useState } from 'react';
 import React from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 
+// Same limits as app/api/send/route.js
+const MAX_LENGTH = { fullName: 100, phoneNumber: 30, email: 254, country: 100, message: 5000 };
+
+// Error `code` from app/api/send → dictionary key of the message shown
+const ERROR_MESSAGES = {
+  captcha: 'captchaRequired',
+  rate_limit: 'tooManyRequests',
+  too_long: 'tooLong',
+  invalid_email: 'invalidEmail',
+  url: 'notice',
+};
+
 const ContactForm = ({ locale, dictionary }) => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -12,25 +24,26 @@ const ContactForm = ({ locale, dictionary }) => {
   const [status, setStatus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCaptchaCode, setIsCaptchaCode] = useState('');
-  const recaptchaRef = React.createRef();
+  const [website, setWebsite] = useState(''); // honeypot: hidden, only bots fill it in
+  const recaptchaRef = React.useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isCaptchaCode) {
+      setStatus(dictionary.contactPage.captchaRequired);
+      return;
+    }
+
     setIsSubmitting(true);
     setStatus('');
 
     try {
       const response = await fetch('/api/send', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_CONTACT_API_KEY}`,
-        },
-        body: JSON.stringify({ fullName, phoneNumber, email, country, message, isCaptchaCode }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, phoneNumber, email, country, message, isCaptchaCode, website }),
       });
-
-
-
 
       if (response.ok) {
         setStatus(dictionary.contactPage.sucessSend);
@@ -40,28 +53,35 @@ const ContactForm = ({ locale, dictionary }) => {
         setEmail('');
         setCountry('');
         setMessage('');
-        setIsCaptchaCode('');
-        recaptchaRef.current.reset(); // Reset the reCAPTCHA
       } else {
-        const result = await response.json();
-        setStatus(dictionary.contactPage.failSend);
+        const result = await response.json().catch(() => ({}));
+        setStatus(dictionary.contactPage[ERROR_MESSAGES[result.code]] || dictionary.contactPage.failSend);
       }
     } catch (error) {
       console.error(error);
-      //setStatus('Failed to send email: System Error Email Us');
+      setStatus(dictionary.contactPage.failSend);
     } finally {
+      // a reCAPTCHA answer works once: ask for a new one after every attempt
+      setIsCaptchaCode('');
+      recaptchaRef.current?.reset();
       setIsSubmitting(false);
     }
   };
 
+  // null when the answer expires
   const onReCAPTCHAChange = (captchaCode) => {
-    if (!captchaCode) return;
-    setIsCaptchaCode(captchaCode);
+    setIsCaptchaCode(captchaCode || '');
   };
 
   return (
     <div>
       <form onSubmit={handleSubmit}>
+        {/* honeypot: off screen and skipped by keyboard and screen readers, so only bots fill it in */}
+        <div aria-hidden="true" className="absolute -left-[9999px] w-px h-px overflow-hidden">
+          <label htmlFor="website">Website</label>
+          <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
+        </div>
+
         <div className="flex mb-4">
           <div className="w-1/2 mr-2">
             <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="name">{dictionary.contactPage.yourName}</label>
@@ -70,6 +90,7 @@ const ContactForm = ({ locale, dictionary }) => {
               id="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              maxLength={MAX_LENGTH.fullName}
               type="text"
               placeholder={dictionary.contactPage.yourName}
               required
@@ -83,6 +104,7 @@ const ContactForm = ({ locale, dictionary }) => {
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
+              maxLength={MAX_LENGTH.phoneNumber}
               placeholder={dictionary.contactPage.phone}
               required
             />
@@ -98,6 +120,7 @@ const ContactForm = ({ locale, dictionary }) => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              maxLength={MAX_LENGTH.email}
               placeholder={dictionary.contactPage.email}
               required
             />
@@ -110,6 +133,7 @@ const ContactForm = ({ locale, dictionary }) => {
               type="text"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
+              maxLength={MAX_LENGTH.country}
               placeholder={dictionary.contactPage.country}
               required
             />
@@ -125,6 +149,7 @@ const ContactForm = ({ locale, dictionary }) => {
             placeholder={dictionary.contactPage.message}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            maxLength={MAX_LENGTH.message}
             required
           ></textarea>
           <small className="error text-gray-500 font-light">{dictionary.contactPage.notice}</small>

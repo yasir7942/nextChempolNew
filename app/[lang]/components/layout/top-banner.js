@@ -16,7 +16,8 @@ import JsonLd from "../elements/json-ld";
   - mobile:  220px high, smaller text
   - desktop: 270px high, centred text block with a max width
 */
-const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", dictionary = "" }) => {
+// titleColor: Tailwind text color class for the <h1>, for banners where the default blue is hard to read
+const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", dictionary = "", titleColor = "text-textLightBlue" }) => {
 
 
   if (!banner || banner == null || banner.length == 0) return <div className=" mt-32"></div>
@@ -39,12 +40,12 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", di
 
       <section className=" relative z-20 w-full h-[220px] md:h-[270px] " >
 
-        <Image src={mobileBanner ? mobileBanner : banner} width={1440} height={600}
+        <Image src={mobileBanner ? mobileBanner : banner} width={1440} height={600} priority sizes="100vw"
           className="   object-center object-cover w-full h-full" alt={title ? title : "Chempol Banner"} />
         <PaddingContainer>
           <div className="flex flex-col ml-0 pb-16 -mt-44 md:items-center md:justify-center text-center ">
             {title ? (
-              <h1 className="text-textLightBlue capitalize font-semibold text-center text-xl md:text-2xl md:mx-auto">
+              <h1 className={`${titleColor} capitalize font-semibold text-center text-xl md:text-2xl md:mx-auto`}>
                 {title}
               </h1>
             ) : null}

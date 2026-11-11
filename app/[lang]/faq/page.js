@@ -18,11 +18,13 @@ export async function generateMetadata(props) {
     const locale = params?.lang || 'en';
 
     const pageData = await cachedGetFAQPage(locale);
+    const dictionary = await getDictionary(locale);
 
     const metadataParams = {
         pageTitle: pageData.seo?.seoTitle ? pageData.seo?.seoTitle : pageData?.title,
         pageSlug: "faq",
-        pageDescription: pageData.seo?.seoDesctiption,
+        // used when the Strapi SEO description is empty
+        pageDescription: dictionary.meta?.faqDescription,
         seoTitle: pageData.seo?.seoTitle,
         seoDescription: pageData.seo?.seoDesctiption,
         rebotStatus: pageData.seo?.preventIndexing,

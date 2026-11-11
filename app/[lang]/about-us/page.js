@@ -54,7 +54,7 @@ const AboutUsPage = async ({ params }) => {
             <SEOSchema schemaList={pageData.seo?.schema} />
 
 
-            <TopBanner banner="/images/product-banner.jpg" title={pageData.aboutus.title ? pageData.aboutus.title : pageData.seo?.seoTitle} dictionary={dictionary} />
+            <TopBanner banner="/images/product-banner.jpg" title={pageData.aboutus.title ? pageData.aboutus.title : pageData.seo?.seoTitle} dictionary={dictionary} titleColor="text-white" />
 
 
             <PaddingContainer className="flex flex-col   " >

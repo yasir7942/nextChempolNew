@@ -9,11 +9,14 @@ import {
     Download,
     ExternalLink,
     Info,
+    Pencil,
+    Plus,
     RefreshCw,
     Search,
     TriangleAlert,
 } from "lucide-react";
 import moment from "moment";
+import RedirectEditor from "./redirect-editor";
 
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -134,6 +137,9 @@ const RedirectLinkReport = () => {
     const [view, setView] = useState("table");
     const [copied, setCopied] = useState(false);
     const [reloadKey, setReloadKey] = useState(0);
+    // null: closed, {}: add popup, {row}: edit popup
+    const [editor, setEditor] = useState(null);
+    const [notice, setNotice] = useState("");
 
     useEffect(() => {
         let cancelled = false;
@@ -166,6 +172,12 @@ const RedirectLinkReport = () => {
         fetchData();
         return () => { cancelled = true; };
     }, [reloadKey]);
+
+    const saved = (warning) => {
+        setEditor(null);
+        setNotice(warning || "Saved. The redirect list is updated.");
+        recheck();
+    };
 
     const recheck = () => {
         setLoading(true);
@@ -295,6 +307,13 @@ const RedirectLinkReport = () => {
                 <div className="flex flex-wrap gap-2">
                     <button
                         type="button"
+                        onClick={() => setEditor({})}
+                        className="inline-flex items-center gap-2 rounded-md bg-[#BE1D21] px-3 py-2 text-sm font-medium text-white hover:bg-red-800"
+                    >
+                        <Plus className="h-4 w-4" /> Add redirect
+                    </button>
+                    <button
+                        type="button"
                         onClick={recheck}
                         disabled={loading}
                         className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
@@ -319,6 +338,13 @@ const RedirectLinkReport = () => {
                     </button>
                 </div>
             </div>
+
+            {notice && (
+                <div role="status" className="flex items-start justify-between gap-3 rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">
+                    <p>{notice}</p>
+                    <button type="button" onClick={() => setNotice("")} className="font-medium underline">Dismiss</button>
+                </div>
+            )}
 
             {/* Last sync failed: the site keeps the redirects shown below */}
             {report?.lastError && report.lastError.at > report.syncedAt && (
@@ -502,7 +528,7 @@ const RedirectLinkReport = () => {
                     </p>
                 ) : view === "table" ? (
                     <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                        <table className="w-full min-w-[760px] text-sm">
+                        <table className="w-full min-w-[860px] text-sm">
                             <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
                                 <tr>
                                     <th className="px-4 py-3 font-medium">#</th>
@@ -510,6 +536,7 @@ const RedirectLinkReport = () => {
                                     <th className="px-2 py-3" aria-label="redirects to" />
                                     <th className="px-4 py-3 font-medium">Destination</th>
                                     <th className="px-4 py-3 font-medium">Status</th>
+                                    <th className="px-4 py-3 font-medium">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -574,6 +601,18 @@ const RedirectLinkReport = () => {
                                                     </ul>
                                                 )}
                                             </td>
+                                            <td className="px-4 py-3">
+                                                {row.id != null && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditor({ row })}
+                                                        className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                                                        aria-label={`Edit redirect ${row.source?.trim()}`}
+                                                    >
+                                                        <Pencil className="h-3.5 w-3.5" /> Edit
+                                                    </button>
+                                                )}
+                                            </td>
                                         </tr>
                                     );
                                 })}
@@ -598,6 +637,8 @@ const RedirectLinkReport = () => {
                     {summary.notices > 0 && <> {summary.notices} redirect{summary.notices === 1 ? "" : "s"} have small notices (blue) that don&apos;t affect the status.</>}
                 </p>
             </section>
+
+            {editor && <RedirectEditor row={editor.row} onClose={() => setEditor(null)} onSaved={saved} />}
         </div>
     );
 };

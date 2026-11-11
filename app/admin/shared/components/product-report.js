@@ -1,24 +1,24 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { createPortal } from "react-dom";
 import { MagnifyingGlass } from "react-loader-spinner";
 import {
     AlertTriangle,
-    CheckCircle2,
-    CircleAlert,
     FileBarChart2,
     FolderTree,
-    ImageOff,
-    Layers3,
+    EyeOff,
+    FileText,
+    Languages,
+    MessageCircleQuestion,
     Package,
     PackageCheck,
     RefreshCw,
+    SearchX,
     ShieldAlert,
 } from "lucide-react";
 
 import ProductReportTable from "@/app/admin/shared/components/product-report-table";
-import { getImageUrl } from "@/libs/helper";
 
 const REPORT_ENDPOINT = "/api/admin/product-report/";
 
@@ -33,88 +33,25 @@ async function loadReport(signal) {
     return json;
 }
 
-const hasMedia = (media) => {
-    return Boolean(media?.url && String(media.url).trim() !== "");
-};
 
-const StatCard = ({
-    title,
-    value,
-    description,
-    icon: Icon,
-    tone = "slate",
-}) => {
+// Compact figure tile: title, one number and a short note
+const StatCard = ({ title, value, description, icon: Icon, tone = "slate" }) => {
     const toneClasses = {
         slate: "border-slate-200 bg-white text-slate-900",
-        blue: "border-blue-200 bg-blue-50 text-blue-900",
         green: "border-emerald-200 bg-emerald-50 text-emerald-900",
         amber: "border-amber-200 bg-amber-50 text-amber-900",
         red: "border-red-200 bg-red-50 text-red-900",
     };
 
-    const iconClasses = {
-        slate: "bg-slate-100 text-slate-700",
-        blue: "bg-blue-100 text-blue-700",
-        green: "bg-emerald-100 text-emerald-700",
-        amber: "bg-amber-100 text-amber-700",
-        red: "bg-red-100 text-red-700",
-    };
-
     return (
-        <div
-            className={`rounded-3xl border p-5 shadow-sm ${toneClasses[tone]}`}
-        >
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <p className="text-sm font-medium opacity-75">{title}</p>
-                    <p className="mt-2 text-3xl font-bold">{value}</p>
-                    {description && (
-                        <p className="mt-2 text-xs leading-5 opacity-75">
-                            {description}
-                        </p>
-                    )}
-                </div>
-
-                <div className={`rounded-2xl p-3 ${iconClasses[tone]}`}>
-                    <Icon className="h-5 w-5" />
-                </div>
+        <div className={`rounded-xl border px-3 py-2.5 ${toneClasses[tone]}`}>
+            <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-medium opacity-75">{title}</p>
+                <Icon className="h-4 w-4 shrink-0 opacity-60" />
             </div>
+            <p className="mt-0.5 text-2xl font-bold leading-tight">{value}</p>
+            {description && <p className="text-[11px] leading-4 opacity-75">{description}</p>}
         </div>
-    );
-};
-
-const MediaCard = ({
-    title,
-    media,
-    alt,
-    sizeClass = "w-14",
-    zoomClass = "hover:scale-[7]",
-}) => {
-    if (!hasMedia(media)) {
-        return (
-            <div className="flex min-h-[92px] min-w-[112px] flex-col items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50 px-3 py-3 text-center">
-                <ImageOff className="h-5 w-5 text-red-500" />
-                <p className="mt-2 text-xs font-bold text-red-700">Missing</p>
-                <p className="mt-0.5 text-[11px] text-red-500">{title}</p>
-            </div>
-        );
-    }
-
-    return (
-        <figure className="group flex min-h-[92px] min-w-[112px] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm">
-            <Image
-                className={`${sizeClass} ${zoomClass} rounded-lg object-contain transition-transform duration-300 group-hover:z-30 group-hover:cursor-pointer`}
-                src={getImageUrl(media.url)}
-                height={250}
-                width={250}
-                alt={alt || title}
-                priority
-            />
-
-            <figcaption className="mt-2 text-center text-[11px] font-semibold text-slate-500">
-                {title}
-            </figcaption>
-        </figure>
     );
 };
 
@@ -152,6 +89,11 @@ const ReadProductReport = () => {
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    // The refresh card lives in the page header (app/admin/(reports)/product-report/page.js)
+    const [refreshSlot, setRefreshSlot] = useState(null);
+    useEffect(() => {
+        setRefreshSlot(document.getElementById("product-report-refresh"));
+    }, []);
     const requestRef = useRef(null);
 
     const categories = useMemo(() => {
@@ -204,15 +146,10 @@ const ReadProductReport = () => {
     // Chempol categories are flat (no parent/child): products belong directly to a category
     const totalCategories = categories.length;
 
-    const totalCategoryProducts = categories.reduce((total, category) => {
-        return total + getProductCount(category);
-    }, 0);
-
     const emptyCategories = categories.filter((category) => {
         return getProductCount(category) === 0;
     });
 
-    const categoriesWithProducts = totalCategories - emptyCategories.length;
 
     // First load: full waiting screen. A refresh keeps the current report visible.
     if (!report && loading) {
@@ -227,8 +164,7 @@ const ReadProductReport = () => {
                 </h2>
 
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                    Checking product categories, product placement, category banners
-                    and missing media.
+                    Checking product categories and product placement.
                 </p>
 
                 <div className="mt-6">
@@ -277,18 +213,39 @@ const ReadProductReport = () => {
     const uncategorizedProducts = Array.isArray(report?.uncategorized) ? report.uncategorized : [];
     const needsReview = emptyCategories.length > 0 || uncategorizedProducts.length > 0;
 
+    // Every live product once (a product in 2 categories counts once); drafts are hidden in the tables too
+    const allProducts = [...new Map(
+        [...categories.flatMap((category) => category.products?.data || []), ...uncategorizedProducts]
+            .filter((item) => item.publishedAt !== null)
+            .map((item) => [item.id, item])
+    ).values()];
+    const countProducts = (test) => allProducts.filter(test).length;
+    const noShortDescription = countProducts((item) => !item.hasShortDescription);
+    const noSeo = countProducts((item) => !item.seoTitle || !item.seoDescription);
+    const blockedFromIndex = countProducts((item) => item.blockIndex);
+    const noFaq = countProducts((item) => !item.faqCount);
+    const translationFigures = (locale) => {
+        const incomplete = countProducts((item) => item.translations?.[locale]?.status === "incomplete");
+        const none = countProducts((item) => item.translations?.[locale]?.status === "none");
+        return { incomplete, none, total: incomplete + none };
+    };
+    const arabic = translationFigures("ar");
+    const spanish = translationFigures("es");
+    const toneFor = (count, bad = "amber") => (count > 0 ? bad : "green");
+
     return (
         <div className="space-y-7 font-serif">
-            {/* Toolbar */}
-            <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-slate-500">
+            {/* Refresh card: shown in the page header */}
+            {refreshSlot && createPortal(
+                <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <p className="text-sm text-slate-500">
                     Live data from Strapi
                     {report?.fetchedAt && (
                         <> · Updated <span className="font-semibold text-slate-700">{new Date(report.fetchedAt).toLocaleString()}</span></>
                     )}
                 </p>
-
-                <button
+                    <div className="mt-2">
+                        <button
                     type="button"
                     onClick={refresh}
                     disabled={loading}
@@ -298,7 +255,10 @@ const ReadProductReport = () => {
                     <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                     {loading ? "Refreshing…" : "Refresh"}
                 </button>
-            </div>
+                    </div>
+                </div>,
+                refreshSlot
+            )}
 
             {/* Refresh failed: the last loaded data stays on screen */}
             {error && (
@@ -312,89 +272,116 @@ const ReadProductReport = () => {
             )}
 
             {/* Report Summary */}
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 <StatCard
                     title="Categories"
                     value={totalCategories}
-                    description="Product categories in Strapi"
+                    description={`${emptyCategories.length} empty`}
                     icon={FolderTree}
+                    tone={toneFor(emptyCategories.length, "red")}
+                />
+                <StatCard
+                    title="Products"
+                    value={allProducts.length}
+                    description={`${uncategorizedProducts.length} without a category`}
+                    icon={Package}
+                    tone={toneFor(uncategorizedProducts.length, "red")}
+                />
+                <StatCard
+                    title="No Short Description"
+                    value={noShortDescription}
+                    description="products to fill"
+                    icon={FileText}
+                    tone={toneFor(noShortDescription)}
+                />
+                <StatCard
+                    title="Missing SEO"
+                    value={noSeo}
+                    description="no SEO title or description"
+                    icon={SearchX}
+                    tone={toneFor(noSeo)}
+                />
+                <StatCard
+                    title="Block Index"
+                    value={blockedFromIndex}
+                    description="hidden from search engines"
+                    icon={EyeOff}
+                    tone={blockedFromIndex > 0 ? "amber" : "slate"}
+                />
+                <StatCard
+                    title="No FAQs"
+                    value={noFaq}
+                    description="products without FAQs"
+                    icon={MessageCircleQuestion}
                     tone="slate"
                 />
-
                 <StatCard
-                    title="Category Products"
-                    value={totalCategoryProducts}
-                    description="Products listed in categories (a product in 2 categories counts twice)"
-                    icon={Layers3}
-                    tone="blue"
+                    title="Arabic"
+                    value={arabic.total}
+                    description={`${arabic.incomplete} incomplete, ${arabic.none} missing`}
+                    icon={Languages}
+                    tone={toneFor(arabic.total)}
                 />
-
                 <StatCard
-                    title="Categories With Products"
-                    value={categoriesWithProducts}
-                    description="Categories that list products"
-                    icon={CheckCircle2}
-                    tone="green"
+                    title="Spanish"
+                    value={spanish.total}
+                    description={`${spanish.incomplete} incomplete, ${spanish.none} missing`}
+                    icon={Languages}
+                    tone={toneFor(spanish.total)}
                 />
-
-                <StatCard
-                    title="Empty Categories"
-                    value={emptyCategories.length}
-                    description="Categories without any product"
-                    icon={AlertTriangle}
-                    tone={emptyCategories.length > 0 ? "red" : "green"}
-                />
-
                 <StatCard
                     title="Audit Status"
                     value={needsReview ? "Review" : "Good"}
-                    description={
-                        needsReview
-                            ? "Some categories or products need attention"
-                            : "Every product is in a category"
-                    }
+                    description={needsReview ? "empty or uncategorized" : "all products placed"}
                     icon={PackageCheck}
                     tone={needsReview ? "amber" : "green"}
                 />
             </div>
 
-            {/* Report Rule */}
-            <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex items-start gap-3">
-                        <div className="rounded-2xl bg-white p-3 shadow-sm">
-                            <CircleAlert className="h-6 w-6 text-amber-700" />
+            {/* Products that exist only in Arabic / only in Spanish */}
+            {[
+                { locale: "ar", name: "Arabic" },
+                { locale: "es", name: "Spanish" },
+            ].map(({ locale, name }) => {
+                const items = Array.isArray(report?.translationOnly?.[locale]) ? report.translationOnly[locale] : [];
+
+                // Nothing to review for this language: no section
+                if (items.length === 0) return null;
+
+                return (
+                    <section key={locale} className="overflow-hidden rounded-3xl border border-sky-200 bg-white shadow-sm">
+                        <SectionTitle
+                            icon={AlertTriangle}
+                            title={`${name} products without an English version (${items.length})`}
+                            description={`These products exist only in ${name}. Create the English version in Strapi, or delete the product if it is not needed.`}
+                            tone="amber"
+                        />
+
+                        <div className="p-5 md:p-6">
+                                <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                                    <table className="w-full table-auto border-collapse text-sm">
+                                        <thead>
+                                            <tr className="bg-slate-50 text-left">
+                                                <th className="border border-gray-300 px-2 py-1 text-center">P. Id</th>
+                                                <th className="border border-gray-300 px-2 py-1">Title</th>
+                                                <th className="border border-gray-300 px-2 py-1">Slug</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {items.map((item) => (
+                                                <tr key={item.documentId || item.id}>
+                                                    <td className="border border-gray-300 px-2 py-1 text-center font-semibold">{item.id}</td>
+                                                    <td className="border border-gray-300 px-2 py-1 font-light" dir={locale === "ar" ? "rtl" : "ltr"}>{item.title}</td>
+                                                    <td className="break-all border border-gray-300 px-2 py-1 font-mono text-xs font-light">{item.slug}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                         </div>
-
-                        <div>
-                            <h2 className="text-lg font-bold text-amber-950">
-                                Product placement rule
-                            </h2>
-
-                            <p className="mt-1 max-w-5xl text-sm leading-6 text-amber-800">
-                                Every product should be assigned to a product category. Chempol
-                                categories have no parent or child levels, so products listed in a
-                                category are correctly placed. Empty categories and products
-                                without a category need review.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                        <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
-                            Empty category = Review
-                        </span>
-
-                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
-                            Category products = Correct
-                        </span>
-
-                        <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700">
-                            Uncategorized = Reassign
-                        </span>
-                    </div>
-                </div>
-            </div>
+                    </section>
+                );
+            })}
 
             {/* Categories Needing Review */}
             {emptyCategories.length > 0 && (
@@ -471,84 +458,28 @@ const ReadProductReport = () => {
                             >
                                 <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
                                     <div>
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold text-white">
-                                                Product Category
-                                            </span>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Product Category</p>
 
-                                            {category.index && (
-                                                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                                                    Index: {category.index}
-                                                </span>
-                                            )}
-
-                                            {category.slug && (
-                                                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                                                    Slug: {category.slug}
-                                                </span>
-                                            )}
-
-                                            {isEmpty ? (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
-                                                    <AlertTriangle className="h-3.5 w-3.5" />
-                                                    No products
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
-                                                    <CheckCircle2 className="h-3.5 w-3.5" />
-                                                    {productCount} product{productCount > 1 ? "s" : ""}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <h2 className="mt-3 text-2xl font-bold text-slate-950">
+                                        <h2 className="mt-1 text-2xl font-bold text-slate-950">
                                             {category.title || "No Title"}
                                         </h2>
 
-                                        {isEmpty ? (
+                                        <p className="mt-1 text-sm text-slate-600">
+                                            {category.index ? <>Index: {category.index}<span className="mx-2 text-slate-300">|</span></> : null}
+                                            {category.slug ? <>Slug: {category.slug}<span className="mx-2 text-slate-300">|</span></> : null}
+                                            <span className={isEmpty ? "font-semibold text-red-700" : ""}>
+                                                {isEmpty ? "No products" : `${productCount} product${productCount > 1 ? "s" : ""}`}
+                                            </span>
+                                        </p>
+
+                                        {isEmpty && (
                                             <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-red-700">
                                                 Warning: this category has no products. Assign products to it
                                                 in Strapi.
                                             </p>
-                                        ) : (
-                                            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
-                                                Products in this section are assigned to the category, which
-                                                is the correct product placement.
-                                            </p>
                                         )}
                                     </div>
 
-                                    <div className="flex flex-wrap gap-3">
-                                        <MediaCard
-                                            title="Web Banner"
-                                            media={category.banner?.webBanner}
-                                            alt={`${category.title || "Category"} web banner`}
-                                            sizeClass="w-16"
-                                            zoomClass="hover:scale-[7]"
-                                        />
-
-                                        <MediaCard
-                                            title="Mobile Banner"
-                                            media={category.banner?.mobileBanner}
-                                            alt={`${category.title || "Category"} mobile banner`}
-                                            sizeClass="w-14"
-                                            zoomClass="hover:scale-[7]"
-                                        />
-
-                                        <MediaCard
-                                            title="Button Color"
-                                            media={category.image}
-                                            alt={`${category.title || "Category"} button color`}
-                                            sizeClass="w-11"
-                                        />
-
-                                        <MediaCard
-                                            title="Button Black"
-                                            media={category.bImage}
-                                            alt={`${category.title || "Category"} button black`}
-                                            sizeClass="w-11"
-                                        />
-                                    </div>
                                 </div>
                             </div>
 
@@ -558,6 +489,7 @@ const ReadProductReport = () => {
                                     <ProductReportTable
                                         Type="child"
                                         products={category.products?.data}
+                                        postCount={category.postCount}
                                     />
                                 </div>
                             </div>

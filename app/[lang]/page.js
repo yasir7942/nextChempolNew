@@ -99,8 +99,8 @@ export default async function Home({ params }) {
 
 
 
-          {homeData.homeBlock && homeData.homeBlock.map((data) => (
-            <CharcoalContentBox key={data.id} BlockData={data} />
+          {homeData.homeBlock && homeData.homeBlock.map((data, index) => (
+            <CharcoalContentBox key={data.id} BlockData={data} priority={index === 0} />
           ))}
 
 

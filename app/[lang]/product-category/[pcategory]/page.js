@@ -3,7 +3,7 @@ import PaddingContainer from "../../components/layout/padding-container"
 import SearchBar from "../../components/layout/search-bar";
 import TopBanner from "../../components/layout/top-banner"
 import Image from "next/image";
-import { getProductCategory, getProductsByCategory } from "../../data/loader";
+import { getCategoryPosts, getProductCategory, getProductsByCategory } from "../../data/loader";
 
 import { PaginationComponent } from "../../components/elements/pagination";
 
@@ -14,7 +14,8 @@ import SEOSchema from "../../components/elements/seo-schema";
 import BodyDataParse from "../../components/elements/data-parse-content";
 import { buildBreadcrumbList, buildCollectionPage, buildFaqPage, pageUrl } from "@/libs/schema/entity";
 
-import SingleTab from "../../components/layout/SingleTab";
+import FAQs from "../../components/layout/Faqs";
+import CategoryTable from "../../components/layout/category-table";
 import CTAcard from "../../components/layout/cta-card";
 import BlogContainer from "../../components/layout/blog-container";
 import { cache } from 'react';
@@ -130,15 +131,16 @@ const ProductCategory = async props => {
   const productData = await getProductsByCategory(lang, params.pcategory, currentPage, pageSize);
   //const productData = await cachedGetingleProductCategory(params.pcategory, currentPage, pageSize);
 
+  const categoryPosts = await getCategoryPosts(lang, params.pcategory);
+
   const PageCount = productData.meta.pagination.pageCount;
   const totalPage = productData.meta.pagination.total;
 
   const content = categoryData.data[0].description;
-  const middleTitle = categoryData.data[0].middleTitle;
-
-  const middleDescrption = categoryData.data[0].middleDescription;
-  const readmoreTab = categoryData.data[0].readMoreTab;
-  const faqs = categoryData.data[0].faq;
+  // Only entries with both a question and an answer; with none left, the FAQ section and the FAQ schema are left out
+  const faqs = (Array.isArray(categoryData.data[0].faq) ? categoryData.data[0].faq : []).filter(
+    (item) => String(item?.question ?? "").trim() && String(item?.answer ?? "").trim()
+  );
 
   // Structured data: category page with the products listed on this page, breadcrumb and FAQ.
   const pcategory = categoryData.data[0];
@@ -195,6 +197,8 @@ const ProductCategory = async props => {
         <div className="text-black font-normal text-sm  pb-10 rich-text">
           <BodyDataParse content={content} />
         </div>
+
+        <CategoryTable rows={pcategory.CategoryTabel} locale={lang} dictionary={dictionary} />
         <div className="w-full h-auto flex flex-col md:flex-row     ">
           {/*  Left Menu Column  */}
           <div className="w-full md:w-3/12 lg:w-[22%] p-6 md:pl-0  overflow-hidden ">
@@ -249,14 +253,12 @@ const ProductCategory = async props => {
 
         <div className="flex flex-col w-full h-auto text-center my-20 2xl:px-[18%]">
 
-          {middleTitle && <h2 className="text-lg"> {middleTitle} </h2>}
-          {middleDescrption && <div className="text-black  pb-10 rich-text">
-            <BodyDataParse content={middleDescrption} />
-          </div>}
-
-          {readmoreTab && <SingleTab heading={dictionary.navigation.readMore} text={readmoreTab} />}
-
-          {faqs && faqs.length > 0 && <SingleTab heading={dictionary.navigation.faq} faqList={faqs} />}
+          {faqs.length > 0 && (
+            <>
+              <h2 className="text-2xl text-textBlue font-semibold">{dictionary.navigation.faq}</h2>
+              <FAQs dictionary={dictionary} faqList={faqs} />
+            </>
+          )}
 
         </div>
 
@@ -264,7 +266,7 @@ const ProductCategory = async props => {
 
 
       <CTAcard locale={lang} />
-      <BlogContainer locale={lang} />
+      <BlogContainer locale={lang} posts={categoryPosts} />
 
 
     </div>

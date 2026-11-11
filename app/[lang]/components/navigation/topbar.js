@@ -69,6 +69,7 @@ const Topbar = async ({ locale }) => {
               width={350}
               height={150}
               priority
+              sizes="288px"
               alt="Chempol A Leading Manufacturer of Lubricant Additives and Specialty Chemicals in UAE"
             />
           </Link>

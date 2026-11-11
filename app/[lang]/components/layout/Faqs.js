@@ -7,8 +7,9 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 
-// FAQPage JSON-LD is built on the server by each page (buildFaqPage), so it is in
-// the HTML even when this list sits inside a closed accordion.
+// FAQPage JSON-LD is built on the server by each page (buildFaqPage).
+// Answers are force-mounted: a closed item keeps its answer in the HTML (hidden until
+// opened), so search engines see the same answers as the schema.
 const FAQs = ({ dictionary, faqList = [], heading = "", text = "", page = "category" }) => {
     // Safe access + fallbacks
     const nav = dictionary?.navigation || {};
@@ -29,7 +30,8 @@ const FAQs = ({ dictionary, faqList = [], heading = "", text = "", page = "categ
                 ) : null}
 
                 {hasFaqs ? (
-                    <Accordion type="single" collapsible>
+                    // the first question starts open
+                    <Accordion type="single" collapsible defaultValue={String(faqList[0]?.id ?? 0)}>
                         {faqList.map((data, idx) => {
                             const question = data?.question ?? "";
                             const answer = data?.answer ?? "";
@@ -41,7 +43,7 @@ const FAQs = ({ dictionary, faqList = [], heading = "", text = "", page = "categ
                                     <AccordionTrigger className="text-black text-left text-base font-normal rtl:text-right headline">
                                         {labelQ}: {question}
                                     </AccordionTrigger>
-                                    <AccordionContent className="text-black text-left text-base font-light rtl:text-right summary">
+                                    <AccordionContent forceMount className="text-black text-left text-base font-light rtl:text-right summary">
                                         {labelA}: {answer}
                                     </AccordionContent>
                                 </AccordionItem>

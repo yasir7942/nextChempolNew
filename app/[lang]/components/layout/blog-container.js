@@ -8,11 +8,15 @@ import Link from "next/link";
 
 
 
-const BlogContainer = async ({ locale }) => {
+// posts: ready-made list (product category page); without it the 4 latest posts are shown
+const BlogContainer = async ({ locale, posts }) => {
 
   const dictionary = await getDictionary(locale);
 
-  const postData = await getPostLimitedData(locale);
+  const postData = posts ?? (await getPostLimitedData(locale));
+  if (!postData?.data?.length) return null;
+  // more than 4 posts: wrap into rows instead of squeezing them in one row
+  const many = postData.data.length > 4;
 
 
 
@@ -30,9 +34,9 @@ const BlogContainer = async ({ locale }) => {
             <h3 className="*:first-letter: text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize  -mt-3  z-20" >{dictionary.homePage.latestInsights}</h3>
           </div>
           {/* <!--news blocks--> */}
-          <div className="w-full flex flex-col md:flex-row pt-10 md:py-10 lg:py-12 justify-between
-                md:space-x-5 rtl:md:space-x-reverse
-                space-y-6 md:space-y-0">
+          <div className={many
+            ? "w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-10 md:py-10 lg:py-12"
+            : "w-full flex flex-col md:flex-row pt-10 md:py-10 lg:py-12 justify-between md:space-x-5 rtl:md:space-x-reverse space-y-6 md:space-y-0"}>
             {/* <!--new block--> */}
 
             {

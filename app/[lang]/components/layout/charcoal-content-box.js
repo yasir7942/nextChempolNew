@@ -3,7 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 
-const CharcoalContentBox = ({ BlockData }) => {
+const CharcoalContentBox = ({ BlockData, priority = false }) => {
 
 
   return (
@@ -22,6 +22,8 @@ const CharcoalContentBox = ({ BlockData }) => {
             src={getImageUrl(BlockData.image.url)}
             width={400}
             height={200}
+            priority={priority}
+            sizes="(min-width: 1024px) 448px, 100vw"
             alt={BlockData.title} />
           <Link href={`/${BlockData.url}/`} aria-label={BlockData.title} >
             <div

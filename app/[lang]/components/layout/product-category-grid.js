@@ -65,6 +65,7 @@ const ProductCategoryGrid = async ({ locale }) => {
                       src={getImageUrl(category.image.url)}
                       width={500}
                       height={300}
+                      sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
                       alt={category.title}
                     />
                   )}

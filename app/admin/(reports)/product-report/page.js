@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Product Report",
   description:
-    "Professional product category audit report for checking product placement, missing media, empty categories and uncategorized products.",
+    "Professional product category audit report for checking product placement, empty categories and uncategorized products.",
   robots: ADMIN_ROBOTS,
 };
 
@@ -30,17 +30,19 @@ const ProductReport = () => {
                 </h1>
 
                 <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-                  Review product category placement, empty categories, missing
-                  category media and uncategorized products in one professional
-                  reporting screen.
+                  Review product category placement, empty categories and uncategorized products in one reporting screen.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
-                <p className="font-bold">Recommended View</p>
-                <p className="mt-0.5 text-amber-700">
-                  Use desktop browser for best table readability.
-                </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                <div id="product-report-refresh" />
+
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+                  <p className="font-bold">Recommended View</p>
+                  <p className="mt-0.5 text-amber-700">
+                    Use desktop browser for best table readability.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
