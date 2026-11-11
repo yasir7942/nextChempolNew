@@ -1,15 +1,14 @@
-export const dynamic = 'force-dynamic';
-
 import BodyDataParse from "../../components/elements/data-parse-content";
 import GroupProducts from "../../components/layout/group-products";
 import PaddingContainer from "../../components/layout/padding-container";
 import { getAllProductsSlug, getSingleProduct } from "../../data/loader";
-import { getBaseUrl, getFirstDescriptionText, getImageUrl } from "../../../../libs/helper";
+import { getFirstDescriptionText, getImageUrl } from "../../../../libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { cache } from 'react';
-import siteConfig from "@/config/site";
+import { buildBreadcrumbList, buildFaqPage, buildImageObject, buildProduct, pageUrl } from "@/libs/schema/entity";
+import { strapiProductRatings } from "@/libs/schema/strapi";
 import SEOSchema from "../../components/elements/seo-schema";
 import ProductCategoryMenuWrapper from "../../components/layout/ProductCategoryMenuWrapper";
 import Breadcrumbs from "../../components/elements/breadcrumbs";
@@ -27,10 +26,11 @@ const cachedgetSingleProduct = cache(getSingleProduct);
 
 
 
-export async function generateStaticParams() {
+// Called once per language from the [lang] layout.
+export async function generateStaticParams({ params: parentParams }) {
 
   try {
-    const locales = i18n.locales;   // ["en","ar","es"]
+    const locales = parentParams?.lang ? [parentParams.lang] : i18n.locales;
     const params = [];
 
     for (const locale of locales) {
@@ -128,7 +128,6 @@ const SingleProductPage = async (props) => {
   const productGroup = productData.data[0].related_products;
   const firstDescriptionText = getFirstDescriptionText(productData.data[0].description);
   const seoDescription = productData.data[0].seo?.seoDesctiption ? productData.data[0].seo?.seoDesctiption : firstDescriptionText;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   const category = productData.data[0].product_categories[0]?.title ? productData.data[0].product_categories[0]?.title : dictionary.navigation.productCategory;
   const categorySlug = productData.data[0].product_categories[0].slug ? productData.data[0].product_categories[0].slug : "#";
   const faqs = productData.data[0].faq ? productData.data[0].faq : [];
@@ -140,137 +139,47 @@ const SingleProductPage = async (props) => {
 
 
   const breadcrumbsData = [
-    { title: dictionary.navigation.home, url: "/" },
-    { title: `${category}`, url: `${getBaseUrl()}/${lang}/product-category/${categorySlug}` },
+    { title: dictionary.navigation.home, url: `/${lang}/` },
+    { title: `${category}`, url: `/${lang}/product-category/${categorySlug}/` },
     { title: `${productData.data[0]?.title}` }
   ];
 
 
 
-  let ratingCounter = 0;
+  /*
+    Product (price range from siteConfig, reviews only when Strapi has them),
+    breadcrumb, image and FAQ. Strapi seo.schema is used only for types missing here
+    or failing validation.
+  */
+  const product = productData.data[0];
+  const productImageUrl = getImageUrl(product.productImage?.url);
 
-  const reviews = productData.data[0]?.productSchema?.reviews?.map(review => {
-    ratingCounter += review.bestRating;
-    return {
-      "@type": "Review",
-      "name": review?.title,
-      "reviewBody": review.reviewBody,
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": review.bestRating,
-        "bestRating": "5",
-        "worstRating": "1"
-      },
-      "datePublished": review.datePublished,
-      "author": {
-        "@type": "Person",
-        "name": review.author
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "Chempol"
-      }
-    };
-  });
-
-  const averageRating = (ratingCounter / productData.data[0].productSchema?.reviews?.length || 0) || 4.8;
-
-  const jsonLd = {
-    "@context": "https://schema.org/",
-    "@type": "Product",
-    "name": productData.data[0]?.title,
-    "image": getImageUrl(productData.data[0].productImage.url),
-    "image": [
-      getImageUrl(productData.data[0].productImage?.url),  // large
-      getImageUrl(productData.data[0].productImage?.formats?.thumbnail?.url),  // medium
-    ],
-    "description": seoDescription,
-    "brand": {
-      "@type": "Brand",
-      "name": dictionary.imageObject.creditText    //"creditText": "Chempol Additives & Chemical Speciality",
-    },
-    "sku": productData.data[0].productSchema?.sku,
-    "gtin8": productData.data[0].productSchema?.gtin8,
-    "mpn": productData.data[0].productSchema?.mpn,
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": averageRating,   // average rating value
-      "reviewCount": productData.data[0].productSchema?.reviews?.length || 1,   // total reviews  set 1 if null, undefine or 0 
-      "bestRating": "5",
-      "worstRating": "2",
-    },
-    "offers": {
-      "@type": "Offer",
-      "priceCurrency": "AED",
-      "price": "25",
-      "lowPrice": "1",
-      "highPrice": "500",
-      "priceValidUntil": "10-10-2040",
-      "itemCondition": "https://schema.org/NewCondition",
-      "availability": "http://schema.org/InStock",
-      "seller": {
-        "@type": "Organization",
-        "name": dictionary.imageObject.creditText  //"creditText": "Chempol Additives & Chemical Speciality",
-      }
-    },
-    "hasMerchantReturnPolicy": {
-      "@type": "MerchantReturnPolicy",
-      "applicableCountry": "AE",
-      "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
-      "merchantReturnDays": 15,
-      "returnMethod": "https://schema.org/ReturnByMail",
-      "returnFees": "https://schema.org/FreeReturn"
-    },
-    "review": reviews,
-  };
-
-  // BreadcrumbList
-  const jsonLd2 = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [{
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": baseUrl,
-    }, {
-      "@type": "ListItem",
-      "position": 2,
-      "name": category,
-      "item": baseUrl + '/' + categorySlug
-    }, {
-      "@type": "ListItem",
-      "position": 3,
-      "name": productData.data[0]?.title,
-    }]
-  };
-
-  // image schema for seo
-  const jsonLd3 = {
-    "@context": "https://schema.org/",
-    "@type": "ImageObject",
-    "contentUrl": getImageUrl(productData.data[0].productImage.url),
-    "license": siteConfig.imageObject.license,
-    "acquireLicensePage": siteConfig.imageObject.acquireLicensePage,
-    "creditText": siteConfig.imageObject.creditText,
-    "creator": {
-      "@type": "Organization",
-      "name": siteConfig.imageObject.creatorName,
-    },
-    "copyrightNotice": siteConfig.imageObject.copyrightNoticeProduct
-  };
-
-
-  console.log(productData.data[0]?.Dosage.length);
+  const schemaNodes = [
+    buildProduct({
+      product,
+      lang,
+      description: seoDescription,
+      images: [productImageUrl, getImageUrl(product.productImage?.formats?.thumbnail?.url)],
+      categoryTitle: category,
+      strapiRatings: strapiProductRatings(product.seo?.schema),
+    }),
+    buildBreadcrumbList([
+      { name: dictionary.navigation.home, url: pageUrl(lang) },
+      { name: category, url: pageUrl(lang, "product-category", categorySlug) },
+      { name: product.title },
+    ]),
+    buildImageObject({
+      url: productImageUrl,
+      creditText: dictionary.imageObject?.creditText,
+      copyrightNotice: dictionary.imageObject?.copyrightNoticeProduct,
+    }),
+    buildFaqPage(faqs),
+  ];
 
   return (
     <div className=" z-10 relative">
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd2) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd3) }} />
-
-      <SEOSchema schemaList={productData.data[0].seo?.schema} />
+      <SEOSchema schemaList={product.seo?.schema} nodes={schemaNodes} />
 
       <div className="w-full h-12 bg-textLightBlue"></div>
 
@@ -290,17 +199,20 @@ const SingleProductPage = async (props) => {
           {/* Content Area */}
           <div className="w-full md:w-9/12 justify-between lg:w-[78%]  flex flex-col  pb-3     ">
             {/* Content area content goes here */}
-            <div className="flex flex-col md:flex-row w-full h-auto p-0 lg:p-8">
+            {/*
+              One H1 for all screens. Mobile: title, image, text stacked.
+              Desktop: image in the left 2/6 column; title above the text in the right 4/6 column.
+            */}
+            <div className="grid grid-cols-1 md:grid-cols-6 md:grid-rows-[auto_1fr] w-full h-auto p-0 lg:p-8">
 
-              {/* title just for mobile */}
-              <h1 className="capitalize font-semibold text-2xl pb-5 md:hidden text-[var(--primary)] ">
+              <h1 className="capitalize font-semibold text-2xl pb-5 md:pb-0 md:col-start-3 md:col-span-4 md:row-start-1 text-[var(--primary)] ">
                 {productData.data[0].title}
               </h1>
 
 
 
               {/* image section */}
-              <div className="w-full md:w-2/6 items-center  ">
+              <div className="w-full md:col-span-2 md:col-start-1 md:row-start-1 md:row-span-2 items-center  ">
                 <div className="w-full flex flex-col justify-center  items-center text-center">
                   {productData?.data?.[0]?.productImage?.url && (
                     <Image
@@ -320,10 +232,7 @@ const SingleProductPage = async (props) => {
 
 
               {/* text section */}
-              <div className="w-full md:w-4/6 flex flex-col text-gray-800 ">
-                <h1 className="capitalize font-semibold text-2xl hidden md:block  text-[var(--primary)] ">
-                  {productData.data[0].title}
-                </h1>
+              <div className="w-full md:col-start-3 md:col-span-4 md:row-start-2 flex flex-col text-gray-800 ">
 
 
                 <div className="font-light text-black text-base mt-5 max-w-xl pr-5 md:pr-2 rich-text">
@@ -563,7 +472,7 @@ const SingleProductPage = async (props) => {
 
             {/* Related Product section */}
             <div className="w-full flex flex-col justify-center items-center text-gray-300 mt-5  ">
-              <GroupProducts productGroup={productGroup} />
+              <GroupProducts productGroup={productGroup} locale={lang} />
             </div>
           </div>
         </div>

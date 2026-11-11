@@ -37,7 +37,7 @@ const Topbar = async ({ locale }) => {
 
             <LangSwitcher Locale={locale} />
 
-            <Link href={`/contact`} className=" border border-textBlue rounded-sm text-sm px-3 py-2 text-textBlue hover:text-lightColorHover  hidden md:block   " > {dictionary.topbar.customerSupport.button.getQuote}</Link>
+            <Link href={`/${locale}/contact/`} className=" border border-textBlue rounded-sm text-sm px-3 py-2 text-textBlue hover:text-lightColorHover  hidden md:block   " > {dictionary.topbar.customerSupport.button.getQuote}</Link>
 
 
             <div className='flex flex-row    '>
@@ -46,7 +46,7 @@ const Topbar = async ({ locale }) => {
               </div>
               <div className='text-sm font-light'>
                 {dictionary.topbar.customerSupport.title}<br />
-                <Link className='font-normal text-textBlue' href='mailto:info@chemol.co.uk'>info@chempol.co.uk</Link>
+                <Link className='font-normal text-textBlue' href='mailto:info@chempol.co.uk'>info@chempol.co.uk</Link>
               </div>
             </div>
 
@@ -62,7 +62,7 @@ const Topbar = async ({ locale }) => {
       <PaddingContainer >
         <section className="  flex flex-col md:flex-row w-full   h-auto justify-between items-center space-y-5 md:space-y-0 py-3 md:py-4 px-4 md:px-2 ">
 
-          <Link href={`/${locale}`} className="    ">
+          <Link href={`/${locale}/`} className="    ">
 
             <Image className='w-72 md:w-72'
               src={locale === 'ar' ? "/images/chempol-ar.png" : "/images/chempol.png"}

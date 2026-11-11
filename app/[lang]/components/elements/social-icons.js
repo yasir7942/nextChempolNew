@@ -1,5 +1,6 @@
 
-import { FaFacebook, FaInstagramSquare, FaLinkedin, FaPinterestSquare, FaSnapchatSquare, FaTwitterSquare, FaVimeoSquare, FaYoutube, FaYoutubeSquare } from "react-icons/fa";
+import { FaFacebook, FaInstagramSquare, FaLinkedin, FaPinterestSquare, FaSnapchatSquare, FaVimeoSquare, FaYoutube, FaYoutubeSquare } from "react-icons/fa";
+import { FaSquareXTwitter } from "react-icons/fa6";
 import { AiFillTikTok } from "react-icons/ai";
 import { PiBuildingOfficeFill } from "react-icons/pi";
 
@@ -12,7 +13,7 @@ const SocialIcons = ({ plateform, link, dark = false }) => {
                case "facebook":
                     return <FaFacebook className="text-textBlue hover:text-white" size="23" />
                case "twitter":
-                    return <FaTwitterSquare className="text-textBlue hover:text-white" size="23" />
+                    return <FaSquareXTwitter className="text-textBlue hover:text-white" size="23" />
                case "linkedin":
                     return <FaLinkedin className="text-textBlue hover:text-white" size="23" />
                case "instagram":
@@ -36,7 +37,7 @@ const SocialIcons = ({ plateform, link, dark = false }) => {
                case "facebook":
                     return "Facebook"
                case "twitter":
-                    return "Twitter"
+                    return "X"
                case "linkedin":
                     return "Linkedin"
                case "instagram":

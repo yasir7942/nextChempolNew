@@ -39,7 +39,7 @@ const BlogContainer = async ({ locale }) => {
               postData.data.map(post => (
 
                 <div key={post.id} className="w-full flex flex-col text-white md:text-left rtl:md:text-right">
-                  <Link href={`/${locale}/blog/${post.slug}`} >
+                  <Link href={`/${locale}/blog/${post.slug}/`} >
                     <Image className="w-full rounded-lg " src={getImageUrl(post.featureImage.url)} width={500} height={350} alt={post.title} />
                     <h4 className="text-textBlue font-semibold  leading-6 text-base md:text-base pt-3  text-justify headline rtl:text-right">
                       {post.title}

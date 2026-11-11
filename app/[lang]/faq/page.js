@@ -3,6 +3,7 @@ import TopBanner from "../components/layout/top-banner";
 import { cache } from 'react';
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import SEOSchema from "../components/elements/seo-schema";
+import { buildFaqPage } from "@/libs/schema/entity";
 import SpeakableSchema from "../components/elements/speakable-schema";
 import { getFaqPage } from "../data/loader";
 import FAQs from "../components/layout/Faqs";
@@ -51,7 +52,7 @@ const FAQPage = async ({ params }) => {
     return (
         <div>
             <SpeakableSchema pageTitle={pageData.title} locale={lang} pageUrl={pageData.seo?.canonicalLinks ?? "/faq"} />
-            <SEOSchema schemaList={pageData.seo?.schema} />
+            <SEOSchema schemaList={pageData.seo?.schema} nodes={[buildFaqPage(pageData.faq)]} />
 
             <TopBanner banner="/images/chempol-banner.jpg" title={pageData?.title} title2="" dictionary={dictionary} />
 

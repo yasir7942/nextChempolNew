@@ -8,7 +8,7 @@ import VideoPopup from "../elements/VideoPopup";
 import Link from "next/link";
 
 
-const DisaplyFrontVideos = ({ VideoData, latestRelasetext }) => {
+const DisaplyFrontVideos = ({ VideoData, latestRelasetext, locale = "en" }) => {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [selectedVideoId, setSelectedVideoId] = useState(null);
 
@@ -73,7 +73,7 @@ const DisaplyFrontVideos = ({ VideoData, latestRelasetext }) => {
             {/* Video Popup */}
             {isPopupOpen && selectedVideoId && <VideoPopup videoId={selectedVideoId} onClose={handleClosePopup} />}
 
-            <Link href="/videos" className="text-textBlue flex justify-end items-center w-full min-h-4 ">
+            <Link href={`/${locale}/videos/`} className="text-textBlue flex justify-end items-center w-full min-h-4 ">
                 {latestRelasetext}
             </Link>
         </div>

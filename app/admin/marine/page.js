@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Combobox,
     ComboboxButton,
@@ -66,6 +66,45 @@ function getItemValue(item) {
 
 function findSelected(options, value) {
     return (options || []).find((item) => getItemValue(item) === String(value || "")) || null;
+}
+
+async function fetchJson(url, options = {}) {
+    const response = await fetch(url, {
+        cache: "no-store",
+        ...options,
+    });
+
+    const text = await response.text();
+
+    let data = null;
+
+    try {
+        data = JSON.parse(text);
+    } catch (error) {
+        console.log("[marine page] JSON parse error:", error);
+        console.log("[marine page] response text:", text);
+        throw new Error("Invalid JSON from API route");
+    }
+
+    if (!response.ok || data?.ok === false) {
+        throw new Error(data?.error || "Request failed");
+    }
+
+    return data;
+}
+
+function apiUrl(mode, params = {}) {
+    const sp = new URLSearchParams({
+        mode,
+    });
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            sp.set(key, value);
+        }
+    });
+
+    return `${API_ROUTE}?${sp.toString()}`;
 }
 
 export default function MarinePage() {
@@ -147,46 +186,7 @@ export default function MarinePage() {
         });
     }
 
-    async function fetchJson(url, options = {}) {
-        const response = await fetch(url, {
-            cache: "no-store",
-            ...options,
-        });
-
-        const text = await response.text();
-
-        let data = null;
-
-        try {
-            data = JSON.parse(text);
-        } catch (error) {
-            console.log("[marine page] JSON parse error:", error);
-            console.log("[marine page] response text:", text);
-            throw new Error("Invalid JSON from API route");
-        }
-
-        if (!response.ok || data?.ok === false) {
-            throw new Error(data?.error || "Request failed");
-        }
-
-        return data;
-    }
-
-    function apiUrl(mode, params = {}) {
-        const sp = new URLSearchParams({
-            mode,
-        });
-
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                sp.set(key, value);
-            }
-        });
-
-        return `${API_ROUTE}?${sp.toString()}`;
-    }
-
-    async function loadStaticCategory() {
+    const loadStaticCategory = useCallback(async () => {
         const data = await fetchJson(apiUrl("static-category"));
 
         setStaticCategory(
@@ -195,9 +195,9 @@ export default function MarinePage() {
                 slug: STATIC_CATEGORY.slug,
             }
         );
-    }
+    }, []);
 
-    async function loadTypes() {
+    const loadTypes = useCallback(async () => {
         const [data, all] = await Promise.all([
             fetchJson(apiUrl("types")),
             fetchJson(apiUrl("all-types")),
@@ -205,9 +205,9 @@ export default function MarinePage() {
 
         setTypes(data?.items || []);
         setAllTypes(all?.items || []);
-    }
+    }, []);
 
-    async function loadProducts(typeId) {
+    const loadProducts = useCallback(async (typeId) => {
         if (!typeId) {
             setProducts([]);
             setAllProducts([]);
@@ -221,9 +221,9 @@ export default function MarinePage() {
 
         setProducts(data?.items || []);
         setAllProducts(all?.items || []);
-    }
+    }, []);
 
-    async function loadDosage(productId, typeId = selectedType) {
+    const loadDosage = useCallback(async (productId, typeId = selectedType) => {
         setDosageDocId("");
         setDosageTitle("");
 
@@ -244,9 +244,9 @@ export default function MarinePage() {
         } finally {
             setLoadingDosage(false);
         }
-    }
+    }, [selectedType]);
 
-    async function loadOems(typeId, productId) {
+    const loadOems = useCallback(async (typeId, productId) => {
         if (!typeId || !productId) {
             setOems([]);
             setAllOems([]);
@@ -260,7 +260,7 @@ export default function MarinePage() {
 
         setOems(data?.items || []);
         setAllOems(all?.items || []);
-    }
+    }, []);
 
     useEffect(() => {
         async function init() {
@@ -280,7 +280,7 @@ export default function MarinePage() {
         }
 
         init();
-    }, []);
+    }, [loadStaticCategory, loadTypes]);
 
     useEffect(() => {
         async function run() {
@@ -307,7 +307,7 @@ export default function MarinePage() {
         }
 
         run();
-    }, [selectedType]);
+    }, [selectedType, loadProducts]);
 
     useEffect(() => {
         async function run() {
@@ -333,7 +333,7 @@ export default function MarinePage() {
         }
 
         run();
-    }, [selectedProduct, selectedType]);
+    }, [selectedProduct, selectedType, loadDosage, loadOems]);
 
     function setSelectedAddValue(type, value) {
         setSelectedAdd((prev) => ({

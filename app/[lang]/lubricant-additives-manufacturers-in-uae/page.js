@@ -7,6 +7,7 @@ import { getImageUrl } from "@/libs/helper";
 import { cache } from 'react';
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import SEOSchema from "../components/elements/seo-schema";
+import { buildFaqPage } from "@/libs/schema/entity";
 import SpeakableSchema from "../components/elements/speakable-schema";
 import { getLubricantAddtives } from "../data/loader";
 import { FaPhone } from "react-icons/fa6";
@@ -71,7 +72,7 @@ const Company = async ({ params }) => {
     return (
         <div>
             <SpeakableSchema pageTitle={pageData.title} locale={lang} pageUrl={pageData.seo?.canonicalLinks ?? "/lubricant-additives-manufacturers-in-uae"} />
-            <SEOSchema schemaList={pageData.seo?.schema} />
+            <SEOSchema schemaList={pageData.seo?.schema} nodes={[buildFaqPage(pageData.faq)]} />
 
 
             <TopBanner banner="/images/product-banner.jpg" title={pageData.topBanner1} title2={pageData.topBanner2} dictionary={dictionary} />
@@ -81,11 +82,11 @@ const Company = async ({ params }) => {
                 <PaddingContainer>
                     <div className="flex flex-col md:flex-row w-full items-center justify-center ">
                         <div className=" w-full md:w-[80%] ">
-                            <h1 className="w-full text-textBlue text-xl font-semibold  headline">{pageData.contactText1}</h1>
+                            <h2 className="w-full text-textBlue text-xl font-semibold  headline">{pageData.contactText1}</h2>
                             <p className="font-light font-xl md:max-w-[90%] summary">{pageData.contactText2}</p>
 
                         </div>
-                        <div className="w-full mt-5 md:mt-0 md:w-[20%]  "><Link href={`/contact-us`}
+                        <div className="w-full mt-5 md:mt-0 md:w-[20%]  "><Link href={`/${lang}/contact/`}
                             className="px-6 py-3 transition duration-300 ease-in-out hover:bg-textLightBlue bg-textBlue text-white">{pageData.contactBtnText}</Link> </div>
                     </div>
                 </PaddingContainer>

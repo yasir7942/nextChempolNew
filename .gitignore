@@ -61,3 +61,6 @@ chempo15lang.7z
 *.7z
 *.zip
 *.rar
+
+# live redirects built from Strapi (libs/redirects/sync.js)
+/.redirects/

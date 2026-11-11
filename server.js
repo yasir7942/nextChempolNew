@@ -8,6 +8,10 @@ const dev = false;
 const hostname = 'localhost';
 const port = process.env.port || 3003;
 
+// How the redirect sync reaches this server to wait for start-up (libs/redirects/sync.js).
+// Destinations themselves are checked on NEXT_PUBLIC_BASE_URL (libs/redirects/site.js).
+process.env.REDIRECT_CHECK_ORIGIN ||= `http://${hostname}:${port}`;
+
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 

@@ -45,7 +45,7 @@ export default async function NotFound() {
         {dictionary.fourOfour.text}
       </p>
       <Link
-        href={`/${lang}`}
+        href={`/${lang}/`}
         className="mt-6 px-6 py-3 border-1 border-textBlue bg-white hover:bg-textBlue text-textBlue hover:text-white text-lg font-medium rounded-sm shadow-md transition-all duration-300"
       >
         {dictionary.fourOfour.button}

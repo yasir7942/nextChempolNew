@@ -72,7 +72,7 @@ const AboutUsPage = async ({ params }) => {
                             <div className="max-w-sm md:max-w-lg  overflow-hidden rounded-lg bg-red-300">
                                 <Image className="w-full h-full object-cover" width={800} height={800} src={getImageUrl(pageData.coreValue.image.url)} alt={pageData.coreValue.image.alternativeText ? pageData.coreValue.image.alternativeText : "Chempol Core value"} />
                             </div>
-                            <h1 className="text-xl mt-5 text-left   capitalize font-normal text-textBlue">{pageData.coreValue.title}</h1>
+                            <h2 className="text-xl mt-5 text-left   capitalize font-normal text-textBlue">{pageData.coreValue.title}</h2>
                             <div className="text-black text-left summary rtl:text-righ 2xl:w-full   ">
                                 <BodyDataParse content={pageData.coreValue.description} />
                             </div>
@@ -84,7 +84,7 @@ const AboutUsPage = async ({ params }) => {
                             <div className="max-w-sm md:max-w-lg   overflow-hidden rounded-lg">
                                 <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.ourMission.image.url)} alt={pageData.ourMission.image.alternativeText ? pageData.ourMission.image.alternativeText : "Chempol Mission"} />
                             </div>
-                            <h1 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.ourMission.title}</h1>
+                            <h2 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.ourMission.title}</h2>
                             <div className="text-black  text-left summary rtl:text-righ  2xl:w-full  ">
                                 <BodyDataParse content={pageData.ourMission.description} />
                             </div>
@@ -95,7 +95,7 @@ const AboutUsPage = async ({ params }) => {
                             <div className="max-w-sm md:max-w-lg  overflow-hidden rounded-lg">
                                 <Image className="w-full h-full object-cover" width={1000} height={1000} src={getImageUrl(pageData.overVisson.image.url)} alt={pageData.overVisson.image.alternativeText ? pageData.overVisson.image.alternativeText : "Chempol Vission"} />
                             </div>
-                            <h1 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.overVisson.title}</h1>
+                            <h2 className="text-xl mt-5 text-left capitalize font-normal text-textBlue">{pageData.overVisson.title}</h2>
                             <div className="text-black  text-left rtl:text-right summary  2xl:w-full  ">
                                 <BodyDataParse content={pageData.overVisson.description} />
                             </div>
@@ -120,7 +120,7 @@ const AboutUsPage = async ({ params }) => {
                                 <div className="w-full   overflow-hidden rounded-lg before:">
                                     <Image className="w-full 2xl:w-[80%]  h-auto object-cover " width={1000} height={1000} src={getImageUrl(val.image.url)} alt={val.image?.alternativeText ? val.image?.alternativeText : val.title} />
                                 </div>
-                                <h1 className="text-xl mt-5 text-left w-full 2xl:w-[80%]   items-start capitalize font-normal text-textBlue rtl:text-right">{val.title}</h1>
+                                <h2 className="text-xl mt-5 text-left w-full 2xl:w-[80%]   items-start capitalize font-normal text-textBlue rtl:text-right">{val.title}</h2>
                                 <div className="text-black md:text-justify items-start text-base 2xl:text-left w-full 2xl:w-[80%]  rtl:text-right ">
                                     <BodyDataParse content={val.description} />
                                 </div>

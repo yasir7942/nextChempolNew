@@ -110,7 +110,7 @@ function Slider({ locale, diction }) {
                 </div>
                 <div>
                   <Link
-                    href="/contact/"
+                    href={`/${locale}/contact/`}
                     className="bg-[#001a35] border border-textLightBlue hover:bg-textLightBlue hover:text-[#001a35] text-textLightBlue uppercase px-5 py-2   font-semibold text-sm rounded-md transition duration-300 ease-in-out"
                   >
                     {diction.slider.button.getInTouch}

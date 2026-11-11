@@ -1,23 +1,26 @@
-import SpeakableSchema from "./speakable-schema"
+import JsonLd from "./json-ld";
+import { filterValidNodes } from "@/libs/schema/render";
+import { strapiSchemaNodes } from "@/libs/schema/strapi";
+import { typesOf } from "@/libs/schema/validate";
 
+/*
+    Page structured data.
 
-const SEOSchema = ({ schemaList }) => {
+    - `nodes`: schemas the page builds itself (Product, BlogPosting, FAQPage,
+      BreadcrumbList...). These always win.
+    - `schemaList`: Strapi seo.schema entries, used only as a fallback for types the
+      page does not provide, or provides but invalid.
 
-  //console.log("SEO Schema Componenet Call");
+    The site-wide Organization and WebSite come from <SiteSchema> in the layout;
+    Strapi copies of those are always dropped.
+*/
+const SEOSchema = ({ schemaList, nodes = [] }) => {
+    const ownNodes = filterValidNodes(nodes.filter(Boolean), "page schema");
+    const ownTypes = ownNodes.flatMap(typesOf);
 
-  return (
-    <>
-      {schemaList && schemaList.length > 0 && (
-        schemaList.map((schema) => (
-          <script
-            key={schema.id}
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: (schema.code) }}
-          />
-        ))
-      )}
-    </>
-  );
+    const fallbackNodes = strapiSchemaNodes(schemaList, ownTypes);
+
+    return <JsonLd data={[...ownNodes, ...fallbackNodes]} label="Strapi schema" />;
 };
 
-export default SEOSchema
+export default SEOSchema;

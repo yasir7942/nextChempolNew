@@ -1,13 +1,21 @@
 
-// app/not-found.js
+// app/global-not-found.js — 404 for URLs outside the root layouts ([lang], (home), admin).
+// It renders its own <html>/<body> because the site has several root layouts.
 
+import "./[lang]/globals.css";
 import Link from "next/link"
+import { openSans } from "@/libs/fonts";
 import Topbar from "./[lang]/components/navigation/topbar"
 import Footer from "./[lang]/components/layout/footer"
 
+export const metadata = {
+    title: "404 - Page Not Found",
+};
+
 export default function NotFoundPage() {
     return (
-        <div dir="ltr">
+        // html/body must be on one line, no whitespace
+        <html lang="en"><body className={openSans.className}><div dir="ltr">
             <Topbar locale="en" />
 
             <main className="container mx-auto py-20 text-center">
@@ -25,7 +33,6 @@ export default function NotFoundPage() {
             </main>
 
             <Footer locale="en" />
-        </div>
+        </div></body></html>
     )
 }
-

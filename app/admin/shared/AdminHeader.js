@@ -17,6 +17,8 @@ const menuItems = [
     { label: "Grease", href: "/admin/grease" },
     { label: "Synthetic", href: "/admin/synthetic" },
     { label: "Speciality", href: "/admin/speciality" },
+    // Product Report and Redirect Links (app/admin/(reports))
+    { label: "Reports", href: "/admin/reports" },
 ];
 
 export default function AdminHeader() {

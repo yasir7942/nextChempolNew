@@ -1,30 +1,32 @@
 import Image from "next/image"
 import PaddingContainer from "./padding-container"
 import { getImageUrl } from "@/libs/helper";
-import siteConfig from "@/config/site";
+import { buildImageObject } from "@/libs/schema/entity";
+import JsonLd from "../elements/json-ld";
 
 
 
+/*
+  Page banner. `title` is the page's single <h1>, so pages using this banner must not
+  add another <h1>.
+
+  Desktop and mobile used to be two separate copies of the banner (one hidden per
+  breakpoint), which put the title in the HTML twice. Now there is one banner whose
+  classes switch at `md`, reproducing both previous layouts:
+  - mobile:  220px high, smaller text
+  - desktop: 270px high, centred text block with a max width
+*/
 const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", dictionary = "" }) => {
 
 
   if (!banner || banner == null || banner.length == 0) return <div className=" mt-32"></div>
 
-  // image schema for seo
-  const jsonLd =
-  {
-    "@context": "https://schema.org/",
-    "@type": "ImageObject",
-    "contentUrl": getImageUrl(banner),
-    "license": siteConfig.imageObject.license,
-    "acquireLicensePage": siteConfig.imageObject.acquireLicensePage,
-    "creditText": dictionary?.imageObject.creditText,
-    "creator": {
-      "@type": dictionary?.imageObject.organization,
-      "name": dictionary?.imageObject.creatorName,
-    },
-    "copyrightNotice": dictionary?.imageObject.copyrightNoticeBanner
-  };
+  // image schema for seo; the creator is the canonical Organization
+  const imageSchema = buildImageObject({
+    url: getImageUrl(banner),
+    creditText: dictionary?.imageObject?.creditText,
+    copyrightNotice: dictionary?.imageObject?.copyrightNoticeBanner,
+  });
 
 
 
@@ -33,40 +35,25 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", di
   return (
     // <!--Top Banner-->
     <>
-      <script type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd data={imageSchema} label="banner image schema" />
 
-      <section className=" relative hidden md:block  z-20 w-full h-[270px]  " >
+      <section className=" relative z-20 w-full h-[220px] md:h-[270px] " >
 
         <Image src={mobileBanner ? mobileBanner : banner} width={1440} height={600}
           className="   object-center object-cover w-full h-full" alt={title ? title : "Chempol Banner"} />
         <PaddingContainer>
-          <div className="flex flex-col items-center pb-16 justify-center text-center -mt-44 ">
-            <div className="text-textLightBlue capitalize font-semibold text-xl md:text-2xl mx-auto">
-              {title}
-            </div>
-            <div className="w-full text-white font-light max-w-screen-md xl:max-w-screen-lg 2xl:max-w-screen-2xl text-center text-sm md:text-xl mx-auto overflow-hidden">
+          <div className="flex flex-col ml-0 pb-16 -mt-44 md:items-center md:justify-center text-center ">
+            {title ? (
+              <h1 className="text-textLightBlue capitalize font-semibold text-center text-xl md:text-2xl md:mx-auto">
+                {title}
+              </h1>
+            ) : null}
+            <div className="text-white font-light text-center md:w-full md:max-w-screen-md xl:max-w-screen-lg 2xl:max-w-screen-2xl md:text-xl md:mx-auto md:overflow-hidden">
               {title2}
             </div>
           </div>
         </PaddingContainer>
 
-      </section>
-      <div className="hidden lg:relative w-full h-5 bg-textLightBlue"></div>
-
-      {/* show md to  sm */}
-
-      <section className="  relative block  md:hidden  z-20 w-full h-[220px]   " >
-
-        <Image src={mobileBanner ? mobileBanner : banner} width={800} height={500}
-          className="   object-center object-cover w-full h-full" alt={title} />
-        <PaddingContainer>
-          <div className="flex flex-col   ml-0 pb-16  -mt-44 "  >
-            <div className="text-textLightBlue capitalize font-semibold  text-center    text-xl md:text-2xl" >{title}</div>
-            <div className="text-white  font-light  text-center     text-normal md:text-normal"  >{title2}</div>
-
-          </div>
-        </PaddingContainer>
       </section>
       <div className="lg:hidden relative w-full h-1 bg-textLightBlue"></div>
 

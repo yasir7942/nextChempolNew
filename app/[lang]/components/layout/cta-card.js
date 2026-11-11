@@ -30,7 +30,7 @@ const CTAcard = async ({ locale }) => {
           {/* <!--button--> */}
           <div className=" flex  items-center text-center pt-5 pl-3 w-52 md:pl-0" >
             <a className="uppercase px-6 py-3 text-white bg-gray-600  hover:bg-blue-400 hover:text-white 
-            transition decoration-purple-500 ease-in-out " href={`/contact/`} >{dictionary.cta.contactus} <MousePointerClick className="inline-block pl-2 " size={26} /> </a>
+            transition decoration-purple-500 ease-in-out " href={`/${locale}/contact/`} >{dictionary.cta.contactus} <MousePointerClick className="inline-block pl-2 " size={26} /> </a>
           </div>
         </div>
 

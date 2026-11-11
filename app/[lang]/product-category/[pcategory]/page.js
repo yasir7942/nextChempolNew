@@ -12,6 +12,7 @@ import { getFirstDescriptionText, getImageUrl } from "@/libs/helper";
 import { Suspense } from "react";
 import SEOSchema from "../../components/elements/seo-schema";
 import BodyDataParse from "../../components/elements/data-parse-content";
+import { buildBreadcrumbList, buildCollectionPage, buildFaqPage, pageUrl } from "@/libs/schema/entity";
 
 import SingleTab from "../../components/layout/SingleTab";
 import CTAcard from "../../components/layout/cta-card";
@@ -139,6 +140,26 @@ const ProductCategory = async props => {
   const readmoreTab = categoryData.data[0].readMoreTab;
   const faqs = categoryData.data[0].faq;
 
+  // Structured data: category page with the products listed on this page, breadcrumb and FAQ.
+  const pcategory = categoryData.data[0];
+
+  const schemaNodes = [
+    buildCollectionPage({
+      lang,
+      slug: pcategory.slug,
+      name: pcategory.title,
+      description: pcategory.seo?.seoDesctiption || getFirstDescriptionText(pcategory.description),
+      image: pcategory.image?.url ? getImageUrl(pcategory.image.url) : "",
+      products: productData.data,
+      startPosition: (currentPage - 1) * pageSize + 1,
+    }),
+    buildBreadcrumbList([
+      { name: dictionary.navigation.home, url: pageUrl(lang) },
+      { name: pcategory.title },
+    ]),
+    buildFaqPage(faqs),
+  ];
+
 
   /*  of product category or product in arabic is missing dont show this page just move to 404 page */
   /****issue is some time arabic category not lin with arabic product that issue  hand this issue with conditions and reoslve it ** */
@@ -156,13 +177,13 @@ const ProductCategory = async props => {
   return (
     <div className=" z-10">
 
-      <SEOSchema schemaList={categoryData.data[0].seo?.schema} />
+      <SEOSchema schemaList={pcategory.seo?.schema} nodes={schemaNodes} />
 
       {/* title={productData?.data[0]?.product_categories.data[0]?.title}  */}
 
 
       <TopBanner banner="/images/product-banner.jpg"
-        title={productData?.data[0]?.product_categories[0]?.title}
+        title={productData?.data[0]?.product_categories[0]?.title || pcategory.title}
         title2={categoryData.data[0]?.seo?.seoDesctiption ? categoryData.data[0]?.seo?.seoDesctiption : ""}
         dictionary={dictionary} />
 
@@ -228,7 +249,7 @@ const ProductCategory = async props => {
 
         <div className="flex flex-col w-full h-auto text-center my-20 2xl:px-[18%]">
 
-          {middleTitle && <h1 className="text-lg"> {middleTitle} </h1>}
+          {middleTitle && <h2 className="text-lg"> {middleTitle} </h2>}
           {middleDescrption && <div className="text-black  pb-10 rich-text">
             <BodyDataParse content={middleDescrption} />
           </div>}

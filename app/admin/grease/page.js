@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Combobox,
     ComboboxButton,
@@ -59,6 +59,45 @@ function getItemValue(item) {
 
 function findSelected(options, value) {
     return (options || []).find((item) => getItemValue(item) === String(value || "")) || null;
+}
+
+async function fetchJson(url, options = {}) {
+    const response = await fetch(url, {
+        cache: "no-store",
+        ...options,
+    });
+
+    const text = await response.text();
+
+    let data = null;
+
+    try {
+        data = JSON.parse(text);
+    } catch (error) {
+        console.log("[grease page] JSON parse error:", error);
+        console.log("[grease page] response text:", text);
+        throw new Error("Invalid JSON from API route");
+    }
+
+    if (!response.ok || data?.ok === false) {
+        throw new Error(data?.error || "Request failed");
+    }
+
+    return data;
+}
+
+function apiUrl(mode, params = {}) {
+    const sp = new URLSearchParams({
+        mode,
+    });
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            sp.set(key, value);
+        }
+    });
+
+    return `${API_ROUTE}?${sp.toString()}`;
 }
 
 export default function GreaseAdditivesPage() {
@@ -131,46 +170,7 @@ export default function GreaseAdditivesPage() {
         });
     }
 
-    async function fetchJson(url, options = {}) {
-        const response = await fetch(url, {
-            cache: "no-store",
-            ...options,
-        });
-
-        const text = await response.text();
-
-        let data = null;
-
-        try {
-            data = JSON.parse(text);
-        } catch (error) {
-            console.log("[grease page] JSON parse error:", error);
-            console.log("[grease page] response text:", text);
-            throw new Error("Invalid JSON from API route");
-        }
-
-        if (!response.ok || data?.ok === false) {
-            throw new Error(data?.error || "Request failed");
-        }
-
-        return data;
-    }
-
-    function apiUrl(mode, params = {}) {
-        const sp = new URLSearchParams({
-            mode,
-        });
-
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                sp.set(key, value);
-            }
-        });
-
-        return `${API_ROUTE}?${sp.toString()}`;
-    }
-
-    async function loadStaticCategory() {
+    const loadStaticCategory = useCallback(async () => {
         const data = await fetchJson(apiUrl("static-category"));
 
         setStaticCategory(
@@ -179,9 +179,9 @@ export default function GreaseAdditivesPage() {
                 slug: STATIC_CATEGORY.slug,
             }
         );
-    }
+    }, []);
 
-    async function loadTypes() {
+    const loadTypes = useCallback(async () => {
         const [data, all] = await Promise.all([
             fetchJson(apiUrl("types")),
             fetchJson(apiUrl("all-types")),
@@ -189,9 +189,9 @@ export default function GreaseAdditivesPage() {
 
         setTypes(data?.items || []);
         setAllTypes(all?.items || []);
-    }
+    }, []);
 
-    async function loadProducts(typeId) {
+    const loadProducts = useCallback(async (typeId) => {
         if (!typeId) {
             setProducts([]);
             setAllProducts([]);
@@ -205,9 +205,9 @@ export default function GreaseAdditivesPage() {
 
         setProducts(data?.items || []);
         setAllProducts(all?.items || []);
-    }
+    }, []);
 
-    async function loadDosage(productId, typeId = selectedType) {
+    const loadDosage = useCallback(async (productId, typeId = selectedType) => {
         setDosageDocId("");
         setDosageTitle("");
 
@@ -228,7 +228,7 @@ export default function GreaseAdditivesPage() {
         } finally {
             setLoadingDosage(false);
         }
-    }
+    }, [selectedType]);
 
     useEffect(() => {
         async function init() {
@@ -248,7 +248,7 @@ export default function GreaseAdditivesPage() {
         }
 
         init();
-    }, []);
+    }, [loadStaticCategory, loadTypes]);
 
     useEffect(() => {
         async function run() {
@@ -271,7 +271,7 @@ export default function GreaseAdditivesPage() {
         }
 
         run();
-    }, [selectedType]);
+    }, [selectedType, loadProducts]);
 
     useEffect(() => {
         async function run() {
@@ -290,7 +290,7 @@ export default function GreaseAdditivesPage() {
         }
 
         run();
-    }, [selectedProduct, selectedType]);
+    }, [selectedProduct, selectedType, loadDosage]);
 
     function setSelectedAddValue(type, value) {
         setSelectedAdd((prev) => ({

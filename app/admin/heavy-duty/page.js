@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Combobox,
     ComboboxButton,
@@ -78,6 +78,45 @@ function getItemValue(item) {
 
 function findSelected(options, value) {
     return (options || []).find((item) => getItemValue(item) === String(value || "")) || null;
+}
+
+async function fetchJson(url, options = {}) {
+    const response = await fetch(url, {
+        cache: "no-store",
+        ...options,
+    });
+
+    const text = await response.text();
+
+    let data = null;
+
+    try {
+        data = JSON.parse(text);
+    } catch (error) {
+        console.log("[page] JSON parse error:", error);
+        console.log("[page] response text:", text);
+        throw new Error("Invalid JSON from API route");
+    }
+
+    if (!response.ok || data?.ok === false) {
+        throw new Error(data?.error || "Request failed");
+    }
+
+    return data;
+}
+
+function apiUrl(mode, params = {}) {
+    const sp = new URLSearchParams({
+        mode,
+    });
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            sp.set(key, value);
+        }
+    });
+
+    return `${API_ROUTE}?${sp.toString()}`;
 }
 
 export default function HeavyDutyPage() {
@@ -179,46 +218,14 @@ export default function HeavyDutyPage() {
         });
     }
 
-    async function fetchJson(url, options = {}) {
-        const response = await fetch(url, {
-            cache: "no-store",
-            ...options,
-        });
+    // Latest selections, read by loaders/effects that must not re-run when they change.
+    const selectedApiRef = useRef(selectedApi);
 
-        const text = await response.text();
+    useEffect(() => {
+        selectedApiRef.current = selectedApi;
+    }, [selectedApi]);
 
-        let data = null;
-
-        try {
-            data = JSON.parse(text);
-        } catch (error) {
-            console.log("[page] JSON parse error:", error);
-            console.log("[page] response text:", text);
-            throw new Error("Invalid JSON from API route");
-        }
-
-        if (!response.ok || data?.ok === false) {
-            throw new Error(data?.error || "Request failed");
-        }
-
-        return data;
-    }
-
-    function apiUrl(mode, params = {}) {
-        const sp = new URLSearchParams({
-            mode,
-        });
-
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                sp.set(key, value);
-            }
-        });
-
-        return `${API_ROUTE}?${sp.toString()}`;
-    }
-
-    async function loadStaticCategory() {
+    const loadStaticCategory = useCallback(async () => {
         const data = await fetchJson(apiUrl("static-category"));
 
         setStaticCategory(
@@ -227,9 +234,9 @@ export default function HeavyDutyPage() {
                 slug: STATIC_CATEGORY.slug,
             }
         );
-    }
+    }, []);
 
-    async function loadApis() {
+    const loadApis = useCallback(async () => {
         const [data, all] = await Promise.all([
             fetchJson(apiUrl("apis")),
             fetchJson(apiUrl("allapis")),
@@ -237,9 +244,9 @@ export default function HeavyDutyPage() {
 
         setApis(data?.items || []);
         setAllApis(all?.items || []);
-    }
+    }, []);
 
-    async function loadSaeGrades(apiId) {
+    const loadSaeGrades = useCallback(async (apiId) => {
         if (!apiId) {
             setSaeGrades([]);
             setAllSaeGrades([]);
@@ -253,9 +260,9 @@ export default function HeavyDutyPage() {
 
         setSaeGrades(data?.items || []);
         setAllSaeGrades(all?.items || []);
-    }
+    }, []);
 
-    async function loadProducts(saeGradeId) {
+    const loadProducts = useCallback(async (saeGradeId) => {
         if (!saeGradeId) {
             setProducts([]);
             setAllProducts([]);
@@ -266,7 +273,7 @@ export default function HeavyDutyPage() {
             fetchJson(apiUrl("products", { saeGradeId })),
             fetchJson(
                 apiUrl("all-products", {
-                    apiId: selectedApi,
+                    apiId: selectedApiRef.current,
                     saeGradeId,
                 })
             ),
@@ -274,9 +281,9 @@ export default function HeavyDutyPage() {
 
         setProducts(data?.items || []);
         setAllProducts(all?.items || []);
-    }
+    }, []);
 
-    async function loadDosage(productId, apiId = selectedApi, saeGradeId = selectedSaeGrade) {
+    const loadDosage = useCallback(async (productId, apiId = selectedApi, saeGradeId = selectedSaeGrade) => {
         setDosageDocId("");
         setDosageTitle("");
 
@@ -305,9 +312,9 @@ export default function HeavyDutyPage() {
         } finally {
             setLoadingDosage(false);
         }
-    }
+    }, [selectedApi, selectedSaeGrade]);
 
-    async function loadLeaf(saeGradeId, productId) {
+    const loadLeaf = useCallback(async (saeGradeId, productId) => {
         if (!saeGradeId || !productId) {
             setAceas([]);
             setAllAceas([]);
@@ -327,7 +334,7 @@ export default function HeavyDutyPage() {
         setAllAceas(allAcea?.items || []);
         setOems(oem?.items || []);
         setAllOems(allOem?.items || []);
-    }
+    }, []);
 
     useEffect(() => {
         async function init() {
@@ -344,7 +351,7 @@ export default function HeavyDutyPage() {
         }
 
         init();
-    }, []);
+    }, [loadStaticCategory, loadApis]);
 
     useEffect(() => {
         async function run() {
@@ -377,7 +384,7 @@ export default function HeavyDutyPage() {
         }
 
         run();
-    }, [selectedApi]);
+    }, [selectedApi, loadSaeGrades]);
 
     useEffect(() => {
         async function run() {
@@ -407,7 +414,7 @@ export default function HeavyDutyPage() {
         }
 
         run();
-    }, [selectedSaeGrade]);
+    }, [selectedSaeGrade, loadProducts]);
 
     useEffect(() => {
         async function run() {
@@ -437,7 +444,7 @@ export default function HeavyDutyPage() {
         }
 
         run();
-    }, [selectedProduct, selectedApi, selectedSaeGrade]);
+    }, [selectedProduct, selectedApi, selectedSaeGrade, loadDosage, loadLeaf]);
 
     function setSelectedAddValue(type, value) {
         setSelectedAdd((prev) => ({

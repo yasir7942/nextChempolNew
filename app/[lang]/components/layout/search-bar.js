@@ -159,7 +159,7 @@ const SearchBar = ({ locale, dictionary, dataType, topBar = false }) => {
                 <div key={product.id} className="flex flex-col space-y-3">
                   <div className="flex justify-start space-x-5 items-center pl-1">
                     <Link
-                      href={`/${locale}/product/${productSlug}`}
+                      href={`/${locale}/product/${productSlug}/`}
                       onClick={() => {
                         setTimeout(() => {
                           setIsSearchVisible(false);
@@ -183,7 +183,7 @@ const SearchBar = ({ locale, dictionary, dataType, topBar = false }) => {
                     </Link>
 
                     <Link
-                      href={`/${locale}/product/${productSlug}`}
+                      href={`/${locale}/product/${productSlug}/`}
                       className="flex flex-col items-start space-y-2 rtl:pr-2"
                       onClick={() => {
                         setTimeout(() => {
@@ -208,7 +208,7 @@ const SearchBar = ({ locale, dictionary, dataType, topBar = false }) => {
         </div>
 
         <Link
-          href={`/${locale}/search?s=${searchQuery}`}
+          href={`/${locale}/search/?s=${searchQuery}`}
           className="w-full block h-auto mt-5 py-1 text-base bg-slate-200 font-normal tracking-wider text-center text-black first-letter:uppercase"
         >
           {dictionary.topbar.viewMoreSearch}

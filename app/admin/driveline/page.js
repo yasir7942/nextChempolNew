@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Combobox,
     ComboboxButton,
@@ -75,6 +75,43 @@ function findSelected(options, value) {
     return (options || []).find((item) => getItemValue(item) === String(value || "")) || null;
 }
 
+async function fetchJson(url, options = {}) {
+    const response = await fetch(url, {
+        cache: "no-store",
+        ...options,
+    });
+
+    const text = await response.text();
+
+    let data = null;
+
+    try {
+        data = JSON.parse(text);
+    } catch (error) {
+        console.log("[page] JSON parse error:", error);
+        console.log("[page] response text:", text);
+        throw new Error("Invalid JSON from API route");
+    }
+
+    if (!response.ok || data?.ok === false) {
+        throw new Error(data?.error || "Request failed");
+    }
+
+    return data;
+}
+
+function apiUrl(mode, params = {}) {
+    const sp = new URLSearchParams({ mode });
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            sp.set(key, value);
+        }
+    });
+
+    return `${API_ROUTE}?${sp.toString()}`;
+}
+
 export default function DrivelinePage() {
     const [loading, setLoading] = useState(true);
     const [savingType, setSavingType] = useState("");
@@ -146,44 +183,14 @@ export default function DrivelinePage() {
         });
     }
 
-    async function fetchJson(url, options = {}) {
-        const response = await fetch(url, {
-            cache: "no-store",
-            ...options,
-        });
+    // Latest selections, read by loaders/effects that must not re-run when they change.
+    const selectedTypeRef = useRef(selectedType);
 
-        const text = await response.text();
+    useEffect(() => {
+        selectedTypeRef.current = selectedType;
+    }, [selectedType]);
 
-        let data = null;
-
-        try {
-            data = JSON.parse(text);
-        } catch (error) {
-            console.log("[page] JSON parse error:", error);
-            console.log("[page] response text:", text);
-            throw new Error("Invalid JSON from API route");
-        }
-
-        if (!response.ok || data?.ok === false) {
-            throw new Error(data?.error || "Request failed");
-        }
-
-        return data;
-    }
-
-    function apiUrl(mode, params = {}) {
-        const sp = new URLSearchParams({ mode });
-
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                sp.set(key, value);
-            }
-        });
-
-        return `${API_ROUTE}?${sp.toString()}`;
-    }
-
-    async function loadStaticCategory() {
+    const loadStaticCategory = useCallback(async () => {
         const data = await fetchJson(apiUrl("static-category"));
 
         setStaticCategory(
@@ -192,9 +199,9 @@ export default function DrivelinePage() {
                 slug: STATIC_CATEGORY.slug,
             }
         );
-    }
+    }, []);
 
-    async function loadTypes() {
+    const loadTypes = useCallback(async () => {
         const [data, all] = await Promise.all([
             fetchJson(apiUrl("types")),
             fetchJson(apiUrl("all-types")),
@@ -202,9 +209,9 @@ export default function DrivelinePage() {
 
         setTypes(data?.items || []);
         setAllTypes(all?.items || []);
-    }
+    }, []);
 
-    async function loadApis(typeId) {
+    const loadApis = useCallback(async (typeId) => {
         if (!typeId) {
             setApis([]);
             setAllApis([]);
@@ -218,9 +225,9 @@ export default function DrivelinePage() {
 
         setApis(data?.items || []);
         setAllApis(all?.items || []);
-    }
+    }, []);
 
-    async function loadProducts(apiId) {
+    const loadProducts = useCallback(async (apiId) => {
         if (!apiId) {
             setProducts([]);
             setAllProducts([]);
@@ -228,15 +235,15 @@ export default function DrivelinePage() {
         }
 
         const [data, all] = await Promise.all([
-            fetchJson(apiUrl("products", { typeId: selectedType, apiId })),
-            fetchJson(apiUrl("all-products", { typeId: selectedType, apiId })),
+            fetchJson(apiUrl("products", { typeId: selectedTypeRef.current, apiId })),
+            fetchJson(apiUrl("all-products", { typeId: selectedTypeRef.current, apiId })),
         ]);
 
         setProducts(data?.items || []);
         setAllProducts(all?.items || []);
-    }
+    }, []);
 
-    async function loadDosage(productId, typeId = selectedType, apiId = selectedApi) {
+    const loadDosage = useCallback(async (productId, typeId = selectedType, apiId = selectedApi) => {
         setDosageDocId("");
         setDosageTitle("");
 
@@ -258,9 +265,9 @@ export default function DrivelinePage() {
         } finally {
             setLoadingDosage(false);
         }
-    }
+    }, [selectedType, selectedApi]);
 
-    async function loadOems(productId) {
+    const loadOems = useCallback(async (productId) => {
         if (!productId) {
             setOems([]);
             setAllOems([]);
@@ -274,7 +281,7 @@ export default function DrivelinePage() {
 
         setOems(data?.items || []);
         setAllOems(all?.items || []);
-    }
+    }, [selectedType, selectedApi]);
 
     useEffect(() => {
         async function init() {
@@ -291,7 +298,7 @@ export default function DrivelinePage() {
         }
 
         init();
-    }, []);
+    }, [loadStaticCategory, loadTypes]);
 
     useEffect(() => {
         async function run() {
@@ -321,7 +328,7 @@ export default function DrivelinePage() {
         }
 
         run();
-    }, [selectedType]);
+    }, [selectedType, loadApis]);
 
     useEffect(() => {
         async function run() {
@@ -348,7 +355,7 @@ export default function DrivelinePage() {
         }
 
         run();
-    }, [selectedApi]);
+    }, [selectedApi, loadProducts]);
 
     useEffect(() => {
         async function run() {
@@ -374,7 +381,7 @@ export default function DrivelinePage() {
         }
 
         run();
-    }, [selectedProduct, selectedType, selectedApi]);
+    }, [selectedProduct, selectedType, selectedApi, loadDosage, loadOems]);
 
     function setSelectedAddValue(type, value) {
         setSelectedAdd((prev) => ({

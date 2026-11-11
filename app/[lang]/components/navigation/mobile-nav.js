@@ -72,7 +72,8 @@ const MobileNavigation = ({ locale }) => {
           </Link>
         </SheetTrigger>
 
-        <SheetContent className="w-[85%] border-l-4 border-textBlue bg-blue-50 overflow-scroll z-[999]">
+        {/* the sheet renders outside the page wrapper; dir="ltr" keeps its existing look now that <html> has dir="rtl" on Arabic pages */}
+        <SheetContent dir="ltr" className="w-[85%] border-l-4 border-textBlue bg-blue-50 overflow-scroll z-[999]">
           <SheetHeader>
 
             <SheetTitle className="hidden">Menu</SheetTitle>
@@ -80,7 +81,7 @@ const MobileNavigation = ({ locale }) => {
 
           <div className="flex flex-col w-full h-full py-4 px-2">
             {/* ✅ Logo */}
-            <Link href={`${locale}/`} className="w-[80%]">
+            <Link href={`/${locale}/`} className="w-[80%]">
               <Image
                 src="/images/chempol.png"
                 width={332}
@@ -95,7 +96,7 @@ const MobileNavigation = ({ locale }) => {
               <ul className="flex flex-col space-y-2 text-lg text-textBlue font-normal">
                 <li>
                   <Link
-                    href="/"
+                    href={`/${locale}/`}
                     className="hover:text-textLightBlue transition"
                     onClick={() => setOpenSheet(false)}
                   >
@@ -104,7 +105,7 @@ const MobileNavigation = ({ locale }) => {
                 </li>
                 <li>
                   <Link
-                    href={`/${locale}/about-us`}
+                    href={`/${locale}/about-us/`}
                     className="hover:text-textLightBlue transition"
                     onClick={() => setOpenSheet(false)}
                   >
@@ -128,7 +129,7 @@ const MobileNavigation = ({ locale }) => {
                           <Link
                             className="hover:text-textLightBlue transition"
                             onClick={() => setOpenSheet(false)}
-                            href={`/${locale}/product-category/${component.slug}`}
+                            href={`/${locale}/product-category/${component.slug}/`}
                           >
                             {component.title}
                           </Link>
@@ -140,7 +141,7 @@ const MobileNavigation = ({ locale }) => {
 
                 <li>
                   <Link
-                    href={`/${locale}/lubricant-additives-manufacturers-in-uae`}
+                    href={`/${locale}/lubricant-additives-manufacturers-in-uae/`}
                     className="hover:text-textLightBlue transition"
                     onClick={() => setOpenSheet(false)}
                   >
@@ -149,7 +150,7 @@ const MobileNavigation = ({ locale }) => {
                 </li>
                 <li>
                   <Link
-                    href={`/${locale}/faq`}
+                    href={`/${locale}/faq/`}
                     className="hover:text-textLightBlue transition"
                     onClick={() => setOpenSheet(false)}
                   >
@@ -158,7 +159,7 @@ const MobileNavigation = ({ locale }) => {
                 </li>
                 <li>
                   <Link
-                    href={`/${locale}/blog`}
+                    href={`/${locale}/blog/`}
                     className="hover:text-textLightBlue transition"
                     onClick={() => setOpenSheet(false)}
                   >
@@ -167,7 +168,7 @@ const MobileNavigation = ({ locale }) => {
                 </li>
                 <li>
                   <Link
-                    href={`/${locale}/contact`}
+                    href={`/${locale}/contact/`}
                     className="hover:text-textLightBlue transition"
                     onClick={() => setOpenSheet(false)}
                   >

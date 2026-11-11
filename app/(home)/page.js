@@ -1,20 +1,22 @@
 //Home Page
-import PaddingContainer from "./[lang]/components/layout/padding-container";
-import BlogContainer from "./[lang]/components/layout/blog-container";
-import SpeakableSchema from "./[lang]/components/elements/speakable-schema";
+import PaddingContainer from "../[lang]/components/layout/padding-container";
+import BlogContainer from "../[lang]/components/layout/blog-container";
+import SpeakableSchema from "../[lang]/components/elements/speakable-schema";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import { cache } from 'react';
-import SEOSchema from "./[lang]/components/elements/seo-schema";
+import SEOSchema from "../[lang]/components/elements/seo-schema";
+import { buildFaqPage } from "@/libs/schema/entity";
+import SiteSchema from "../[lang]/components/elements/site-schema";
 import siteConfig from "@/config/site";
-import CharcoalContentBox from "./[lang]/components/layout/charcoal-content-box";
-import ProductCategoryGrid from "./[lang]/components/layout/product-category-grid";
-import CTAcard from "./[lang]/components/layout/cta-card";
-import Slider from "./[lang]/components/layout/slider";
-import FretchVideosWrapper from "./[lang]/components/elements/FretchVideosWrapper";
+import CharcoalContentBox from "../[lang]/components/layout/charcoal-content-box";
+import ProductCategoryGrid from "../[lang]/components/layout/product-category-grid";
+import CTAcard from "../[lang]/components/layout/cta-card";
+import Slider from "../[lang]/components/layout/slider";
+import FretchVideosWrapper from "../[lang]/components/elements/FretchVideosWrapper";
 
 import { getDictionary } from "@/libs/getDictionary";
-import FAQs from "./[lang]/components/layout/Faqs";
-import { getHomePage } from "./[lang]/data/loader";
+import FAQs from "../[lang]/components/layout/Faqs";
+import { getHomePage } from "../[lang]/data/loader";
 
 
 
@@ -78,7 +80,8 @@ export default async function Home({ params }) {
       <Slider locale={lang} diction={dictionary} />
 
       <SpeakableSchema pageTitle={dictionary.homePage.title} locale={lang} pageUrl={homeData.seo?.canonicalLinks ?? "/"} />
-      <SEOSchema schemaList={homeData.seo?.schema} />
+      <SiteSchema lang={lang || "en"} />
+      <SEOSchema schemaList={homeData.seo?.schema} nodes={[buildFaqPage(faqs)]} />
 
       {/* <!--powering progress--> {`${lang === 'ar' ? 'rtl' : 'ltr'}` */}
 
@@ -119,14 +122,8 @@ export default async function Home({ params }) {
 
       <BlogContainer locale={lang} />
 
-      <div className="bg-[#F2F2F2] w-full h-auto pt-14 pb-10" dir="ltr">
-
-        <PaddingContainer className=" ">
-          <h3 className=" text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize r   ml-5 z-20" >{dictionary.homePage.latestMediaUpdate} </h3>
-          <FretchVideosWrapper langText={dictionary.homePage.latestRelease} />
-        </PaddingContainer>
-
-      </div>
+      {/* hidden when no video is available on YouTube */}
+      <FretchVideosWrapper title={dictionary.homePage.latestMediaUpdate} langText={dictionary.homePage.latestRelease} locale={lang || "en"} />
     </div>
 
   );

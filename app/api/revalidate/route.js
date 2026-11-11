@@ -2,9 +2,10 @@ import { writeFile, appendFile } from "fs/promises";
 import { join } from "path";
 import fs from "fs";
 import path from "path";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { flattenAttributes } from "@/libs/data-utils";
-import { revalidatePath } from "next/cache";
+import { syncRedirects } from "@/libs/redirects/sync";
+import { revalidateBoth, revalidateLocales, revalidateSite, revalidateVideoPages } from "@/libs/revalidate-pages";
 
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_ADMIN_BASE_URL + ""; // direct strapi api call
 const VALID_TOKEN = process.env.ADMIN_TOKEN;
@@ -12,6 +13,76 @@ const VALID_TOKEN = process.env.ADMIN_TOKEN;
 const logFilePath = join(process.cwd(), "strapi-webhooks.log");
 
 const locales = ["en", "ar", "es"];
+
+const REDIRECT_MODELS = ["redirection-url", "redirection-urls", "redirects"];
+// Content whose pages can be redirect destinations
+const DESTINATION_MODELS = ["post", "product", "product-category"];
+
+// Shown in the header menu or footer of every page (categories, office addresses)
+const SITE_WIDE_MODELS = ["all", "product-category", "contact", "contact-us"];
+
+// Strapi single types (no slug) and the page they feed: "" is the home page
+const SINGLE_TYPE_PAGES = {
+    "home-page": "",
+    "about-us": "about-us",
+    "faq-page": "faq",
+    "blog-page": "blog",
+    "search-page": "search",
+    "lubricant-additives-uae": "lubricant-additives-manufacturers-in-uae",
+};
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+
+function getTokenFromReq(req) {
+    const url = new URL(req.url);
+
+    const queryToken = url.searchParams.get("token") || "";
+    const authHeader = req.headers.get("authorization") || "";
+
+    const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
+        ? authHeader.slice(7).trim()
+        : "";
+
+    return queryToken || bearerToken;
+}
+
+// ?token=... or "Authorization: Bearer ..." must equal ADMIN_TOKEN
+function verifyToken(req) {
+    const token = getTokenFromReq(req);
+
+    if (!VALID_TOKEN) {
+        return {
+            ok: false,
+            response: NextResponse.json(
+                { success: false, error: "ADMIN_TOKEN is missing in Next.js .env" },
+                { status: 401, headers: corsHeaders }
+            ),
+        };
+    }
+
+    if (!token || token !== VALID_TOKEN) {
+        return {
+            ok: false,
+            response: NextResponse.json(
+                { success: false, error: "Unauthorized: Invalid token" },
+                { status: 401, headers: corsHeaders }
+            ),
+        };
+    }
+
+    return { ok: true };
+}
+
+// Any add / update / delete of a redirect: rebuild the live redirects after responding
+function scheduleRedirectSync(model, { force = false } = {}) {
+    after(() => syncRedirects({ trigger: `webhook:${model}`, force }));
+    return NextResponse.json(
+        { success: true, model, redirects: "sync scheduled", now: Date.now() },
+        { status: 202, headers: corsHeaders }
+    );
+}
 
 
 
@@ -72,16 +143,7 @@ async function revalidate(req, model, slug) {
 
     try {
 
-        const url = new URL(req.url);
-        const token = url.searchParams.get("token"); // Extract token from URL
-
-        // Validate token
-        if (!token || token !== VALID_TOKEN) {
-            return NextResponse.json(
-                { success: false, error: "Unauthorized: Invalid token" },
-                { status: 401 }
-            );
-        }
+        // The token is checked by GET/POST (verifyToken) before this runs
 
         // Enable CORS
         const headers = {
@@ -94,51 +156,38 @@ async function revalidate(req, model, slug) {
             return new NextResponse(null, { headers });
         }
 
-        if (model == 'all') {
-            // revalidatePath('/', 'layout');
-            for (const loc of locales) revalidatePath(`/${loc}`, 'layout');
-
+        if (SITE_WIDE_MODELS.includes(model)) {
+            // header menu / footer content is on every page
+            revalidateSite();
         }
         else if (model == 'post') {
             console.log("revalidate post");
-            for (const loc of locales) {
-                revalidatePath(`/${loc}`); // for homepage
-                revalidatePath(`/${loc}/blog/`);
-                revalidatePath(`/${loc}/blog/${slug}/`);
-            }
+            revalidateLocales(""); // for homepage
+            revalidateLocales("blog");
+            if (slug) revalidateLocales(`blog/${slug}`);
         }
         else if (model == 'product') {
             for (const loc of locales) {
-                revalidatePath(`/${loc}/product/${slug}/`);
-                let categorySlug = await getProductCategoryBySlug(loc, slug);
-                revalidatePath(`/${loc}/product-category/${categorySlug?.toString()}`);
+                if (slug) revalidateBoth(`/${loc}/product/${slug}/`);
+                let categorySlug = slug ? await getProductCategoryBySlug(loc, slug) : null;
+                if (categorySlug) revalidateBoth(`/${loc}/product-category/${categorySlug}/`);
             }
         }
         else if (model == 'video') {
             console.log("revalidate video");
-            for (const loc of locales) {
-                revalidatePath(`/${loc}`); // for homepage
-                revalidatePath(`/${loc}/videos/`);
-            }
-
+            revalidateVideoPages(); // home pages, videos pages and sitemaps
         }
-
-        else if (model == 'product-category') {
-
-
-
-            for (const loc of locales) {
-                revalidatePath(`/${loc}`); // for homepage
-                revalidatePath(`/${loc}/product-category/${slug}/`);
-            }
-
-
+        else if (SINGLE_TYPE_PAGES[model] !== undefined) {
+            // single types (home-page, about-us...) have no slug: refresh the page they feed
+            revalidateLocales(SINGLE_TYPE_PAGES[model]);
+            if (model == 'home-page') revalidateBoth("/");
+        }
+        else if (slug) {
+            revalidateLocales(slug);
         }
         else {
-
-            for (const loc of locales) {
-                revalidatePath(`/loc/${slug}/`);
-            }
+            // unknown content without a slug: refresh everything rather than nothing
+            revalidateSite();
         }
 
 
@@ -175,9 +224,20 @@ export async function OPTIONS() {
 
 // ✅ Handle GET request
 export async function GET(req) {
+    const auth = verifyToken(req);
+    if (!auth.ok) return auth.response;
+
     try {
         const { searchParams } = new URL(req.url);
         const token = searchParams.get("token") || "No token provided";
+        const model = searchParams.get("model") || "all";
+
+        // ?model=redirection-url[&force=1]: rebuild the live redirects (force re-checks every destination)
+        if (REDIRECT_MODELS.includes(model)) {
+            await logRequest(`[${new Date().toISOString()}] Revalidate Manual - redirects sync (${model})  \n`);
+            return scheduleRedirectSync(model, { force: searchParams.get("force") === "1" });
+        }
+
         const logMessage = `[${new Date().toISOString()}] Revalidate Manual - All Revalidate Done  \n`;
 
 
@@ -202,13 +262,19 @@ export async function GET(req) {
 
 // ✅ Handle POST request
 export async function POST(req) {
+    const auth = verifyToken(req);
+    if (!auth.ok) return auth.response;
+
     try {
 
-        const { searchParams } = new URL(req.url);
-        const token = searchParams.get("token") || "No token provided";
-
         const body = await req.json();
+        const model = body?.model || body?.event || "";
+        const slug = body?.entry?.slug ?? body?.data?.slug ?? body?.slug ?? "";
 
+        if (REDIRECT_MODELS.includes(model)) {
+            await logRequest(`[${new Date().toISOString()}] Revalidate Auto -  redirects sync (${model}) \n`);
+            return scheduleRedirectSync(model);
+        }
 
 
         /* if (body) {
@@ -218,11 +284,16 @@ export async function POST(req) {
              );
          }
  */
-        const logMessage = `[${new Date().toISOString()}] Revalidate Auto -  Revalidate: ${body.model} : ${body.entry.slug} \n`;
+        const logMessage = `[${new Date().toISOString()}] Revalidate Auto -  Revalidate: ${model} : ${slug} \n`;
         console.log(logMessage);
 
 
-        await revalidate(req, body.model, body.entry.slug);
+        await revalidate(req, model, slug);
+
+        // A page was added or removed: redirects pointing to it may become valid or broken
+        if (slug && DESTINATION_MODELS.includes(model)) {
+            after(() => syncRedirects({ trigger: `webhook:${model}`, recheck: slug }));
+        }
 
 
         await logRequest(logMessage);

@@ -99,6 +99,21 @@
     @apply text-lg font-semibold mt-6  text-[--primary];
   }
 
+  /* heading-1 blocks from Strapi render as <h2> (one <h1> per page); keep their old <h1> look */
+  .rich-text h2.content-h1,
+  .rich-text h2.content-h1 strong {
+    font-size: inherit;
+    line-height: inherit;
+    margin-top: 0;
+    color: inherit;
+  }
+  .rich-text h2.content-h1 {
+    font-weight: inherit;
+  }
+  .rich-text h2.content-h1 strong {
+    font-weight: bolder;
+  }
+
   .rich-text a {
     @apply text-textLightBlue hover:text-textBlue transition duration-300 ease-in-out;
   }

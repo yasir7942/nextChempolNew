@@ -22,7 +22,7 @@ export default function MenuList({ locale, productCategory, dictionary }) {
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link
-              href={`/${locale}`}
+              href={`/${locale}/`}
               className={`${navigationMenuTriggerStyle()} text-textBlue font-normal uppercase hover:text-darkGary text-lg`}
             >
               {dictionary.navigation.home}
@@ -43,7 +43,7 @@ export default function MenuList({ locale, productCategory, dictionary }) {
                   <FaAngleLeft className="pl-2 text-textBlue ltr:hidden" />
                   <Link
                     className="transition duration-300 ease-in-out hover:text-textBlue capitalize"
-                    href={`/${locale}/product-category/${component.slug}`}
+                    href={`/${locale}/product-category/${component.slug}/`}
                   >
                     {component.title}
                   </Link>
@@ -72,13 +72,13 @@ export default function MenuList({ locale, productCategory, dictionary }) {
                   </div>
                 </NavigationMenuLink>
               </li>
-              <Link href={`/${locale}/about-us`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">
+              <Link href={`/${locale}/about-us/`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">
                 {dictionary.navigation.about}
               </Link>
-              <Link href={`/${locale}/faq`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">
+              <Link href={`/${locale}/faq/`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">
                 {dictionary.navigation.faq}
               </Link>
-              <Link href={`/${locale}/lubricant-additives-manufacturers-in-uae`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">
+              <Link href={`/${locale}/lubricant-additives-manufacturers-in-uae/`} className="font-light hover:text-textBlue ml-3 rtl:mr-2">
                 {dictionary.navigation.lubricantAdditives}
               </Link>
             </ul>
@@ -89,7 +89,7 @@ export default function MenuList({ locale, productCategory, dictionary }) {
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link
-              href={`/${locale}/blog`}
+              href={`/${locale}/blog/`}
               className={`${navigationMenuTriggerStyle()} text-textBlue font-normal uppercase hover:text-darkGary text-lg`}
             >
               {dictionary.navigation.blog}
@@ -101,7 +101,7 @@ export default function MenuList({ locale, productCategory, dictionary }) {
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link
-              href={`/${locale}/about-us`}
+              href={`/${locale}/about-us/`}
               className={`${navigationMenuTriggerStyle()} text-textBlue font-normal uppercase hover:text-darkGary text-lg`}
             >
               {dictionary.navigation.about}
@@ -113,7 +113,7 @@ export default function MenuList({ locale, productCategory, dictionary }) {
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link
-              href={`/${locale}/contact`}
+              href={`/${locale}/contact/`}
               className={`${navigationMenuTriggerStyle()} text-textBlue font-normal uppercase hover:text-darkGary text-lg`}
             >
               {dictionary.navigation.contact}

@@ -7,6 +7,8 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 
+// FAQPage JSON-LD is built on the server by each page (buildFaqPage), so it is in
+// the HTML even when this list sits inside a closed accordion.
 const FAQs = ({ dictionary, faqList = [], heading = "", text = "", page = "category" }) => {
     // Safe access + fallbacks
     const nav = dictionary?.navigation || {};
@@ -15,31 +17,8 @@ const FAQs = ({ dictionary, faqList = [], heading = "", text = "", page = "categ
 
     const hasFaqs = Array.isArray(faqList) && faqList.length > 0;
 
-    // JSON-LD only when we actually have FAQs
-    const jsonLd = hasFaqs
-        ? {
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: faqList.map((data) => ({
-                "@type": "Question",
-                name: data?.question ?? "",
-                acceptedAnswer: {
-                    "@type": "Answer",
-                    text: data?.answer ?? "",
-                },
-            })),
-        }
-        : null;
-
     return (
         <>
-            {jsonLd && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
-            )}
-
             <div className="w-full mt-10 mb-10 text-center h-auto">
 
 

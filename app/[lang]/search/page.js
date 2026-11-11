@@ -79,6 +79,12 @@ const searchPage = async props => {
     <div>
 
       <SEOSchema schemaList={pageData.seo?.schema} />
+
+      {/* page heading for search engines and screen readers; sr-only so the layout is unchanged */}
+      <h1 className="sr-only">
+        {pageData?.title || dictionary.topbar?.searchProducts || dictionary.topbar?.customerSupport?.searchProducts || "Search"}{query ? `: ${query}` : ""}
+      </h1>
+
       <div className="w-full mt-5 h-[1px] bg-textBlue"></div>
       <PaddingContainer>
 

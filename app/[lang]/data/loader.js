@@ -48,6 +48,31 @@ export async function fetchData(path, filter) {
 }
 
 
+// Same request as fetchData, but returns null on any HTTP, JSON or network failure
+// instead of an error body, so callers can tell "Strapi failed" from "no data".
+// Used by the redirect sync and the admin reports, which must never act on a failed read.
+export async function fetchDataOrNull(path, filter) {
+  const url = new URL(path, baseUrl);
+  if (filter) url.search = filter;
+
+  try {
+    const response = await fetch(url.href, { cache: "no-store" });
+    const contentType = response.headers.get("content-type") || "";
+    const bodyText = await response.text();
+
+    if (!response.ok || !contentType.includes("application/json")) {
+      console.error("STRAPI FETCH FAILED:", url.href, response.status, contentType, bodyText.slice(0, 500));
+      return null;
+    }
+
+    return flattenAttributes(JSON.parse(bodyText));
+  } catch (error) {
+    console.error("STRAPI FETCH FAILED:", url.href, error?.message || error, error?.cause?.code || "");
+    return null;
+  }
+}
+
+
 export async function getHomePage(lang) {
 
   const blogBlockQuery = qs.stringify({
@@ -62,13 +87,13 @@ export async function getHomePage(lang) {
 }
 
 
-export async function getVideosLimitedData() {
+export async function getVideosLimitedData(pageSize = 4) {
 
   const videoBlockQuery = qs.stringify({
     sort: 'youtubePublishedAt:desc',
     pagination: {
       page: 1,
-      pageSize: 4
+      pageSize
     },
     populate: ['image'],
   });
@@ -511,11 +536,13 @@ export async function getProductCategoryList() {
 }
 
 
+// Every redirect saved in Strapi (all pages), for libs/redirects/sync.js.
+// Throws when Strapi doesn't answer, so the sync keeps the last good redirects.
 export async function getRedirectLinks() {
 
   let allRecords = [];
   let page = 1;
-  const pageSize = 25;
+  const pageSize = 100;
   let hasMore = true;
 
   while (hasMore) {
@@ -528,21 +555,20 @@ export async function getRedirectLinks() {
       },
     });
 
-    const response = await fetchData("redirection-urls", blogBlockQuery);
+    const response = await fetchDataOrNull("redirection-urls", blogBlockQuery);
 
-    // Log response for debugging (remove when confirmed working)
-    //console.log(`Page ${page} response:`, response);
+    if (!response) {
+      throw new Error(`Strapi did not return redirect data (page ${page}). Check that the API is up and redirection-urls is public.`);
+    }
 
     const records = response.data || [];
     allRecords = allRecords.concat(records);
 
-    // Option 1: Using API metadata (if available)
     if (response.meta && response.meta.pagination) {
       const { pageCount, page: currentPage } = response.meta.pagination;
       hasMore = currentPage < pageCount;
     } else {
-      // Option 2: Fallback - if the returned records count is less than the pageSize,
-      // assume it's the last page.
+      // no pagination info: a short page is the last one
       hasMore = records.length === pageSize;
     }
 
@@ -550,6 +576,49 @@ export async function getRedirectLinks() {
   }
 
   return allRecords;
+}
+
+
+// All product categories with their products and media, for /admin/product-report
+// (English; Chempol categories are flat, there is no parent/child relation)
+export async function getReportProductCategoryList() {
+
+  const blogBlockQuery = qs.stringify({
+    locale: "en",
+    sort: ['index'],
+    populate: ['image', 'banner', 'banner.webBanner', 'banner.mobileBanner', 'products', 'products.productImage', 'products.TDSFile', 'products.MSDSFile'],
+    pagination: {
+      pageSize: 100,
+      page: 1,
+    },
+  });
+
+  return await fetchDataOrNull("product-categories", blogBlockQuery);
+}
+
+
+// All products without a category (every page). Returns an array, or null when Strapi fails.
+export async function getUncategorizedProducts() {
+  const products = [];
+
+  for (let page = 1; ; page++) {
+    const BlockQuery = qs.stringify({
+      locale: "en",
+      filters: {
+        product_categories: {
+          $null: true,
+        },
+      },
+      populate: ['productImage', 'TDSFile', 'MSDSFile'],
+      pagination: { pageSize: 100, page },
+    });
+
+    const response = await fetchDataOrNull("products", BlockQuery);
+    if (!response) return null;
+
+    products.push(...(response.data || []));
+    if (page >= (response.meta?.pagination?.pageCount || 1)) return products;
+  }
 }
 
 export async function getProductCategoryForHome(lang) {

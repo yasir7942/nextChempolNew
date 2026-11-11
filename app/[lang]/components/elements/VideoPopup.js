@@ -29,16 +29,17 @@ const VideoPopup = ({ videoId, onClose }) => {
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50">
             <div ref={popupRef} className="relative w-full max-w-[90%] lg:max-w-[70%] 2xl:max-w-[60%] bg-white p-4 rounded-xl">
-                {/* Close button */}
+                {/* Close button: own text color, since the popup opens inside cards with white text */}
                 <button
-                    className="absolute top-2 right-2 px-3 py-1 text-sm font-semibold bg-white rounded shadow"
+                    type="button"
+                    className="absolute top-2 right-2 z-10 px-3 py-1 text-sm font-semibold text-gray-900 bg-white border border-gray-300 rounded shadow hover:bg-gray-100"
                     onClick={onClose}
                 >
                     ✕ Close
                 </button>
 
                 {/* YouTube Iframe */}
-                <div className="relative w-full pt-[56.25%] mt-4"> {/* 16:9 aspect ratio */}
+                <div className="relative w-full pt-[56.25%] mt-8"> {/* 16:9 aspect ratio */}
                     <iframe
                         className="absolute top-0 left-0 w-full h-full rounded"
                         src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}

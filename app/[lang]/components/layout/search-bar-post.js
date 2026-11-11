@@ -157,7 +157,7 @@ const SearchBarForPost = ({ locale, dictionary }) => {
                 <div key={post.id} className="flex flex-col space-y-3">
                   <div className="flex justify-start space-x-5 items-center pl-1">
                     <Link
-                      href={`/${locale}/blog/${postSlug}`}
+                      href={`/${locale}/blog/${postSlug}/`}
                       onClick={() => {
                         setTimeout(() => {
                           setIsSearchVisible(false);
@@ -181,7 +181,7 @@ const SearchBarForPost = ({ locale, dictionary }) => {
                     </Link>
 
                     <Link
-                      href={`/${locale}/blog/${postSlug}`}
+                      href={`/${locale}/blog/${postSlug}/`}
                       className="flex flex-col items-start space-y-2"
                       onClick={() => {
                         setTimeout(() => {
@@ -211,7 +211,7 @@ const SearchBarForPost = ({ locale, dictionary }) => {
         </div>
 
         <Link
-          href={`/${locale}/search?s=${searchQuery}`}
+          href={`/${locale}/search/?s=${searchQuery}`}
           className="hidden w-full h-auto mt-5 py-1 text-base bg-slate-200 font-normal tracking-wider text-center text-black first-letter:uppercase"
         >
           View More Search Results

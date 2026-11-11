@@ -57,6 +57,9 @@ export const config = {
 
 import { NextResponse } from "next/server";
 import { i18n } from "./i18n.config";
+import { redirectKey } from "@/libs/redirect-validator";
+import { findRedirect } from "@/libs/redirects/lookup";
+import { CHECK_HEADER, checkHeaderValue } from "@/libs/redirects/paths";
 
 const SUPPORTED = i18n.locales;      // ["en","ar","es"]
 const DEFAULT = i18n.defaultLocale;  // "en"
@@ -81,12 +84,69 @@ function pickLocaleFromHeader(headerValue) {
     return DEFAULT;
 }
 
+/*
+    www → non-www (301). Canonical tags point to https://chempol.co.uk, so the www
+    host must not serve pages. Behind the proxy the public host is in x-forwarded-host.
+*/
+function redirectWww(request) {
+    const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "")
+        .split(",")[0]
+        .trim()
+        .toLowerCase();
+
+    if (!host.startsWith("www.")) return null;
+
+    const { pathname, search } = request.nextUrl;
+    const target = new URL(`https://${host.slice(4).replace(/:\d+$/, "")}${pathname}${search}`);
+
+    return NextResponse.redirect(target, 301);
+}
+
+// Redirects from Strapi are always permanent
+const STRAPI_REDIRECT_STATUS = 301;
+
+// Applies the redirects managed in Strapi (built by libs/redirects/sync.js)
+function strapiRedirect(request) {
+    // Destination checks from the redirect sync must see the site without redirects
+    const checkValue = checkHeaderValue();
+    if (checkValue && request.headers.get(CHECK_HEADER) === checkValue) return null;
+
+    const { pathname } = request.nextUrl;
+    const redirect = findRedirect(pathname);
+    if (!redirect) return null;
+
+    const target = new URL(redirect.destination, request.url);
+
+    // Last-line loop guard (the sync already rejects these): never redirect a page to itself
+    if (target.origin === request.nextUrl.origin && redirectKey(target.pathname) === redirectKey(pathname)) {
+        return null;
+    }
+
+    // Keep the visitor's query string (utm_*, gclid, ...) unless the destination sets the same key
+    const ownKeys = new Set(target.searchParams.keys());
+    for (const [key, value] of request.nextUrl.searchParams) {
+        if (key !== "_rsc" && !ownKeys.has(key)) target.searchParams.append(key, value);
+    }
+
+    return NextResponse.redirect(target, STRAPI_REDIRECT_STATUS);
+}
+
 export function middleware(request) {
     const pathname = request.nextUrl.pathname;
+
+    // runs before the skip list so robots.txt, sitemap.xml and images redirect too
+    const wwwRedirect = redirectWww(request);
+    if (wwwRedirect) return wwwRedirect;
+
+    // Strapi redirects are old paths without a locale (/product/x/), so they run before
+    // the skip list and the locale redirect
+    const redirect = strapiRedirect(request);
+    if (redirect) return redirect;
 
     // ✅ skip next internals + static files + uploads (IMPORTANT)
     if (
         pathname.startsWith("/_next/") ||
+        pathname === "/admin" ||
         pathname.startsWith("/admin/") ||
         pathname.startsWith("/images/") ||
         pathname.startsWith("/uploads/") ||
@@ -115,5 +175,9 @@ export function middleware(request) {
 }
 
 export const config = {
-    matcher: ["/((?!api|_next/static|_next/image).*)"],
+    // Node.js (not Edge): the Strapi redirect lookup reads .redirects/redirects.json
+    runtime: "nodejs",
+    // Everything except Next.js internals and API routes (`api/` is also excluded from
+    // the www redirect; those routes are not crawled pages)
+    matcher: ["/((?!api/|_next/static|_next/image|favicon.ico).*)"],
 };

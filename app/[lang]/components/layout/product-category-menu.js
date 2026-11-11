@@ -27,7 +27,7 @@ const ProductCategoryMenu = ({ locale, dictionary, menuData }) => {
         {/* Category Menu */}
         {menuData.map((menu) => (
           <div key={menu.id} className="flex flex-col space-y-3 text-base md:font-light md:text-base">
-            <Link href={`/${locale}/product-category/${menu.slug}`} className="transition  text-black duration-300 ease-in-out hover:text-textBlue">
+            <Link href={`/${locale}/product-category/${menu.slug}/`} className="transition  text-black duration-300 ease-in-out hover:text-textBlue">
               - {menu.title}
             </Link>
           </div>
@@ -58,7 +58,7 @@ const ProductCategoryMenu = ({ locale, dictionary, menuData }) => {
                   {/* Category Menu */}
                   {menuData.map((menu) => (
                     <div key={"mobile-" + menu.id} className="flex flex-col text-left pl-2 space-y-3 mt-2 text-base font-light">
-                      <Link href={`/${locale}/product-category/${menu.slug}`} onClick={() => setOpenSheet(false)}>
+                      <Link href={`/${locale}/product-category/${menu.slug}/`} onClick={() => setOpenSheet(false)}>
                         {menu.title}
                       </Link>
                       <div className="w-[75%] h-[1px] bg-gray-300"></div>

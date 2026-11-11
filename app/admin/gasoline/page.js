@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Combobox,
     ComboboxButton,
@@ -83,6 +83,46 @@ function getItemValue(item) {
 
 function findSelected(options, value) {
     return (options || []).find((item) => getItemValue(item) === String(value || "")) || null;
+}
+
+async function fetchJson(url, options = {}) {
+    const response = await fetch(url, {
+        cache: "no-store",
+        ...options,
+    });
+
+    const text = await response.text();
+
+    let data = null;
+
+    try {
+        data = JSON.parse(text);
+    } catch (error) {
+        console.log("[gasoline page] JSON parse error:", error);
+        console.log("[gasoline page] response text:", text);
+
+        throw new Error("Invalid JSON from API route");
+    }
+
+    if (!response.ok || data?.ok === false) {
+        throw new Error(data?.error || "Request failed");
+    }
+
+    return data;
+}
+
+function apiUrl(mode, params = {}) {
+    const sp = new URLSearchParams({
+        mode,
+    });
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            sp.set(key, value);
+        }
+    });
+
+    return `/api/admin/gasoline?${sp.toString()}`;
 }
 
 export default function GasolinePage() {
@@ -191,47 +231,16 @@ export default function GasolinePage() {
         });
     }
 
-    async function fetchJson(url, options = {}) {
-        const response = await fetch(url, {
-            cache: "no-store",
-            ...options,
-        });
+    // Latest selections, read by loaders/effects that must not re-run when they change.
+    const selectedApiRef = useRef(selectedApi);
+    const selectedSaeGradeRef = useRef(selectedSaeGrade);
 
-        const text = await response.text();
+    useEffect(() => {
+        selectedApiRef.current = selectedApi;
+        selectedSaeGradeRef.current = selectedSaeGrade;
+    }, [selectedApi, selectedSaeGrade]);
 
-        let data = null;
-
-        try {
-            data = JSON.parse(text);
-        } catch (error) {
-            console.log("[gasoline page] JSON parse error:", error);
-            console.log("[gasoline page] response text:", text);
-
-            throw new Error("Invalid JSON from API route");
-        }
-
-        if (!response.ok || data?.ok === false) {
-            throw new Error(data?.error || "Request failed");
-        }
-
-        return data;
-    }
-
-    function apiUrl(mode, params = {}) {
-        const sp = new URLSearchParams({
-            mode,
-        });
-
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                sp.set(key, value);
-            }
-        });
-
-        return `/api/admin/gasoline?${sp.toString()}`;
-    }
-
-    async function loadStaticCategory() {
+    const loadStaticCategory = useCallback(async () => {
         const data = await fetchJson(apiUrl("static-category"));
 
         setStaticCategory(
@@ -240,9 +249,9 @@ export default function GasolinePage() {
                 slug: STATIC_CATEGORY.slug,
             }
         );
-    }
+    }, []);
 
-    async function loadApis() {
+    const loadApis = useCallback(async () => {
         const [data, all] = await Promise.all([
             fetchJson(apiUrl("apis")),
             fetchJson(apiUrl("allapis")),
@@ -253,9 +262,9 @@ export default function GasolinePage() {
 
         setApis(data?.items || []);
         setAllApis(all?.items || []);
-    }
+    }, []);
 
-    async function loadSaeGrades(apiId) {
+    const loadSaeGrades = useCallback(async (apiId) => {
         if (!apiId) {
             setSaeGrades([]);
             setAllSaeGrades([]);
@@ -269,9 +278,9 @@ export default function GasolinePage() {
 
         setSaeGrades(data?.items || []);
         setAllSaeGrades(all?.items || []);
-    }
+    }, []);
 
-    async function loadProducts(saeGradeId) {
+    const loadProducts = useCallback(async (saeGradeId) => {
         if (!saeGradeId) {
             setProducts([]);
             setAllProducts([]);
@@ -282,7 +291,7 @@ export default function GasolinePage() {
             fetchJson(apiUrl("products", { saeGradeId })),
             fetchJson(
                 apiUrl("all-products", {
-                    apiId: selectedApi,
+                    apiId: selectedApiRef.current,
                     saeGradeId,
                 })
             ),
@@ -290,9 +299,9 @@ export default function GasolinePage() {
 
         setProducts(data?.items || []);
         setAllProducts(all?.items || []);
-    }
+    }, []);
 
-    async function loadDosage(apiId, saeGradeId, productId) {
+    const loadDosage = useCallback(async (apiId, saeGradeId, productId) => {
         setDosageDocId("");
         setDosageTitle("");
 
@@ -314,9 +323,9 @@ export default function GasolinePage() {
         } finally {
             setLoadingDosage(false);
         }
-    }
+    }, []);
 
-    async function loadLeaf(saeGradeId, productId) {
+    const loadLeaf = useCallback(async (saeGradeId, productId) => {
         if (!saeGradeId || !productId) {
             setAceas([]);
             setAllAceas([]);
@@ -342,7 +351,7 @@ export default function GasolinePage() {
         setAllIlsacs(allIlsac?.items || []);
         setOems(oem?.items || []);
         setAllOems(allOem?.items || []);
-    }
+    }, []);
 
     useEffect(() => {
         async function init() {
@@ -359,7 +368,7 @@ export default function GasolinePage() {
         }
 
         init();
-    }, []);
+    }, [loadStaticCategory, loadApis]);
 
     useEffect(() => {
         async function run() {
@@ -395,7 +404,7 @@ export default function GasolinePage() {
         }
 
         run();
-    }, [selectedApi]);
+    }, [selectedApi, loadSaeGrades]);
 
     useEffect(() => {
         async function run() {
@@ -428,7 +437,7 @@ export default function GasolinePage() {
         }
 
         run();
-    }, [selectedSaeGrade]);
+    }, [selectedSaeGrade, loadProducts]);
 
     useEffect(() => {
         async function run() {
@@ -449,10 +458,14 @@ export default function GasolinePage() {
                 setDosageDocId("");
                 setDosageTitle("");
 
-                if (selectedApi && selectedSaeGrade && selectedProduct) {
+                // Only re-runs on product change; API/SAE changes reset the product upstream.
+                const apiId = selectedApiRef.current;
+                const saeGradeId = selectedSaeGradeRef.current;
+
+                if (apiId && saeGradeId && selectedProduct) {
                     await Promise.all([
-                        loadDosage(selectedApi, selectedSaeGrade, selectedProduct),
-                        loadLeaf(selectedSaeGrade, selectedProduct),
+                        loadDosage(apiId, saeGradeId, selectedProduct),
+                        loadLeaf(saeGradeId, selectedProduct),
                     ]);
                 }
             } catch (error) {
@@ -461,7 +474,7 @@ export default function GasolinePage() {
         }
 
         run();
-    }, [selectedProduct]);
+    }, [selectedProduct, loadDosage, loadLeaf]);
 
     function setSelectedAddValue(type, value) {
         setSelectedAdd((prev) => ({

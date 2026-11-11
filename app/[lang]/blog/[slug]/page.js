@@ -3,8 +3,8 @@ import SEOSchema from "../../components/elements/seo-schema";
 import BlogContainer from "../../components/layout/blog-container";
 import PaddingContainer from "../../components/layout/padding-container";
 import { geSinglePost, getAllPostSlug } from "../../data/loader";
-import siteConfig from "@/config/site";
-import { getBaseUrl, getFirstDescriptionText, getImageUrl, validateCanonicalSlug } from "@/libs/helper";
+import { buildBlogPosting, buildBreadcrumbList, buildFaqPage, pageUrl } from "@/libs/schema/entity";
+import { getFirstDescriptionText, getImageUrl, validateCanonicalSlug } from "@/libs/helper";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import Image from "next/image";
 import { cache } from 'react';
@@ -56,10 +56,11 @@ export async function generateMetadata(props) {
 
 // app/[lang]/blog/[slug]/page.js
 
-export async function generateStaticParams() {
+// Called once per language from the [lang] layout.
+export async function generateStaticParams({ params: parentParams }) {
 
   try {
-    const locales = i18n.locales;   // ["en","ar","es"]
+    const locales = parentParams?.lang ? [parentParams.lang] : i18n.locales;
     const params = [];
 
     for (const locale of locales) {
@@ -101,8 +102,8 @@ const SingleBlogPage = async props => {
 
 
   const breadcrumbsData = [
-    { title: dictionary.navigation.home, url: "/" },
-    { title: dictionary.navigation.blog, url: `${getBaseUrl()}/${lang}/blog` },
+    { title: dictionary.navigation.home, url: `/${lang}/` },
+    { title: dictionary.navigation.blog, url: `/${lang}/blog/` },
     { title: `${postData.data[0]?.title}` }
   ];
 
@@ -114,44 +115,26 @@ const SingleBlogPage = async props => {
   const firstDescriptionText = getFirstDescriptionText(postData.data[0].description);
   const seoDesctiption = postData.data[0]?.seo?.seoDesctiption?.trim() ? postData.data[0]?.seo?.seoDesctiption?.trim() : firstDescriptionText;
 
-  const jsonLd =
-  {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": postData.data[0].title,
-    "description": seoDesctiption,
-    "image": [
-      getImageUrl(postData.data[0].featureImage?.formats.thumbnail.url),
-      getImageUrl(postData.data[0].featureImage?.url)
-    ],
-    "datePublished": postData.data[0].publishedAt,
-    "dateModified": postData.data[0].updatedAt,
-    "author": [{
-      "@type": "Organization",
-      "name": siteConfig.postAuthor,
-    }]
-  };
+  // Own structured data; Strapi seo.schema is used only for other types or as fallback.
+  const post = postData.data[0];
 
-  // BreadcrumbList
-  const jsonLd2 = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [{
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": getBaseUrl(),
-    }, {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Blog",
-      "item": getBaseUrl() + '/' + "blog"
-    }, {
-      "@type": "ListItem",
-      "position": 3,
-      "name": postData.data[0]?.title,
-    }]
-  };
+  const schemaNodes = [
+    buildBlogPosting({
+      post,
+      lang,
+      description: seoDesctiption,
+      images: [
+        getImageUrl(post.featureImage?.url),
+        getImageUrl(post.featureImage?.formats?.thumbnail?.url),
+      ],
+    }),
+    buildBreadcrumbList([
+      { name: dictionary.navigation.home, url: pageUrl(lang) },
+      { name: dictionary.navigation.blog, url: pageUrl(lang, "blog") },
+      { name: post.title },
+    ]),
+    buildFaqPage(faq),
+  ];
 
 
   return (
@@ -160,13 +143,7 @@ const SingleBlogPage = async props => {
 
     <div className="relative z-10">
 
-      {/*  JSON-LD of Page */}
-      <script type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd2) }} />
-
-      <SEOSchema schemaList={postData.data[0].seo?.schema} />
+      <SEOSchema schemaList={post.seo?.schema} nodes={schemaNodes} />
 
 
       <div className="w-full  mt-5 h-[1px] bg-textBlue"></div>

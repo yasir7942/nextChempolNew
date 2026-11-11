@@ -95,7 +95,7 @@ const Blog = async props => {
               {postsData.data.map((post) => (
 
                 <div key={post.id} className="w-full flex flex-col text-white  md:text-left pb-14   ">
-                  <Link href={`/${lang}/blog/${post.slug}`}>
+                  <Link href={`/${lang}/blog/${post.slug}/`}>
                     <Image className="w-full " src={getImageUrl(post?.featureImage.url)}
                       width={800} height={600} alt={post?.featureImage.alternativeText ?? post.title} />
                     <h2 className="text-darkBlue font-semibold  leading-6 text-lg md:text-base pt-3  ">

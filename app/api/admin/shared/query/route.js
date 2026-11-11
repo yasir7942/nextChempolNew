@@ -149,29 +149,68 @@ const TYPE_RELATION_FIELDS = {
     ssi: ["ssis", "ssi"],
 };
 
-const PRODUCT_POPULATE = {
-    product_categories: true,
-    api: true,
-    sae_grades: true,
-    types: true,
-    sys_aceas: true,
-    sys_ilsacs: true,
-    sys_oems: true,
-    sys_jasos: true,
-    productImage: true,
-    dosages: true,
+/*
+    Only request what the selector actually reads. Products carry heavy fields
+    (rich text description, tables, seo, schema, files) that the admin cards never
+    use, so every product query selects `fields` explicitly.
+
+    Product data is loaded in two steps:
+    1. PRODUCT_FILTER_POPULATE: light relations used to match filters.
+    2. Card details (image + chip relations) for only the matched products,
+       fetched by id in chunks.
+*/
+const PRODUCT_LIST_FIELDS = ["title", "slug"];
+const ID_CHUNK_SIZE = 100;
+
+const PRODUCT_FILTER_POPULATE = {
+    product_categories: { fields: ["slug", "title"] },
+    api: { fields: ["name"] },
+    sae_grades: { fields: ["name"] },
+    types: { fields: ["title"] },
 };
 
-const SAE_GRADE_POPULATE = {
-    api: true,
+const PRODUCT_LABEL_POPULATE = {
+    acea: { sys_aceas: { fields: ["name"] } },
+    ilsac: { sys_ilsacs: { fields: ["title"] } },
+    oem: { sys_oems: { fields: ["title"] } },
+    jaso: { sys_jasos: { fields: ["title"] } },
+    api: { api: { fields: ["name"] } },
+    type: { types: { fields: ["title"] } },
+};
+
+const PRODUCT_IMAGE_POPULATE = {
+    productImage: { fields: ["url"] },
+};
+
+const SAE_GRADE_LEAF_POPULATE = {
+    acea: { aceas: { fields: ["name"] } },
+    ilsac: { ilsacs: { fields: ["title"] } },
+    oem: { oems: { fields: ["title"] } },
+    jaso: { jasos: { fields: ["title"] } },
+};
+
+const RELATED_PRODUCTS_POPULATE = {
     products: {
-        populate: PRODUCT_POPULATE,
+        fields: PRODUCT_LIST_FIELDS,
+        populate: {
+            product_categories: { fields: ["slug", "title"] },
+        },
     },
-    aceas: true,
-    ilsacs: true,
-    oems: true,
-    jasos: true,
-    dosages: true,
+};
+
+const TYPE_POPULATE = {
+    product_category: { fields: ["slug", "title"] },
+    apis: { fields: ["name"] },
+    oems: { fields: ["title"] },
+    ssis: { fields: ["title"] },
+    ...RELATED_PRODUCTS_POPULATE,
+};
+
+const DOSAGE_POPULATE = {
+    products: { fields: ["title"] },
+    sys_apis: { fields: ["name"] },
+    sys_sae_grades: { fields: ["name"] },
+    sys_types: { fields: ["title"] },
 };
 
 function joinUrl(base, endpoint) {
@@ -199,14 +238,29 @@ async function parseResponse(res) {
     };
 }
 
+// Identical Strapi calls that are in flight at the same time share one request.
+const inflightRequests = new Map();
+
 async function fetchData(endpoint, query = "") {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const token = process.env.API_TOKEN;
-
     const url = `${joinUrl(baseUrl, endpoint)}${query ? `?${query}` : ""}`;
 
-    console.log("==================================================");
-    console.log("[shared query] URL:", url);
+    if (inflightRequests.has(url)) {
+        return inflightRequests.get(url);
+    }
+
+    const request = requestStrapi(url, endpoint).finally(() => {
+        inflightRequests.delete(url);
+    });
+
+    inflightRequests.set(url, request);
+
+    return request;
+}
+
+async function requestStrapi(url, endpoint) {
+    const token = process.env.API_TOKEN;
+    const startedAt = Date.now();
 
     try {
         const res = await fetch(url, {
@@ -219,17 +273,51 @@ async function fetchData(endpoint, query = "") {
 
         const parsed = await parseResponse(res);
 
-        console.log("[shared query] status:", parsed.status);
         console.log(
-            "[shared query] first 1200 chars:",
-            JSON.stringify(parsed.data).slice(0, 1200)
+            `[shared query] ${parsed.status} ${endpoint} ${Date.now() - startedAt}ms ${url.length > 300 ? `${url.slice(0, 300)}...` : url}`
         );
+
+        if (!parsed.ok) {
+            console.log("[shared query] error body:", JSON.stringify(parsed.data).slice(0, 500));
+        }
 
         return parsed.data;
     } catch (err) {
         console.log("[shared query] fetch error:", endpoint, err);
         return null;
     }
+}
+
+function chunk(items = [], size = ID_CHUNK_SIZE) {
+    const chunks = [];
+
+    for (let i = 0; i < items.length; i += size) {
+        chunks.push(items.slice(i, i + size));
+    }
+
+    return chunks;
+}
+
+function splitIds(ids = []) {
+    const unique = Array.from(new Set(ids.map(String).filter(Boolean)));
+
+    return {
+        numeric: unique.filter(isNumericId).map(Number),
+        documentIds: unique.filter((id) => !isNumericId(id)),
+    };
+}
+
+function filterByAnyIds(ids = [], relationName = null) {
+    const { numeric, documentIds } = splitIds(ids);
+    const wrap = (condition) => (relationName ? { [relationName]: condition } : condition);
+    const checks = [];
+
+    if (documentIds.length) checks.push(wrap({ documentId: { $in: documentIds } }));
+    if (numeric.length) checks.push(wrap({ id: { $in: numeric } }));
+
+    if (!checks.length) return null;
+
+    return checks.length === 1 ? checks[0] : { $or: checks };
 }
 
 function okJson(data = {}) {
@@ -333,23 +421,27 @@ function relationFilterByAnyId(relationName, selectedId) {
     };
 }
 
+/*
+    Products only have `product_categories`. Filtering on a missing relation
+    (the old `product_category` branch) makes Strapi reject the whole query with
+    400 "Invalid key", which silently returned no products.
+*/
 function categoryFilterBySlug(categorySlug) {
     return {
+        product_categories: {
+            slug: {
+                $eq: categorySlug,
+            },
+        },
+    };
+}
+
+// Server-side version of categoryMatches(): slug, or title (case-insensitive).
+function relationCategoryFilter(relationName, categorySlug) {
+    return {
         $or: [
-            {
-                product_categories: {
-                    slug: {
-                        $eq: categorySlug,
-                    },
-                },
-            },
-            {
-                product_category: {
-                    slug: {
-                        $eq: categorySlug,
-                    },
-                },
-            },
+            { [relationName]: { slug: { $eq: categorySlug } } },
+            { [relationName]: { title: { $eqi: categorySlug } } },
         ],
     };
 }
@@ -579,34 +671,6 @@ function getDosageValue(row) {
     );
 }
 
-function buildProductsAnyFilter(productIds = []) {
-    const ids = Array.from(new Set(productIds.map(String).filter(Boolean)));
-
-    if (!ids.length) return null;
-
-    return {
-        $or: ids.map((id) => {
-            if (isNumericId(id)) {
-                return {
-                    products: {
-                        id: {
-                            $eq: Number(id),
-                        },
-                    },
-                };
-            }
-
-            return {
-                products: {
-                    documentId: {
-                        $eq: id,
-                    },
-                },
-            };
-        }),
-    };
-}
-
 function rowHasContextRelations(row) {
     return (
         getRelationsByNames(row, DOSAGE_API_RELATION_FIELDS).length > 0 ||
@@ -672,11 +736,10 @@ function setDosageForRowProducts({ map, row, products, overwrite = false }) {
 
 async function loadDosageMapForContext({ filters, products = [] }) {
     const cleanProducts = uniqueRelationObjects(products);
-    const productIds = cleanProducts.flatMap((product) => getProductKeys(product));
-    const productFilter = buildProductsAnyFilter(productIds);
+    const map = new Map();
 
-    if (!productFilter) {
-        return new Map();
+    if (!cleanProducts.length) {
+        return map;
     }
 
     /*
@@ -684,39 +747,54 @@ async function loadDosageMapForContext({ filters, products = [] }) {
         This is more reliable than hard-filtering every context relation in qs,
         because some dosage rows use Product + API + SAE Grade while other rows use
         Product + Type, depending on category flow.
+
+        Products are split into chunks so the id filter stays small. Each product
+        lives in exactly one chunk, so per-product row order (newest first) is the
+        same as a single query.
     */
 
-    const rows = await loadCollectionItems("dosages", {
-        fields: ["dosage"],
-        filters: productFilter,
-        populate: "*",
-        sort: ["updatedAt:desc", "createdAt:desc"],
-    });
+    const productChunks = chunk(cleanProducts);
 
-    const map = new Map();
+    const rowsPerChunk = await Promise.all(
+        productChunks.map((chunkProducts) =>
+            loadCollectionItems("dosages", {
+                fields: ["dosage"],
+                filters: filterByAnyIds(
+                    chunkProducts.flatMap((product) => getProductKeys(product)),
+                    "products"
+                ),
+                populate: DOSAGE_POPULATE,
+                sort: ["updatedAt:desc", "createdAt:desc"],
+            })
+        )
+    );
 
-    rows.forEach((row) => {
-        if (!dosageRowMatchesSelectedFlow(row, filters)) return;
+    productChunks.forEach((chunkProducts, index) => {
+        const rows = rowsPerChunk[index];
 
-        setDosageForRowProducts({
-            map,
-            row,
-            products: cleanProducts,
+        rows.forEach((row) => {
+            if (!dosageRowMatchesSelectedFlow(row, filters)) return;
+
+            setDosageForRowProducts({
+                map,
+                row,
+                products: chunkProducts,
+            });
         });
-    });
 
-    /*
-        Optional safe fallback: if a dosage row is only linked with Product and has
-        no API/SAE/Type context relations, use it as a generic product dosage.
-        Exact flow rows above always win.
-    */
-    rows.forEach((row) => {
-        if (rowHasContextRelations(row)) return;
+        /*
+            Optional safe fallback: if a dosage row is only linked with Product and has
+            no API/SAE/Type context relations, use it as a generic product dosage.
+            Exact flow rows above always win.
+        */
+        rows.forEach((row) => {
+            if (rowHasContextRelations(row)) return;
 
-        setDosageForRowProducts({
-            map,
-            row,
-            products: cleanProducts,
+            setDosageForRowProducts({
+                map,
+                row,
+                products: chunkProducts,
+            });
         });
     });
 
@@ -740,33 +818,17 @@ async function loadLeafRowsForSae(field, saeGradeId) {
 
     if (!cfg || !saeGradeId) return [];
 
-    const query = qs.stringify(
-        {
-            locale: STRAPI_LOCALE,
-            status: "published",
-            filters: relationFilterByAnyId("sae_grade", saeGradeId),
-            fields: [cfg.field],
-            populate: {
-                sae_grade: {
-                    fields: ["name"],
-                },
-                product: {
-                    fields: ["title"],
-                },
+    // Paged by SAFE_PAGE_SIZE: Strapi maxLimit (200) silently truncates bigger pages.
+    return fetchCollectionPages(cfg.endpoint, {
+        filters: relationFilterByAnyId("sae_grade", saeGradeId),
+        fields: [cfg.field],
+        populate: {
+            product: {
+                fields: ["title"],
             },
-            pagination: {
-                pageSize: 1000,
-            },
-            sort: [`${cfg.field}:asc`],
         },
-        {
-            encodeValuesOnly: true,
-        }
-    );
-
-    const res = await fetchData(cfg.endpoint, query);
-
-    return res?.data || [];
+        sort: [`${cfg.field}:asc`],
+    });
 }
 
 async function loadLeafMapForSae(saeGradeId, fields = ["acea", "ilsac", "oem", "jaso"]) {
@@ -933,11 +995,7 @@ function productToContextCard({
     const leaf = getLeafForProduct(product, leafMap);
     const isSaeFlow = Boolean(filters.api && filters.saeGrade);
 
-    console.log(dosageMap);
-
     card.dosage = getDosageForProduct(product, dosageMap);
-
-    console.log(card.dosage);
 
     if (isSaeFlow) {
         card.api = getLabel(apiItem);
@@ -1021,14 +1079,14 @@ async function fetchCollectionPages(endpoint, queryObject = {}, pageSize = SAFE_
 }
 
 async function loadCollectionItems(endpoint, extraQuery = {}) {
-    return fetchCollectionPages(endpoint, {
-        populate: "*",
-        sort: ["name:asc", "title:asc"],
-        ...extraQuery,
-    });
+    return fetchCollectionPages(endpoint, extraQuery);
 }
 
-async function loadProductsFromStrapi(categorySlug = "", extraAndFilters = []) {
+/*
+    Step 1 of product loading: product ids + the light relations needed to match
+    filters. `extraPopulate` adds only the relation a caller needs labels from.
+*/
+async function loadProductsFromStrapi(categorySlug = "", extraAndFilters = [], extraPopulate = {}) {
     const andFilters = [];
 
     if (categorySlug) {
@@ -1040,7 +1098,11 @@ async function loadProductsFromStrapi(categorySlug = "", extraAndFilters = []) {
     });
 
     return loadCollectionItems("products", {
-        populate: PRODUCT_POPULATE,
+        fields: PRODUCT_LIST_FIELDS,
+        populate: {
+            ...PRODUCT_FILTER_POPULATE,
+            ...extraPopulate,
+        },
         ...(andFilters.length
             ? {
                 filters: {
@@ -1052,98 +1114,122 @@ async function loadProductsFromStrapi(categorySlug = "", extraAndFilters = []) {
     });
 }
 
-async function getByAnyIdFromCollection(endpoint, selectedId, populate = "*") {
+function mergeProductDetails(product, detail) {
+    if (!detail) return product;
+
+    if (product?.attributes || detail?.attributes) {
+        return {
+            ...product,
+            ...detail,
+            attributes: {
+                ...(product?.attributes || {}),
+                ...(detail?.attributes || {}),
+            },
+        };
+    }
+
+    return {
+        ...product,
+        ...detail,
+    };
+}
+
+/*
+    Step 2 of product loading: card details (image + chip relations) for only the
+    products that matched. Loaded by id in chunks, one request per chunk, in parallel.
+*/
+async function loadProductCardDetails(products = [], extraPopulate = {}) {
+    const cleanProducts = uniqueRelationObjects(products);
+
+    if (!cleanProducts.length) return [];
+
+    const detailChunks = await Promise.all(
+        chunk(cleanProducts).map((chunkProducts) =>
+            loadCollectionItems("products", {
+                fields: PRODUCT_LIST_FIELDS,
+                filters: filterByAnyIds(
+                    chunkProducts.flatMap((product) => getProductKeys(product))
+                ),
+                populate: {
+                    ...PRODUCT_IMAGE_POPULATE,
+                    ...extraPopulate,
+                },
+            })
+        )
+    );
+
+    const detailMap = new Map();
+
+    detailChunks.flat().forEach((detail) => {
+        getProductKeys(detail).forEach((key) => detailMap.set(key, detail));
+    });
+
+    return cleanProducts.map((product) => {
+        const key = getProductKeys(product).find((k) => detailMap.has(k));
+
+        return mergeProductDetails(product, key ? detailMap.get(key) : null);
+    });
+}
+
+function toQuery(queryObject = {}) {
+    return qs.stringify(
+        {
+            locale: STRAPI_LOCALE,
+            status: "published",
+            ...queryObject,
+        },
+        { encodeValuesOnly: true }
+    );
+}
+
+/*
+    One lookup instead of up to four: documentId path first (Strapi 5), then a
+    single documentId/id filter. The old "load whole collection and search" fallback
+    is gone; if both of these miss, the record does not exist.
+*/
+async function getByAnyIdFromCollection(endpoint, selectedId, queryObject = {}) {
     if (!selectedId) return null;
 
     const wanted = String(selectedId);
 
-    const directQuery = qs.stringify(
-        {
-            locale: STRAPI_LOCALE,
-            status: "published",
-            populate,
-        },
-        { encodeValuesOnly: true }
-    );
+    if (!isNumericId(wanted)) {
+        const directRes = await fetchData(`${endpoint}/${wanted}`, toQuery(queryObject));
 
-    const directRes = await fetchData(`${endpoint}/${wanted}`, directQuery);
-
-    if (directRes?.data) {
-        return directRes.data;
+        if (directRes?.data) {
+            return directRes.data;
+        }
     }
 
-    const documentIdQuery = qs.stringify(
-        {
-            locale: STRAPI_LOCALE,
-            status: "published",
-            filters: {
-                documentId: {
-                    $eq: wanted,
-                },
-            },
-            populate,
+    const res = await fetchData(
+        endpoint,
+        toQuery({
+            ...queryObject,
+            filters: filterByAnyIds([wanted]),
             pagination: {
                 pageSize: 1,
             },
-        },
-        { encodeValuesOnly: true }
+        })
     );
 
-    const documentIdRes = await fetchData(endpoint, documentIdQuery);
-
-    if (documentIdRes?.data?.[0]) {
-        return documentIdRes.data[0];
-    }
-
-    const idQuery = qs.stringify(
-        {
-            locale: STRAPI_LOCALE,
-            status: "published",
-            filters: {
-                id: {
-                    $eq: wanted,
-                },
-            },
-            populate,
-            pagination: {
-                pageSize: 1,
-            },
-        },
-        { encodeValuesOnly: true }
-    );
-
-    const idRes = await fetchData(endpoint, idQuery);
-
-    if (idRes?.data?.[0]) {
-        return idRes.data[0];
-    }
-
-    const allItems = await loadCollectionItems(endpoint, {
-        populate,
-    });
-
-    return allItems.find((item) => sameId(item, wanted)) || null;
+    return res?.data?.[0] || null;
 }
 
-async function getProductCategory(categorySlug) {
-    const query = qs.stringify(
-        {
-            locale: STRAPI_LOCALE,
-            status: "published",
+async function getProductCategory(categorySlug, populate = {}) {
+    const res = await fetchData(
+        "product-categories",
+        toQuery({
             filters: {
                 slug: {
                     $eq: categorySlug,
                 },
             },
-            populate: "*",
+            fields: ["slug", "title"],
+            populate,
             pagination: {
                 pageSize: 1,
             },
-        },
-        { encodeValuesOnly: true }
+        })
     );
-
-    const res = await fetchData("product-categories", query);
 
     return res?.data?.[0] || null;
 }
@@ -1151,14 +1237,23 @@ async function getProductCategory(categorySlug) {
 /* ---------------- API / SAE FLOW ---------------- */
 
 async function getApiOptions(categorySlug) {
-    const category = await getProductCategory(categorySlug);
+    const category = await getProductCategory(categorySlug, {
+        apis: { fields: ["name"] },
+    });
     const fromCategory = getRelationsByNames(category, ["apis", "api"]).map(optionFromRelation);
 
     if (fromCategory.length) {
         return uniqueOptions(fromCategory);
     }
 
-    const apis = await loadCollectionItems("apis");
+    const apis = await loadCollectionItems("apis", {
+        fields: ["name"],
+        filters: relationCategoryFilter("product_category", categorySlug),
+        populate: {
+            product_category: { fields: ["slug", "title"] },
+        },
+        sort: ["name:asc"],
+    });
     const filtered = apis.filter((api) => relationHasCategory(api, categorySlug));
 
     return uniqueOptions(filtered.map(optionFromRelation));
@@ -1167,7 +1262,12 @@ async function getApiOptions(categorySlug) {
 async function getSaeGradeOptionsFromApi(apiId) {
     if (!apiId) return [];
 
-    const api = await getByAnyIdFromCollection("apis", apiId);
+    const api = await getByAnyIdFromCollection("apis", apiId, {
+        fields: ["name"],
+        populate: {
+            sae_grades: { fields: ["name"] },
+        },
+    });
 
     const items = [];
 
@@ -1183,7 +1283,14 @@ async function getSaeGradeOptionsFromApi(apiId) {
     }
 
     if (!items.length) {
-        const grades = await loadCollectionItems("sae-grades");
+        const grades = await loadCollectionItems("sae-grades", {
+            fields: ["name"],
+            filters: relationFilterByAnyId("api", apiId),
+            populate: {
+                api: { fields: ["name"] },
+            },
+            sort: ["name:asc"],
+        });
 
         grades.forEach((grade) => {
             if (hasRelationByNames(grade, ["api", "apis"], apiId)) {
@@ -1195,10 +1302,19 @@ async function getSaeGradeOptionsFromApi(apiId) {
     return uniqueOptions(items);
 }
 
-async function getSaeGradeBySelectedFilter(saeGradeId) {
+/*
+    `populate` decides how much of the SAE grade is loaded:
+    - {} for the label only
+    - SAE_GRADE_LEAF_POPULATE[field] for one refine dropdown
+    - RELATED_PRODUCTS_POPULATE for the product list (ids + categories only)
+*/
+async function getSaeGradeBySelectedFilter(saeGradeId, populate = {}) {
     if (!saeGradeId) return null;
 
-    return getByAnyIdFromCollection("sae-grades", saeGradeId, SAE_GRADE_POPULATE);
+    return getByAnyIdFromCollection("sae-grades", saeGradeId, {
+        fields: ["name"],
+        populate,
+    });
 }
 
 function getOptionsFromSaeGradeRecord(saeGrade, field) {
@@ -1245,72 +1361,53 @@ async function getProductsBySaeGradesRelation({
         return fromSaeGrade;
     }
 
-    const directProducts = await loadProductsFromStrapi(categorySlug, [
+    /*
+        Strapi-side filter on product.sae_grades. The old extra fallback (load every
+        category product and filter sae_grades in JS) matched exactly the same rows,
+        so it only doubled the traffic and is removed.
+    */
+    return loadProductsFromStrapi(categorySlug, [
         relationFilterByAnyId("sae_grades", saeGradeId),
     ]);
-
-    if (directProducts.length) {
-        return directProducts;
-    }
-
-    const categoryProducts = await loadProductsFromStrapi(categorySlug);
-
-    return categoryProducts.filter((product) => {
-        return hasRelationByNames(
-            product,
-            ["sae_grades", "sae_grade", "saeGrades", "saeGrade"],
-            saeGradeId
-        );
-    });
 }
 
 /* ---------------- TYPE FLOW ---------------- */
 
 async function getTypeOptions(categorySlug) {
-    const directQuery = qs.stringify(
-        {
-            locale: STRAPI_LOCALE,
-            status: "published",
-            filters: {
-                product_category: {
-                    slug: {
-                        $eq: categorySlug,
-                    },
-                },
-            },
-            populate: "*",
-            pagination: {
-                pageSize: 1000,
-            },
-            sort: ["title:asc", "name:asc"],
-        },
-        { encodeValuesOnly: true }
-    );
+    /*
+        One paged query covers both old lookups: "types whose product_category slug
+        matches" and "all types filtered in JS by slug/title". The old pageSize 1000
+        was silently capped by Strapi maxLimit (200).
+    */
+    const types = await loadCollectionItems("types", {
+        fields: ["title"],
+        filters: relationCategoryFilter("product_category", categorySlug),
+        sort: ["title:asc"],
+    });
 
-    const directRes = await fetchData("types", directQuery);
-    const directItems = directRes?.data || [];
-
-    if (directItems.length) {
-        return uniqueOptions(directItems.map(optionFromRelation));
+    if (types.length) {
+        return uniqueOptions(types.map(optionFromRelation));
     }
 
-    const allTypes = await loadCollectionItems("types");
-    const filteredTypes = allTypes.filter((type) => relationHasCategory(type, categorySlug));
-
-    if (filteredTypes.length) {
-        return uniqueOptions(filteredTypes.map(optionFromRelation));
-    }
-
-    const category = await getProductCategory(categorySlug);
+    const category = await getProductCategory(categorySlug, {
+        types: { fields: ["title"] },
+    });
     const typesFromCategory = getRelationsByNames(category, ["types", "type"]);
 
     return uniqueOptions(typesFromCategory.map(optionFromRelation));
 }
 
-async function getSelectedType(typeId) {
+/*
+    `populate` decides how much of the type is loaded: {} for the label only, one
+    relation for a dropdown, or TYPE_POPULATE when products are listed.
+*/
+async function getSelectedType(typeId, populate = TYPE_POPULATE) {
     if (!typeId) return null;
 
-    return getByAnyIdFromCollection("types", typeId);
+    return getByAnyIdFromCollection("types", typeId, {
+        fields: ["title"],
+        populate,
+    });
 }
 
 function getTypeRelationOptions(typeItem, field) {
@@ -1506,7 +1603,9 @@ export async function GET(req) {
             }
 
             if (field === "api" && categorySlug === "driveline-additives" && filters.type) {
-                const typeItem = await getSelectedType(filters.type);
+                const typeItem = await getSelectedType(filters.type, {
+                    apis: TYPE_POPULATE.apis,
+                });
                 const apiOptions = getApiOptionsFromTypeRecord(typeItem);
 
                 return okJson({
@@ -1534,7 +1633,10 @@ export async function GET(req) {
                     });
                 }
 
-                const saeGrade = await getSaeGradeBySelectedFilter(filters.saeGrade);
+                const saeGrade = await getSaeGradeBySelectedFilter(
+                    filters.saeGrade,
+                    SAE_GRADE_LEAF_POPULATE[field]
+                );
                 const relationOptions = getOptionsFromSaeGradeRecord(saeGrade, field);
 
                 return okJson({
@@ -1544,7 +1646,9 @@ export async function GET(req) {
             }
 
             if (field === "ssi" && filters.type) {
-                const typeItem = await getSelectedType(filters.type);
+                const typeItem = await getSelectedType(filters.type, {
+                    ssis: TYPE_POPULATE.ssis,
+                });
                 const ssiOptions = getSsiOptionsFromTypeRecord(typeItem);
 
                 return okJson({
@@ -1558,7 +1662,9 @@ export async function GET(req) {
                 filters.type &&
                 ["industrial-additives", "marine-additives"].includes(categorySlug)
             ) {
-                const typeItem = await getSelectedType(filters.type);
+                const typeItem = await getSelectedType(filters.type, {
+                    oems: TYPE_POPULATE.oems,
+                });
                 const oemOptions = getOemOptionsFromTypeRecord(typeItem);
 
                 return okJson({
@@ -1567,10 +1673,23 @@ export async function GET(req) {
                 });
             }
 
-            const allProducts = await loadProductsFromStrapi(categorySlug);
+            // Only the relation this dropdown reads labels from is populated.
+            const labelPopulate = PRODUCT_LABEL_POPULATE[field] || {};
             const previousFilters = filtersBeforeField(category, filters, field);
-            const saeGrade = await getSaeGradeBySelectedFilter(previousFilters.saeGrade);
-            const typeItem = await getSelectedType(previousFilters.type);
+
+            const [allProducts, saeGrade, typeItem] = await Promise.all([
+                loadProductsFromStrapi(categorySlug, [], labelPopulate),
+                getSaeGradeBySelectedFilter(previousFilters.saeGrade, {
+                    products: {
+                        ...RELATED_PRODUCTS_POPULATE.products,
+                        populate: {
+                            ...RELATED_PRODUCTS_POPULATE.products.populate,
+                            ...labelPopulate,
+                        },
+                    },
+                }),
+                getSelectedType(previousFilters.type),
+            ]);
 
             const filteredProducts = await filterProductsBySelectedRelations({
                 products: allProducts,
@@ -1600,23 +1719,20 @@ export async function GET(req) {
         }
 
         if (mode === "products") {
-            const apiItem = filters.api
-                ? await getByAnyIdFromCollection("apis", filters.api)
-                : null;
+            const isSaeFlow =
+                SAE_FLOW_CATEGORY_SLUGS.has(categorySlug) && filters.api && filters.saeGrade;
 
+            // Selected records in parallel, each with only the fields this mode reads.
+            const [apiItem, saeGrade, typeItem, leafMap] = await Promise.all([
+                getByAnyIdFromCollection("apis", filters.api, { fields: ["name"] }),
+                getSaeGradeBySelectedFilter(filters.saeGrade, RELATED_PRODUCTS_POPULATE),
+                getSelectedType(filters.type),
+                filters.saeGrade
+                    ? loadLeafMapForSae(filters.saeGrade, ["acea", "ilsac", "oem", "jaso"])
+                    : new Map(),
+            ]);
 
-            const saeGrade = await getSaeGradeBySelectedFilter(filters.saeGrade);
-
-
-            const typeItem = await getSelectedType(filters.type);
-
-
-            if (SAE_FLOW_CATEGORY_SLUGS.has(categorySlug) && filters.api && filters.saeGrade) {
-                const leafMap = await loadLeafMapForSae(
-                    filters.saeGrade,
-                    ["acea", "ilsac", "oem", "jaso"]
-                );
-
+            if (isSaeFlow) {
                 let products = await getProductsBySaeGradesRelation({
                     saeGradeId: filters.saeGrade,
                     categorySlug,
@@ -1627,11 +1743,13 @@ export async function GET(req) {
                     return productMatchesLeafFilters(product, filters, leafMap);
                 });
 
-                const dosageMap = await loadDosageMapForContext({ filters, products });
+                // Card info is split: image and dosage load as separate parallel requests.
+                const [detailedProducts, dosageMap] = await Promise.all([
+                    loadProductCardDetails(products),
+                    loadDosageMapForContext({ filters, products }),
+                ]);
 
-                console.log(filters, dosageMap);
-
-                const items = products.map((product) =>
+                const items = detailedProducts.map((product) =>
                     productToContextCard({
                         product,
                         filters,
@@ -1650,7 +1768,12 @@ export async function GET(req) {
                 });
             }
 
-            const allProducts = await loadProductsFromStrapi(categorySlug);
+            // OEM relation is only needed in the list query when it is used as a filter.
+            const allProducts = await loadProductsFromStrapi(
+                categorySlug,
+                [],
+                filters.type && filters.oem ? PRODUCT_LABEL_POPULATE.oem : {}
+            );
 
             let products = await filterProductsBySelectedRelations({
                 products: allProducts,
@@ -1659,10 +1782,6 @@ export async function GET(req) {
                 saeGrade,
                 typeItem,
             });
-
-            const leafMap = filters.saeGrade
-                ? await loadLeafMapForSae(filters.saeGrade, ["acea", "ilsac", "oem", "jaso"])
-                : new Map();
 
             if (filters.saeGrade) {
                 products = products.filter((product) => {
@@ -1676,9 +1795,16 @@ export async function GET(req) {
                 });
             }
 
-            const dosageMap = await loadDosageMapForContext({ filters, products });
+            // Card info: image (+ OEM chips in type flow) and dosage as parallel requests.
+            const [detailedProducts, dosageMap] = await Promise.all([
+                loadProductCardDetails(
+                    products,
+                    filters.type ? PRODUCT_LABEL_POPULATE.oem : {}
+                ),
+                loadDosageMapForContext({ filters, products }),
+            ]);
 
-            const items = products.map((product) =>
+            const items = detailedProducts.map((product) =>
                 productToContextCard({
                     product,
                     filters,

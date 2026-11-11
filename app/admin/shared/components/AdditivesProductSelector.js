@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const CATEGORY_TABS = [
     {
@@ -228,6 +228,9 @@ export default function AdditivesProductSelector({
     const [loadingProducts, setLoadingProducts] = useState(false);
     const [error, setError] = useState("");
 
+    const optionsRequestRef = useRef(0);
+    const productsRequestRef = useRef(0);
+
     const activeFields = useMemo(() => {
         return [...category.flow, ...category.refine];
     }, [category]);
@@ -259,41 +262,58 @@ export default function AdditivesProductSelector({
         return data;
     }
 
-    async function loadOptions(nextCategory = category, nextFilters = filters) {
+    /*
+        A dropdown's options depend only on the fields before it, so after a change
+        only the later dropdowns are reloaded (fromIndex). They load in parallel,
+        and responses from an older selection are ignored.
+    */
+    async function loadOptions(nextCategory = category, nextFilters = filters, fromIndex = 0) {
+        const requestId = ++optionsRequestRef.current;
+
         try {
             setLoadingOptions(true);
             setError("");
 
-            const optionResults = {};
+            const fields = [...nextCategory.flow, ...nextCategory.refine].slice(fromIndex);
 
-            for (const field of [...nextCategory.flow, ...nextCategory.refine]) {
-                const disabled = getNextDisabled(field, nextFilters);
+            const entries = await Promise.all(
+                fields.map(async (field) => {
+                    if (getNextDisabled(field, nextFilters)) {
+                        return [field, []];
+                    }
 
-                if (disabled) {
-                    optionResults[field] = [];
-                    continue;
-                }
+                    const query = buildQuery({
+                        mode: "options",
+                        field,
+                        ...filterParams(nextCategory, nextFilters, field),
+                    });
 
-                const query = buildQuery({
-                    mode: "options",
-                    field,
-                    ...filterParams(nextCategory, nextFilters, field),
-                });
+                    const data = await fetchJson(`${API_ROUTE}?${query}`);
 
-                const data = await fetchJson(`${API_ROUTE}?${query}`);
-                optionResults[field] = data?.items || [];
-            }
+                    return [field, data?.items || []];
+                })
+            );
 
-            setOptions(optionResults);
+            if (requestId !== optionsRequestRef.current) return;
+
+            const optionResults = Object.fromEntries(entries);
+
+            setOptions((prev) => (fromIndex > 0 ? { ...prev, ...optionResults } : optionResults));
         } catch (err) {
+            if (requestId !== optionsRequestRef.current) return;
+
             console.log("[selector] loadOptions error:", err);
             setError(err?.message || "Failed to load dropdowns");
         } finally {
-            setLoadingOptions(false);
+            if (requestId === optionsRequestRef.current) {
+                setLoadingOptions(false);
+            }
         }
     }
 
     async function loadProducts(nextCategory = category, nextFilters = filters) {
+        const requestId = ++productsRequestRef.current;
+
         try {
             setError("");
 
@@ -301,6 +321,7 @@ export default function AdditivesProductSelector({
 
             if (!allowed) {
                 setProducts([]);
+                setLoadingProducts(false);
                 return;
             }
 
@@ -313,12 +334,19 @@ export default function AdditivesProductSelector({
             });
 
             const data = await fetchJson(`${API_ROUTE}?${query}`);
+
+            if (requestId !== productsRequestRef.current) return;
+
             setProducts(data?.items || []);
         } catch (err) {
+            if (requestId !== productsRequestRef.current) return;
+
             console.log("[selector] loadProducts error:", err);
             setError(err?.message || "Failed to load products");
         } finally {
-            setLoadingProducts(false);
+            if (requestId === productsRequestRef.current) {
+                setLoadingProducts(false);
+            }
         }
     }
 
@@ -360,7 +388,7 @@ export default function AdditivesProductSelector({
         setFilters(nextFilters);
 
         await Promise.all([
-            loadOptions(category, nextFilters),
+            loadOptions(category, nextFilters, currentIndex + 1),
             loadProducts(category, nextFilters),
         ]);
     }

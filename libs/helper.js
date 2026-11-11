@@ -16,6 +16,16 @@ export const getImageUrl = (path) => {
 }
 
 
+// Strapi file (TDS, MSDS...) as a full URL; relative /uploads paths are served by Strapi
+export const getFileUrl = (url) => {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url) || url.startsWith("//")) return url;
+
+  const base = (process.env.NEXT_PUBLIC_ADMIN_BASE_URL || "").replace(/\/+$/, "");
+  return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
+
 export const getBaseUrl = () => {
 
   if (process.env.NEXT_PUBLIC_MODE == "dev") {
@@ -28,6 +38,40 @@ export const getBaseUrl = () => {
   }
 }
 
+
+
+/*
+  tel: link from a display number such as "+971 (04) 5878 423" → "tel:+97145878423".
+  The bracketed trunk 0 is dropped (it is not dialled after the country code).
+*/
+export const telHref = (phone) => {
+  const number = String(phone || "")
+    .trim()
+    .replace(/\(0+(\d)/g, "($1")
+    .replace(/(?!^\+)[^\d]/g, "");
+
+  return number.replace(/\D/g, "").length >= 6 ? `tel:${number}` : "";
+}
+
+
+// mailto: link, or "" when the address is missing or not an email.
+export const mailtoHref = (email) => {
+  const address = String(email || "").trim();
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address) ? `mailto:${address}` : "";
+}
+
+
+// Office map link from Strapi; falls back to a Google Maps search for the address.
+export const mapHref = (mapUrl, address) => {
+  const url = String(mapUrl || "").trim();
+
+  if (/^https?:\/\//i.test(url)) return url;
+
+  const query = String(address || "").trim();
+
+  return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : "";
+}
 
 
 export const getFirstDescriptionText = (descriptionArray) => {

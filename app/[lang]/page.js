@@ -5,6 +5,7 @@ import SpeakableSchema from "./components/elements/speakable-schema";
 import { generateMetadata as generatePageMetadata } from "@/libs/metadata";
 import { cache } from 'react';
 import SEOSchema from "./components/elements/seo-schema";
+import { buildFaqPage } from "@/libs/schema/entity";
 import siteConfig from "@/config/site";
 import CharcoalContentBox from "./components/layout/charcoal-content-box";
 import ProductCategoryGrid from "./components/layout/product-category-grid";
@@ -77,7 +78,7 @@ export default async function Home({ params }) {
       <Slider locale={lang} diction={dictionary} />
 
       <SpeakableSchema pageTitle={dictionary.homePage.title} locale={lang} pageUrl={homeData.seo?.canonicalLinks ?? "/"} />
-      <SEOSchema schemaList={homeData.seo?.schema} />
+      <SEOSchema schemaList={homeData.seo?.schema} nodes={[buildFaqPage(faqs)]} />
 
       {/* <!--powering progress--> {`${lang === 'ar' ? 'rtl' : 'ltr'}` */}
 
@@ -118,14 +119,8 @@ export default async function Home({ params }) {
 
       <BlogContainer locale={lang} />
 
-      <div className="bg-[#F2F2F2] w-full h-auto pt-14 pb-10" dir="ltr">
-
-        <PaddingContainer className=" ">
-          <h3 className=" text-2xl md:text-3xl text-center font-semibold text-textBlue capitalize r   ml-5 z-20" >{dictionary.homePage.latestMediaUpdate} </h3>
-          <FretchVideosWrapper langText={dictionary.homePage.latestRelease} />
-        </PaddingContainer>
-
-      </div>
+      {/* hidden when no video is available on YouTube */}
+      <FretchVideosWrapper title={dictionary.homePage.latestMediaUpdate} langText={dictionary.homePage.latestRelease} locale={lang} />
     </div>
 
   );

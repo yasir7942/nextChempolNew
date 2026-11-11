@@ -11,6 +11,7 @@ import ContactForm from "../components/elements/contact-form";
 import { PiBuildingOfficeFill } from "react-icons/pi";
 import siteConfig from "@/config/site";
 import { getDictionary } from "@/libs/getDictionary";
+import { mailtoHref, mapHref, telHref } from "@/libs/helper";
 
 const cachedGetContactPage = cache(getContactUsPageData);
 
@@ -82,7 +83,7 @@ const ContactUs = async ({ params }) => {
 
           {/* map */}
           <div className=" w-full   text-gray-800 mt-28 md:mt-10  rtl:mt-0 rtl:pr-12   ">
-            <h1 className="text-textBlue text-2xl font-semibold capitalize">{dictionary.contactPage.ourDetails1}</h1>
+            <h2 className="text-textBlue text-2xl font-semibold capitalize">{dictionary.contactPage.ourDetails1}</h2>
             <p className="text-gray-800 font-light " >{dictionary.contactPage.ourDetails2}</p>
 
             {contactData.addressBook?.map((contact) => (
@@ -92,9 +93,15 @@ const ContactUs = async ({ params }) => {
                 <div className="w-full flex   justify-normal space-x-4">
                   <div><PiBuildingOfficeFill size="32" className="text-textLightBlue" /></div>
                   <div>
-                    <div className="font-light text-textLightBlue text-base "><a href='mailto:{contactData.email}' >{contact.email}  </a> | {contact.phone} </div>
+                    <div className="font-light text-textLightBlue text-base ">
+                      {mailtoHref(contact.email) ? <a href={mailtoHref(contact.email)} >{contact.email?.trim()}  </a> : contact.email}
+                      {" | "}
+                      {telHref(contact.phone) ? <a href={telHref(contact.phone)} >{contact.phone?.trim()}</a> : contact.phone}
+                    </div>
                     <div className="font-light text-base  max-w-96">{contact.address}</div>
-                    <div className="font-light text-base  text-textLightBlue  max-w-72"> <a target="_blank" href='{contact.mapUrl}' >{dictionary.contactPage.map}</a></div>
+                    {mapHref(contact.mapUrl, contact.address) && (
+                      <div className="font-light text-base  text-textLightBlue  max-w-72"> <a target="_blank" rel="noopener noreferrer" href={mapHref(contact.mapUrl, contact.address)} >{dictionary.contactPage.map}</a></div>
+                    )}
                   </div>
                 </div>
               </div>

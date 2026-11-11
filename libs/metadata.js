@@ -48,7 +48,9 @@ export async function generateMetadata({ type, path, params, lang = "en" }) {
       languages: {
         'en': process.env.NEXT_PUBLIC_BASE_URL + `/en` + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug),
         'ar': process.env.NEXT_PUBLIC_BASE_URL + `/ar` + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug),
-        'es': process.env.NEXT_PUBLIC_BASE_URL + `/es` + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug)
+        'es': process.env.NEXT_PUBLIC_BASE_URL + `/es` + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug),
+        // default for languages the site does not have
+        'x-default': process.env.NEXT_PUBLIC_BASE_URL + `/en` + (canonicalLinks?.trim() ? manualCanonicalSlug : autoCanonicalSlug)
       },
     },
     openGraph: {
