@@ -1,4 +1,4 @@
-// Contact form (app/[lang]/components/elements/contact-form.js) → email to info@chempol.co.uk
+// Contact form (app/[lang]/components/elements/contact-form.js) → email to the team inbox (CONTACT_TO_EMAIL, CC: CONTACT_CC_EMAILS), see libs/team-mail.js
 //
 // Checks, in order:
 // 1. the request comes from a page of this site (Origin header)
@@ -10,13 +10,11 @@
 // The checks themselves are in libs/form-security.js (shared with app/api/inquiry).
 
 import { EmailTemplate } from "@/app/[lang]/components/elements/email-template";
-import { Resend } from "resend";
+import { sendTeamMail } from "@/libs/team-mail";
 import { isRateLimited, isSameSite, reply, singleLine, verifyCaptcha, visitorIp } from "@/libs/form-security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const MAX_LENGTH = { fullName: 100, phoneNumber: 30, email: 254, country: 100, message: 5000 };
 
@@ -67,18 +65,13 @@ export async function POST(request) {
     try {
         if (!(await verifyCaptcha(captchaToken, ip))) return reply(400, "captcha");
 
-        const { error } = await resend.emails.send({
-            from: "Chempol Site <website@chempol.co.uk>",
-            to: ["info@chempol.co.uk"],
+        const sent = await sendTeamMail({
+            label: "Contact form",
             replyTo: email,
             subject: `Chempol Contact Form - ${fullName}`,
-            react: EmailTemplate({ name: fullName, phone: phoneNumber, mail: email, contry: country, msg: message }),
+            html: EmailTemplate({ name: fullName, phone: phoneNumber, mail: email, contry: country, msg: message }),
         });
-
-        if (error) {
-            console.error("Contact form: Resend error", error);
-            return reply(500, "send_failed");
-        }
+        if (!sent) return reply(500, "send_failed");
 
         return reply(200, "sent", "Email sent successfully!");
     } catch (error) {

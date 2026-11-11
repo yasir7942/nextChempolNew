@@ -1,5 +1,5 @@
 // Product page forms: "Get a Quote" and "Request a Product Sample"
-// (app/[lang]/components/elements/product-inquiry.js) → email to info@chempol.co.uk
+// (app/[lang]/components/elements/product-inquiry.js) → email to the team inbox (CONTACT_TO_EMAIL, CC: CONTACT_CC_EMAILS), see libs/team-mail.js
 //
 // Same protections as the contact form (libs/form-security.js): same-site Origin, honeypot,
 // length limits, rate limit per IP (shared with the contact form) and Google reCAPTCHA.
@@ -7,16 +7,14 @@
 // can't put their own text in the product list of the email.
 // Errors return a `code` the form turns into a translated message; details stay in the server log.
 
-import { Resend } from "resend";
 import { i18n } from "@/i18n.config";
 import { InquiryEmailTemplate } from "@/app/[lang]/components/elements/inquiry-email-template";
 import { isRateLimited, isSameSite, reply, singleLine, verifyCaptcha, visitorIp } from "@/libs/form-security";
 import { lookupProducts } from "@/libs/product-search";
+import { sendTeamMail } from "@/libs/team-mail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const MAX_PRODUCTS = 10;
 const MAX_LENGTH = {
@@ -125,12 +123,11 @@ export async function POST(request) {
         ];
 
         const subjectProduct = products.length > 1 ? `${products[0].title} +${products.length - 1} more` : products[0].title;
-        const { error } = await resend.emails.send({
-            from: "Chempol Site <website@chempol.co.uk>",
-            to: ["info@chempol.co.uk"],
+        const sent = await sendTeamMail({
+            label: "Inquiry form",
             replyTo: fields.email,
             subject: `${type === "quote" ? "Quotation request" : "Sample request"} - ${fields.company} - ${subjectProduct}`.slice(0, 200),
-            react: InquiryEmailTemplate({
+            html: InquiryEmailTemplate({
                 type,
                 products,
                 contact,
@@ -139,11 +136,7 @@ export async function POST(request) {
                 siteUrl: (process.env.NEXT_PUBLIC_BASE_URL || "https://chempol.co.uk").replace(/\/$/, ""),
             }),
         });
-
-        if (error) {
-            console.error("Inquiry form: Resend error", error);
-            return reply(500, "send_failed");
-        }
+        if (!sent) return reply(500, "send_failed");
 
         return reply(200, "sent");
     } catch (error) {
