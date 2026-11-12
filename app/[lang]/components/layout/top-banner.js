@@ -40,7 +40,7 @@ const TopBanner = ({ banner = "", mobileBanner = "", title = "", title2 = "", di
 
       <section className=" relative z-20 w-full h-[220px] md:h-[270px] " >
 
-        <Image src={mobileBanner ? mobileBanner : banner} width={1440} height={600} priority sizes="100vw"
+        <Image src={mobileBanner ? mobileBanner : banner} width={1440} height={600} priority fetchPriority="high" sizes="100vw"
           className="   object-center object-cover w-full h-full" alt={title ? title : "Chempol Banner"} />
         <PaddingContainer>
           <div className="flex flex-col ml-0 pb-16 -mt-44 md:items-center md:justify-center text-center ">

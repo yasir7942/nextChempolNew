@@ -224,7 +224,7 @@ const ProductCategory = async props => {
                         <Image
                           className="relative w-28 text-center"
                           src={getImageUrl(product.productImage.url)}
-                          priority
+                          sizes="112px"
                           height={400}
                           width={400}
                           alt={product?.title || "Product"}

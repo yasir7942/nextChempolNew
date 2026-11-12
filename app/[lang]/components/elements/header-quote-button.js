@@ -16,7 +16,7 @@ const HeaderQuoteButton = ({ locale, dictionary, label }) => {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="border border-textBlue rounded-sm text-sm px-3 py-2 text-textBlue hover:text-lightColorHover hidden md:block"
+        className="h-9 whitespace-nowrap rounded-md bg-textBlue px-4 text-sm font-normal text-white transition-colors hover:bg-[#145f96] focus:outline-none focus-visible:ring-2 focus-visible:ring-textBlue focus-visible:ring-offset-2"
       >
         {label}
       </button>

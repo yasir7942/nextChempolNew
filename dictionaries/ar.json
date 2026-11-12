@@ -66,6 +66,7 @@
   },
   "topbar": {
     "searchProducts": "البحث عن المنتجات",
+    "searchPlaceholder": "ابحث باسم المنتج أو رمزه",
     "searchBlogs": "ابحث في المدونات",
     "search": "بحث",
     "viewMoreSearch": "عرض المزيد من نتائج البحث",

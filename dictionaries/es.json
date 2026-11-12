@@ -66,6 +66,7 @@
   },
   "topbar": {
     "searchProducts": "Buscar productos",
+    "searchPlaceholder": "Buscar por nombre o código del producto",
     "searchBlogs": "Buscar en Blogs",
     "search": "Buscar",
     "viewMoreSearch": "Ver más resultados de búsqueda",

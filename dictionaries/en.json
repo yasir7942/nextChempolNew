@@ -66,6 +66,7 @@
     },
     "topbar": {
         "searchProducts": "Search Products",
+        "searchPlaceholder": "Search by product name or code",
         "searchBlogs": "Search Blogs",
         "search": "Search",
         "viewMoreSearch": "View More Search Results",

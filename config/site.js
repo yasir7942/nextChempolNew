@@ -75,11 +75,13 @@ const siteConfig = {
 
   imageObject:
   {
-    license: "https://chempol.co.uk/contact/",
-    acquireLicensePage: "https://chempol.co.uk/contact/",
+    // final URL (200, no redirect): /contact/ redirects to /en/contact/ and Search Console flagged it as an invalid license URL
+    license: "https://chempol.co.uk/en/contact/",
+    acquireLicensePage: "https://chempol.co.uk/en/contact/",
     creditText: "Chempol Additives & Chemical Speciality",
     creatorName: "Chempol Additives & Chemical Speciality",   //organization
     copyrightNoticeProduct: "All images of Chempol Additives & Chemical Speciality products are the exclusive property of Chempol Additives & Chemical Speciality. These images were created by our company, featuring our uniquely designed products. Any unauthorized use, reproduction, distribution, or modification of these images is strictly prohibited without the express written consent of Chempol Additives & Chemical Speciality.For inquiries regarding the use of these images, please contact us.",
+    copyrightNoticeLogo: "© Chempol Additives & Chemical Speciality. The Chempol name and logo are trademarks of Chempol Additives & Chemical Speciality. Any use, reproduction or modification without our written permission is prohibited.",
     copyrightNoticeBanner: "The banners displayed on this website have been created by modifying and enhancing images sourced from the internet. While we have significantly altered these images, the original copyrights may belong to the original creators. Any unauthorized use, reproduction, distribution, or modification of these banners without the express written consent of Chempol Additives & Chemical Speciality is prohibited. For inquiries regarding the use of these banners, please contact us."
   }
 

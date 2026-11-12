@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Image from 'next/image';
+import { ChevronDown } from 'lucide-react';
 
 
 const LangSwitcher = ({ Locale }) => {
@@ -35,23 +35,21 @@ const LangSwitcher = ({ Locale }) => {
     };
 
     return (
-        <div className="relative inline-block text-left z-[100] font-sans">
+        <div className="relative inline-block text-start z-[100] font-sans">
             <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex justify-center items-center shadow-md border border-textBlue rounded-sm text-sm px-3 py-2 text-textBlue hover:text-lightColorHover rtl:ml-3"
+                aria-haspopup="true"
+                aria-expanded={isOpen}
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-[#B9CBDB] bg-white px-2.5 text-sm text-textBlue transition-colors hover:border-textBlue focus:outline-none focus-visible:ring-2 focus-visible:ring-textBlue"
             >
-                <img
-                    src={selectedLang.flag}
-                    alt={selectedLang.label}
-                    width={30}
-                    height={20}
-                    className="mr-2 rtl:pl-1.5"
-                />
+                <img src={selectedLang.flag} alt="" width={22} height={16} className="h-4 w-[22px] shrink-0 rounded-[2px] object-cover" />
                 {selectedLang.label}
+                <ChevronDown aria-hidden="true" size={14} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (
-                <div className="absolute ltr:left-0 rtl:right-0   mt-2 w-44 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[9999]">
+                <div className="absolute start-0 mt-2 w-44 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[9999]">
                     <div className="py-1">
                         {languages.map((lang) => (
                             <button

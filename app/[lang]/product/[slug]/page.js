@@ -209,11 +209,13 @@ const SingleProductPage = async (props) => {
             {product.productImage?.url && (
               <Image
                 priority
+                fetchPriority="high"
+                sizes="(min-width: 768px) 340px, 260px"
                 className="w-full h-full object-contain"
                 src={getImageUrl(product.productImage.url)}
                 height={1000}
                 width={1000}
-                quality={100}
+                quality={75}
                 alt={product.productImage.alternativeText || product.title || "Product"}
               />
             )}
