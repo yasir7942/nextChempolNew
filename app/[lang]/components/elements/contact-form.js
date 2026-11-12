@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import React from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { MdCheckCircle } from 'react-icons/md';
 
 // Same limits as app/api/send/route.js
 const MAX_LENGTH = { fullName: 100, phoneNumber: 30, email: 254, country: 100, message: 5000 };
@@ -21,7 +22,8 @@ const ContactForm = ({ locale, dictionary }) => {
   const [email, setEmail] = useState('');
   const [country, setCountry] = useState('');
   const [message, setMessage] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(''); // error message
+  const [sent, setSent] = useState(false); // shows the thank-you panel instead of the form
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCaptchaCode, setIsCaptchaCode] = useState('');
   const [website, setWebsite] = useState(''); // honeypot: hidden, only bots fill it in
@@ -46,7 +48,7 @@ const ContactForm = ({ locale, dictionary }) => {
       });
 
       if (response.ok) {
-        setStatus(dictionary.contactPage.sucessSend);
+        setSent(true);
         // Reset form fields only on success
         setFullName('');
         setPhoneNumber('');
@@ -73,6 +75,23 @@ const ContactForm = ({ locale, dictionary }) => {
     setIsCaptchaCode(captchaCode || '');
   };
 
+  if (sent) {
+    return (
+      <div role="status" className="py-10 text-center">
+        <MdCheckCircle aria-hidden="true" className="mx-auto text-6xl text-green-600" />
+        <p className="mt-3 text-lg font-semibold text-green-700">{dictionary.contactPage.successTitle}</p>
+        <p className="mt-2 font-light text-gray-700">{dictionary.contactPage.successText}</p>
+        <button
+          type="button"
+          onClick={() => setSent(false)}
+          className="mt-6 py-2 px-10 bg-textBlue text-white font-medium hover:bg-textLightBlue hover:text-gray-900 transition-colors"
+        >
+          {dictionary.contactPage.sendAnother}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -97,7 +116,7 @@ const ContactForm = ({ locale, dictionary }) => {
             />
           </div>
           <div className="w-1/2 ml-2">
-            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="phoneNumber">{dictionary.contactPage.phonelable}</label>
+            <label className="block text-gray-800 text-sm font-semibold mb-2" htmlFor="phoneNumber">{dictionary.contactPage.phonelable} <small className="font-light text-gray-500">({dictionary.contactPage.countryCodeHint})</small></label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 tracking-wide text-gray-800 bg-transparent font-light leading-tight focus:outline-none focus:shadow-outline"
               id="phoneNumber"
@@ -179,7 +198,9 @@ const ContactForm = ({ locale, dictionary }) => {
           )}
         </div>
 
-        {status && <p className="pt-5 text-[#A81B1A]">{status}</p>}
+        {status && (
+          <p role="alert" className="mt-5 rounded border border-red-200 bg-red-50 px-4 py-3 text-[#A81B1A]">{status}</p>
+        )}
       </form>
     </div>
   );

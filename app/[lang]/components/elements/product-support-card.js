@@ -9,7 +9,7 @@ import { MdOutlineScience } from "react-icons/md";
 
 const InquiryDialog = dynamic(() => import("./inquiry-dialog"), { ssr: false });
 
-const ProductSupportCard = ({ locale, dictionary, product, title, text }) => {
+const ProductSupportCard = ({ locale, dictionary, product, title, text, buttonLabel }) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -25,11 +25,11 @@ const ProductSupportCard = ({ locale, dictionary, product, title, text }) => {
           onClick={() => setOpen(true)}
           className="mt-4 w-full py-2.5 px-4 bg-textBlue text-white text-base font-medium border-[3px] border-textBlue hover:bg-textLightBlue hover:border-textLightBlue hover:text-gray-900 transition-colors"
         >
-          {dictionary.getQuote}
+          {buttonLabel || dictionary.getQuote}
         </button>
       </div>
 
-      {open && <InquiryDialog type="quote" locale={locale} dictionary={dictionary} product={product} onClose={() => setOpen(false)} />}
+      {open && <InquiryDialog type="support" locale={locale} dictionary={dictionary} product={product} onClose={() => setOpen(false)} />}
     </>
   );
 };

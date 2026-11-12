@@ -467,6 +467,7 @@ const SingleProductPage = async (props) => {
               dictionary={dictionary.inquiry}
               product={{ slug: product.slug, title: product.title }}
               title={dictionary.productPage.supportTitle}
+              buttonLabel={dictionary.productPage.supportButton}
               text={dictionary.productPage.supportText.replace("{product}", product.title)}
             />
           </div>

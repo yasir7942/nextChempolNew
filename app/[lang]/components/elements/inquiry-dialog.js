@@ -1,6 +1,7 @@
 "use client";
 
-// Popup form for "Get a Quote" (type "quote") and "Request a Product Sample" (type "sample").
+// Popup form for "Get a Quote" (type "quote"), "Request a Product Sample" (type "sample") and
+// "Ask Our Technical Team" (type "support": the sample details without the product list).
 // The current product (when there is one) is already in the list; other products are found with the product
 // search (any language) and added. Sent to app/api/inquiry, which does the security checks.
 
@@ -8,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ReCAPTCHA from "react-google-recaptcha";
 import { MdClose, MdCheckCircle } from "react-icons/md";
+import { FaWhatsapp } from "react-icons/fa";
 
 const MAX_PRODUCTS = 10;
 
@@ -31,10 +33,14 @@ const inputClass =
   "w-full border border-gray-400 rounded px-3 py-2 text-base text-gray-800 bg-white font-light focus:outline-none focus:border-textBlue focus:ring-1 focus:ring-textBlue";
 const labelClass = "block text-gray-800 text-sm font-semibold mb-1";
 
+// WhatsApp number of the site (same one as the floating WhatsApp button); wa.me wants digits only
+const WHATSAPP_NUMBER = String(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "").replace(/\D/g, "");
+
 const emptyFields = { fullName: "", company: "", address: "", city: "", postcode: "", country: "", phone: "", email: "", remarks: "" };
 
 const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
   const isQuote = type === "quote";
+  const isSupport = type === "support";
   const [products, setProducts] = useState(product?.slug ? [{ slug: product.slug, title: product.title, quantity: "" }] : []);
   const [fields, setFields] = useState(emptyFields);
   const [website, setWebsite] = useState(""); // honeypot: hidden, only bots fill it in
@@ -120,7 +126,6 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!products.length) return setStatus(d.noProducts);
     if (isQuote && products.some((item) => !item.quantity.trim())) return setStatus(d.quantityRequired);
     if (!captcha) return setStatus(d.captchaRequired);
 
@@ -158,7 +163,7 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
     }
   };
 
-  const title = isQuote ? d.quoteTitle : d.sampleTitle;
+  const title = isQuote ? d.quoteTitle : isSupport ? d.technicalTitle : d.sampleTitle;
   const available = results.filter((result) => !products.some((item) => item.slug === result.slug));
 
   return createPortal(
@@ -182,14 +187,34 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
           <div className="px-4 sm:px-6 py-10 text-center">
             <MdCheckCircle aria-hidden="true" className="mx-auto text-6xl text-green-600" />
             <p className="mt-3 text-lg font-semibold">{d.successTitle}</p>
-            <p className="mt-2 font-light">{isQuote ? d.successQuote : d.successSample}</p>
+            <p className="mt-2 font-light">{isQuote ? d.successQuote : isSupport ? d.successTechnical : d.successSample}</p>
             <button type="button" onClick={onClose} className="mt-6 py-2 px-10 bg-textBlue text-white font-medium hover:bg-textLightBlue hover:text-gray-900 transition-colors">
               {d.close}
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-4">
-            <p className="text-sm font-light text-gray-700 mb-4">{isQuote ? d.quoteIntro : d.sampleIntro}</p>
+            <p className="text-sm font-light text-gray-700 mb-4">{isQuote ? d.quoteIntro : isSupport ? d.technicalIntro : d.sampleIntro}</p>
+
+            {/* Technical team: the visitor can also chat directly instead of filling in the form */}
+            {isSupport && WHATSAPP_NUMBER && (
+              <div className="mb-5">
+                <a
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(product?.title ? d.whatsappMessage.replace("{product}", product.title) : d.whatsappMessageGeneral)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
+                >
+                  <FaWhatsapp aria-hidden="true" className="text-2xl shrink-0" />
+                  {d.whatsappChat}
+                </a>
+                <p className="mt-3 flex items-center gap-3 text-sm font-light text-gray-500">
+                  <span className="h-px flex-1 bg-gray-300" />
+                  {d.whatsappOr}
+                  <span className="h-px flex-1 bg-gray-300" />
+                </p>
+              </div>
+            )}
 
             {/* honeypot: off screen and skipped by keyboard and screen readers, so only bots fill it in */}
             <div aria-hidden="true" className="absolute -left-[9999px] w-px h-px overflow-hidden">
@@ -197,8 +222,9 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
               <input id="inquiry-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
             </div>
 
+            {!isSupport && (
             <fieldset className="mb-5">
-              <legend className={labelClass}>{d.products}</legend>
+              <legend className={labelClass}>{d.products} <span className="font-light">({d.optional})</span></legend>
 
               <ul className="space-y-2">
                 {products.map((item) => (
@@ -217,7 +243,7 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
                         className={`${inputClass} sm:w-48`}
                       />
                     )}
-                    {products.length > 1 && (
+                    {products.length >= 1 && (
                       <button type="button" onClick={() => removeProduct(item.slug)} className="self-end sm:self-auto text-sm text-red-700 hover:underline px-1">
                         {d.remove}
                       </button>
@@ -255,6 +281,7 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
                 </div>
               )}
             </fieldset>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -276,10 +303,12 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
                     <label className={labelClass} htmlFor="inq-city">{d.city}</label>
                     <input id="inq-city" className={inputClass} value={fields.city} onChange={setField("city")} maxLength={MAX_LENGTH.city} autoComplete="address-level2" required />
                   </div>
+                  {!isSupport && (
                   <div>
                     <label className={labelClass} htmlFor="inq-postcode">{d.postcode} <span className="font-light">({d.optional})</span></label>
                     <input id="inq-postcode" className={inputClass} value={fields.postcode} onChange={setField("postcode")} maxLength={MAX_LENGTH.postcode} autoComplete="postal-code" />
                   </div>
+                  )}
                 </>
               )}
 
@@ -288,16 +317,16 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
                 <input id="inq-country" className={inputClass} value={fields.country} onChange={setField("country")} maxLength={MAX_LENGTH.country} autoComplete="country-name" required />
               </div>
               <div>
-                <label className={labelClass} htmlFor="inq-phone">{d.phone}</label>
+                <label className={labelClass} htmlFor="inq-phone">{isSupport ? d.phoneWhatsapp : d.phone} <small className="font-light text-gray-500">({d.countryCodeHint})</small></label>
                 <input id="inq-phone" type="tel" dir="ltr" className={`${inputClass} rtl:text-right`} value={fields.phone} onChange={setField("phone")} maxLength={MAX_LENGTH.phone} autoComplete="tel" required />
               </div>
-              <div className="sm:col-span-2">
+              <div className={isSupport ? "" : "sm:col-span-2"}>
                 <label className={labelClass} htmlFor="inq-email">{d.email}</label>
                 <input id="inq-email" type="email" dir="ltr" className={`${inputClass} rtl:text-right`} value={fields.email} onChange={setField("email")} maxLength={MAX_LENGTH.email} autoComplete="email" required />
               </div>
               <div className="sm:col-span-2">
-                <label className={labelClass} htmlFor="inq-remarks">{d.remarks} <span className="font-light">({d.optional})</span></label>
-                <textarea id="inq-remarks" rows="3" className={inputClass} value={fields.remarks} onChange={setField("remarks")} maxLength={MAX_LENGTH.remarks} placeholder={d.remarksPlaceholder} />
+                <label className={labelClass} htmlFor="inq-remarks">{isSupport ? d.askQuestion : <>{d.remarks} <span className="font-light">({d.optional})</span></>}</label>
+                <textarea id="inq-remarks" rows="3" className={inputClass} value={fields.remarks} onChange={setField("remarks")} maxLength={MAX_LENGTH.remarks} required={isSupport} placeholder={isSupport ? d.askQuestionPlaceholder : d.remarksPlaceholder} />
                 <small className="text-gray-500 font-light">{d.noLinks}</small>
               </div>
             </div>

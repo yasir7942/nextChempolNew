@@ -34,6 +34,8 @@ const MAX_LENGTH = {
 const REQUIRED = {
     quote: ["fullName", "company", "country", "phone", "email"],
     sample: ["fullName", "company", "address", "city", "country", "phone", "email"],
+    // "Ask Our Technical Team": same details as a sample request, no product list (the product page it came from is optional)
+    support: ["fullName", "company", "address", "city", "country", "phone", "email", "remarks"],
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -59,7 +61,7 @@ export async function POST(request) {
         return reply(200, "sent");
     }
 
-    const type = data?.type === "sample" ? "sample" : data?.type === "quote" ? "quote" : null;
+    const type = ["sample", "quote", "support"].includes(data?.type) ? data.type : null;
     const locale = i18n.locales.includes(data?.locale) ? data.locale : null;
     if (!type || !locale) return reply(400, "invalid");
 
@@ -69,7 +71,7 @@ export async function POST(request) {
     }
     const remarks = String(data?.remarks ?? "").trim();
 
-    if (REQUIRED[type].some((name) => !fields[name])) return reply(400, "invalid");
+    if (REQUIRED[type].some((name) => !(name === "remarks" ? remarks : fields[name]))) return reply(400, "invalid");
     if (Object.entries(fields).some(([name, value]) => value.length > MAX_LENGTH[name]) || remarks.length > MAX_LENGTH.remarks) {
         return reply(400, "too_long");
     }
@@ -79,7 +81,7 @@ export async function POST(request) {
 
     // products: [{ slug, quantity }], at least one, no repeats
     const requested = Array.isArray(data?.products) ? data.products : [];
-    if (!requested.length) return reply(400, "no_products");
+    if (type === "support" && requested.length > 1) return reply(400, "invalid");
     if (requested.length > MAX_PRODUCTS) return reply(400, "too_many_products");
 
     const quantities = new Map();
@@ -104,7 +106,7 @@ export async function POST(request) {
     try {
         if (!(await verifyCaptcha(captchaToken, ip))) return reply(400, "captcha");
 
-        const found = await lookupProducts(locale, [...quantities.keys()]);
+        const found = quantities.size ? await lookupProducts(locale, [...quantities.keys()]) : [];
         if (found.length !== quantities.size) {
             console.warn("Inquiry form: unknown product slug(s) from", ip);
             return reply(400, "invalid");
@@ -116,17 +118,20 @@ export async function POST(request) {
             ["Company", fields.company],
             ...(type === "sample"
                 ? [["Address", fields.address], ["City", fields.city], ["Postcode", fields.postcode]]
-                : []),
+                : type === "support"
+                    ? [["Address", fields.address], ["City", fields.city]]
+                    : []),
             ["Country", fields.country],
             ["Phone", fields.phone],
             ["Email", fields.email],
         ];
 
-        const subjectProduct = products.length > 1 ? `${products[0].title} +${products.length - 1} more` : products[0].title;
+        const subjectProduct = !products.length ? "" : products.length > 1 ? `${products[0].title} +${products.length - 1} more` : products[0].title;
+        const subjectLabel = type === "quote" ? "Quotation request" : type === "support" ? "Technical support request" : "Sample request";
         const sent = await sendTeamMail({
             label: "Inquiry form",
             replyTo: fields.email,
-            subject: `${type === "quote" ? "Quotation request" : "Sample request"} - ${fields.company} - ${subjectProduct}`.slice(0, 200),
+            subject: [subjectLabel, fields.company, subjectProduct].filter(Boolean).join(" - ").slice(0, 200),
             html: InquiryEmailTemplate({
                 type,
                 products,

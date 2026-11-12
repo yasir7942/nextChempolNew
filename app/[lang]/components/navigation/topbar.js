@@ -10,6 +10,7 @@ import SearchBar from '../layout/search-bar';
 import HomneCategoryMenuWrapper from '../layout/HomeCategoryMenuWrapper';
 import { getDictionary } from '@/libs/getDictionary';
 import LangSwitcher from './lang-switcher';
+import HeaderQuoteButton from '../elements/header-quote-button';
 
 
 
@@ -37,7 +38,7 @@ const Topbar = async ({ locale }) => {
 
             <LangSwitcher Locale={locale} />
 
-            <Link href={`/${locale}/contact/`} className=" border border-textBlue rounded-sm text-sm px-3 py-2 text-textBlue hover:text-lightColorHover  hidden md:block   " > {dictionary.topbar.customerSupport.button.getQuote}</Link>
+            <HeaderQuoteButton locale={locale} dictionary={dictionary.inquiry} label={dictionary.topbar.customerSupport.button.getQuote} />
 
 
             <div className='flex flex-row    '>

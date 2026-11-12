@@ -29,6 +29,18 @@ export const escapeHtml = (value) =>
         .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#39;");
 
+// "https://wa.me/<digits>" for a phone number typed with its country code, or "" when it is too short to be one
+export const whatsappLink = (phone) => {
+    const digits = String(phone ?? "").replace(/\D/g, "").replace(/^00/, "");
+    return digits.length >= 8 ? `https://wa.me/${digits}` : "";
+};
+
+// The phone number as a WhatsApp link (escaped) for the team email
+export const phoneHtml = (phone) => {
+    const link = whatsappLink(phone);
+    return link ? `<a href="${escapeHtml(link)}">${escapeHtml(phone)}</a> (WhatsApp)` : escapeHtml(phone);
+};
+
 // Reads and validates the recipients. Pure function of `env` so it can be tested.
 export function parseMailConfig(env = process.env) {
     const errors = [];
