@@ -76,13 +76,13 @@ export function parseMailConfig(env = process.env) {
     return { ok: errors.length === 0, errors, apiKey, from, to, cc };
 }
 
-// Sends the notification. Returns true when Resend accepted it, false otherwise (reason in the log).
+// Sends the notification. Returns { ok: true } when Resend accepted it, otherwise { ok: false, error } (also logged).
 // `label` names the form in the log, `replyTo` is the visitor's already validated email.
 export async function sendTeamMail({ label, subject, html, text, replyTo }) {
     const config = parseMailConfig();
     if (!config.ok) {
         console.error(`${label}: email not sent, configuration problem in .env:`, config.errors.join("; "));
-        return false;
+        return { ok: false, error: `configuration: ${config.errors.join("; ")}` };
     }
 
     try {
@@ -99,12 +99,134 @@ export async function sendTeamMail({ label, subject, html, text, replyTo }) {
 
         if (error) {
             console.error(`${label}: Resend error`, error);
-            return false;
+            return { ok: false, error: `Resend: ${error.name || "error"} ${error.message || ""}`.trim() };
         }
-        return true;
+        return { ok: true };
     } catch (error) {
         // network failure, timeout...
         console.error(`${label}: Resend request failed`, error);
-        return false;
+        return { ok: false, error: `request failed: ${error?.message || error}` };
     }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Test email for /admin/submissions ("Send test email", SuperAdmin only)
+// ---------------------------------------------------------------------------------------------
+
+// Fixed on purpose: a test email can only ever go to this address, never to a visitor or to a
+// recipient an admin typed.
+export const TEST_RECIPIENT = "it@atlanticlubes.com";
+
+// Shows that a secret is set without revealing it: first 3 characters and the length only
+const maskSecret = (value) => (value ? `${value.slice(0, 3)}${"*".repeat(8)} (${value.length} characters)` : "");
+
+// Plain-language advice for the most common Resend / network failures
+function hintsFor(error) {
+    const text = `${error?.name || ""} ${error?.message || ""} ${error?.cause || ""}`.toLowerCase();
+    const status = Number(error?.statusCode) || 0;
+    const hints = [];
+
+    if (status === 401 || status === 403 || text.includes("api key") || text.includes("api_key")) {
+        hints.push("RESEND_API_KEY is wrong, deleted, or restricted. Create a new key in Resend (API Keys) with sending access, put it in the .env file the server loads, and restart the app.");
+    }
+    if (text.includes("domain") || text.includes("not verified") || text.includes("testing emails")) {
+        hints.push("The sender domain is not verified in Resend. Verify the domain of RESEND_FROM_EMAIL (Resend > Domains: SPF and DKIM records must show Verified), or use an address on a domain that is verified.");
+    }
+    if (status === 422 || text.includes("invalid `from`") || text.includes("invalid from")) {
+        hints.push("Resend rejected the address format. RESEND_FROM_EMAIL must look like name@domain.com or Name <name@domain.com>.");
+    }
+    if (status === 429 || text.includes("rate")) {
+        hints.push("Resend rate limit reached. Wait a little and try again.");
+    }
+    if (/enotfound|econnrefused|etimedout|econnreset|fetch failed|unable to fetch|network/.test(text)) {
+        hints.push("This server could not reach api.resend.com. Check the server's internet access, DNS and any firewall or proxy rule for outgoing HTTPS.");
+    }
+    if (!hints.length) hints.push("Read the error name, message and status code above. The Resend docs list every error code: https://resend.com/docs/api-reference/errors");
+    return hints;
+}
+
+// Sends one test email to TEST_RECIPIENT and returns a full diagnostic report (never throws).
+// The real recipients (CONTACT_TO_EMAIL, CONTACT_CC_EMAILS) are checked but not emailed.
+export async function sendTestMail() {
+    const started = Date.now();
+    const env = process.env;
+    const config = parseMailConfig(env);
+    const failing = (name) => config.errors.some((message) => message.startsWith(name));
+
+    const variable = (name, shown) => ({
+        name,
+        status: !String(env[name] ?? "").trim() ? (name === "CONTACT_CC_EMAILS" ? "empty (optional)" : "missing") : failing(name) ? "invalid" : "ok",
+        value: shown,
+    });
+
+    const report = {
+        ok: false,
+        testedAt: new Date().toISOString(),
+        durationMs: 0,
+        recipient: TEST_RECIPIENT,
+        environment: { node: process.version, nodeEnv: env.NODE_ENV || "", platform: process.platform },
+        configuration: [
+            variable("RESEND_API_KEY", maskSecret(String(env.RESEND_API_KEY ?? "").trim())),
+            variable("RESEND_FROM_EMAIL", String(env.RESEND_FROM_EMAIL ?? "").trim()),
+            variable("CONTACT_TO_EMAIL", String(env.CONTACT_TO_EMAIL ?? "").trim()),
+            variable("CONTACT_CC_EMAILS", String(env.CONTACT_CC_EMAILS ?? "").trim()),
+        ],
+        configurationProblems: config.errors,
+        request: null,
+        resendResponse: null,
+        error: null,
+        hints: [],
+    };
+    const finish = () => {
+        report.durationMs = Date.now() - started;
+        return report;
+    };
+
+    // the test needs only the API key and the sender
+    const blocking = config.errors.filter((message) => message.startsWith("RESEND_API_KEY") || message.startsWith("RESEND_FROM_EMAIL"));
+    if (blocking.length) {
+        report.error = { name: "configuration", message: blocking.join("; ") };
+        report.hints = ["Add the missing variable to the .env file the server loads (.env or .env.production in the app folder), then restart the app (for pm2: pm2 restart <app> --update-env)."];
+        return finish();
+    }
+
+    const subject = `Chempol website - test email (${report.testedAt})`;
+    report.request = { from: config.from, to: TEST_RECIPIENT, subject };
+
+    try {
+        const resend = new Resend(config.apiKey);
+        const { data, error } = await resend.emails.send({
+            from: config.from,
+            to: TEST_RECIPIENT,
+            subject,
+            html: `<p><b>This is a test email from the Chempol website admin (Customer Submissions page).</b></p>
+                   <p>If you can read this, Resend is configured correctly and the website can send email.</p>
+                   <p>Sent at ${escapeHtml(report.testedAt)} (UTC) from ${escapeHtml(config.from)}.</p>`,
+            text: `This is a test email from the Chempol website admin. If you can read this, Resend works. Sent at ${report.testedAt} (UTC).`,
+        });
+
+        if (error) {
+            report.error = {
+                name: error.name || "error",
+                message: error.message || "",
+                statusCode: error.statusCode ?? null,
+            };
+            report.hints = hintsFor(report.error);
+            console.error("Test email: Resend error", error);
+        } else {
+            report.ok = true;
+            report.resendResponse = { id: data?.id || "" };
+        }
+    } catch (error) {
+        report.error = {
+            name: error?.name || "Error",
+            message: error?.message || String(error),
+            cause: error?.cause ? String(error.cause?.code || error.cause?.message || error.cause) : "",
+            stack: String(error?.stack || "").split("\n").slice(0, 8).join("\n"),
+        };
+        report.hints = hintsFor(report.error);
+        console.error("Test email: request failed", error);
+    }
+
+    return finish();
 }

@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { isSuperAdminUser, loadUserRole } from "@/libs/admin-auth";
 
 export const runtime = "nodejs";
 
@@ -57,6 +58,9 @@ export async function GET() {
             );
         }
 
+        // the role is only used to show the SuperAdmin pages; it can never log the user out
+        const role = await loadUserRole(jwt, user);
+
         return NextResponse.json({
             ok: true,
             user: {
@@ -65,6 +69,8 @@ export async function GET() {
                 email: user?.email || "",
                 confirmed: user?.confirmed ?? null,
                 blocked: user?.blocked ?? null,
+                role: role?.name || "",
+                isSuperAdmin: isSuperAdminUser({ role }),
             },
         });
     } catch (error) {

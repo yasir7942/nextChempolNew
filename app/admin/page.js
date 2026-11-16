@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import PaddingContainer from "@/app/admin/shared/components/padding-container";
 import { ADMIN_PAGES, ADMIN_ROBOTS } from "@/app/admin/admin-pages";
+import { getAdminUserWithRole, isSuperAdminUser } from "@/libs/admin-auth";
 
 export const metadata = {
   title: "Admin Home",
@@ -9,7 +10,11 @@ export const metadata = {
   robots: ADMIN_ROBOTS,
 };
 
-const AdminHome = () => {
+const AdminHome = async () => {
+  // customer data cards are listed only for the SuperAdmin role
+  const isSuperAdmin = isSuperAdminUser(await getAdminUserWithRole());
+  const pages = ADMIN_PAGES.filter((page) => !page.superAdminOnly || isSuperAdmin);
+
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
       <section className="border-b border-slate-200 bg-white">
@@ -27,7 +32,7 @@ const AdminHome = () => {
       <section className="py-6 md:py-10">
         <PaddingContainer>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {ADMIN_PAGES.map(({ href, title, description, Icon }) => (
+            {pages.map(({ href, title, description, Icon }) => (
               <Link
                 key={href}
                 href={href}

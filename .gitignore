@@ -64,3 +64,9 @@ chempo15lang.7z
 
 # live redirects built from Strapi (libs/redirects/sync.js)
 /.redirects/
+
+# local submissions database (never commit)
+.data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

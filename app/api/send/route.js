@@ -9,8 +9,9 @@
 // Errors return a `code` the form turns into a translated message; details stay in the server log.
 // The checks themselves are in libs/form-security.js (shared with app/api/inquiry).
 
-import { EmailTemplate } from "@/app/[lang]/components/elements/email-template";
 import { sendTeamMail } from "@/libs/team-mail";
+import { buildSubmissionMail } from "@/libs/submission-mail";
+import { markEmailResult, saveSubmission } from "@/libs/inquiry-db";
 import { isRateLimited, isSameSite, reply, singleLine, verifyCaptcha, visitorIp } from "@/libs/form-security";
 
 export const runtime = "nodejs";
@@ -65,13 +66,25 @@ export async function POST(request) {
     try {
         if (!(await verifyCaptcha(captchaToken, ip))) return reply(400, "captcha");
 
-        const sent = await sendTeamMail({
-            label: "Contact form",
-            replyTo: email,
-            subject: `Chempol Contact Form - ${fullName}`,
-            html: EmailTemplate({ name: fullName, phone: phoneNumber, mail: email, contry: country, msg: message }),
+        // 1. keep the query first, so it is never lost if the email fails
+        const saved = saveSubmission({
+            formType: "contact",
+            fullName,
+            email,
+            phone: phoneNumber,
+            country,
+            message,
+            ip,
         });
-        if (!sent) return reply(500, "send_failed");
+        if (saved?.alreadySent) return reply(200, "sent", "Email sent successfully!");
+
+        // 2. email the team, then record the result
+        const message_ = buildSubmissionMail({ formType: "contact", fullName, email, phone: phoneNumber, country, message });
+        const mail = await sendTeamMail({ label: message_.label, replyTo: message_.replyTo, subject: message_.subject, html: message_.html });
+        if (saved) markEmailResult(saved.id, mail.ok, mail.error);
+
+        // the visitor sees an error only when the query could be neither emailed nor saved
+        if (!mail.ok && !saved) return reply(500, "send_failed");
 
         return reply(200, "sent", "Email sent successfully!");
     } catch (error) {

@@ -10,6 +10,7 @@ import { createPortal } from "react-dom";
 import ReCAPTCHA from "react-google-recaptcha";
 import { MdClose, MdCheckCircle } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa";
+import { trackFormSubmission, trackWhatsappClick } from "@/libs/track";
 
 const MAX_PRODUCTS = 10;
 
@@ -148,6 +149,7 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
 
       if (response.ok) {
         setDone(true);
+        trackFormSubmission(type);
       } else {
         const result = await response.json().catch(() => ({}));
         setStatus(d[ERROR_MESSAGES[result.code]] || d.failed);
@@ -200,6 +202,7 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
             {isSupport && WHATSAPP_NUMBER && (
               <div className="mb-5">
                 <a
+                  onClick={trackWhatsappClick}
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(product?.title ? d.whatsappMessage.replace("{product}", product.title) : d.whatsappMessageGeneral)}`}
                   target="_blank"
                   rel="noopener noreferrer"

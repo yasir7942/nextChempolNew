@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { trackWhatsappClick } from '@/libs/track';
 
 const WhatsAppButton = () => {
     const [isClient, setIsClient] = useState(false);
@@ -21,6 +22,7 @@ const WhatsAppButton = () => {
             <a
                 //href="https://wa.me/+447548378089"
                 href={`https://wa.me/${whatsappNumber}`}
+                onClick={trackWhatsappClick}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-14 h-14 bg-green-500 rounded-full shadow-lg hover:bg-green-600 transition"

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import React from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { MdCheckCircle } from 'react-icons/md';
+import { trackFormSubmission } from '@/libs/track';
 
 // Same limits as app/api/send/route.js
 const MAX_LENGTH = { fullName: 100, phoneNumber: 30, email: 254, country: 100, message: 5000 };
@@ -49,6 +50,7 @@ const ContactForm = ({ locale, dictionary }) => {
 
       if (response.ok) {
         setSent(true);
+        trackFormSubmission('contact');
         // Reset form fields only on success
         setFullName('');
         setPhoneNumber('');

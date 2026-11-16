@@ -1,4 +1,4 @@
-import { ArrowRightLeft, FileBarChart2, PlaySquare } from "lucide-react";
+import { ArrowRightLeft, FileBarChart2, Inbox, PlaySquare } from "lucide-react";
 
 // Admin pages are reports, not content: keep them out of search engines.
 // The admin pages use plain metadata (libs/metadata.js adds /en/ canonical and hreflang links).
@@ -26,5 +26,14 @@ export const ADMIN_PAGES = [
     description:
       "Every YouTube video in Strapi: add, edit, hide or delete videos and fetch new uploads from the channel.",
     Icon: PlaySquare,
+  },
+  {
+    href: "/admin/submissions/",
+    title: "Customer Submissions",
+    description:
+      "Contact, quote, sample and technical-team requests saved in the private database, and which ones were emailed to the team.",
+    Icon: Inbox,
+    // customer data: listed (and allowed by the API) only for users with the SuperAdmin role
+    superAdminOnly: true,
   },
 ];

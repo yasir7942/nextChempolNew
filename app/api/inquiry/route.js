@@ -8,10 +8,11 @@
 // Errors return a `code` the form turns into a translated message; details stay in the server log.
 
 import { i18n } from "@/i18n.config";
-import { InquiryEmailTemplate } from "@/app/[lang]/components/elements/inquiry-email-template";
 import { isRateLimited, isSameSite, reply, singleLine, verifyCaptcha, visitorIp } from "@/libs/form-security";
 import { lookupProducts } from "@/libs/product-search";
 import { sendTeamMail } from "@/libs/team-mail";
+import { buildSubmissionMail } from "@/libs/submission-mail";
+import { markEmailResult, saveSubmission } from "@/libs/inquiry-db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -113,35 +114,44 @@ export async function POST(request) {
         }
         const products = found.map((product) => ({ ...product, quantity: quantities.get(product.slug) }));
 
-        const contact = [
-            ["Name", fields.fullName],
-            ["Company", fields.company],
-            ...(type === "sample"
-                ? [["Address", fields.address], ["City", fields.city], ["Postcode", fields.postcode]]
-                : type === "support"
-                    ? [["Address", fields.address], ["City", fields.city]]
-                    : []),
-            ["Country", fields.country],
-            ["Phone", fields.phone],
-            ["Email", fields.email],
-        ];
-
-        const subjectProduct = !products.length ? "" : products.length > 1 ? `${products[0].title} +${products.length - 1} more` : products[0].title;
-        const subjectLabel = type === "quote" ? "Quotation request" : type === "support" ? "Technical support request" : "Sample request";
-        const sent = await sendTeamMail({
-            label: "Inquiry form",
-            replyTo: fields.email,
-            subject: [subjectLabel, fields.company, subjectProduct].filter(Boolean).join(" - ").slice(0, 200),
-            html: InquiryEmailTemplate({
-                type,
-                products,
-                contact,
-                remarks,
-                locale,
-                siteUrl: (process.env.NEXT_PUBLIC_BASE_URL || "https://chempol.co.uk").replace(/\/$/, ""),
-            }),
+        // 1. keep the request first, so it is never lost if the email fails
+        const saved = saveSubmission({
+            formType: type,
+            locale,
+            fullName: fields.fullName,
+            company: fields.company,
+            email: fields.email,
+            phone: fields.phone,
+            country: fields.country,
+            address: fields.address,
+            city: fields.city,
+            postcode: fields.postcode,
+            message: remarks,
+            products: products.map((product) => ({ slug: product.slug, title: product.title, quantity: product.quantity || "" })),
+            ip,
         });
-        if (!sent) return reply(500, "send_failed");
+        if (saved?.alreadySent) return reply(200, "sent");
+
+        // 2. email the team, then record the result
+        const message_ = buildSubmissionMail({
+            formType: type,
+            locale,
+            fullName: fields.fullName,
+            company: fields.company,
+            email: fields.email,
+            phone: fields.phone,
+            country: fields.country,
+            address: fields.address,
+            city: fields.city,
+            postcode: fields.postcode,
+            message: remarks,
+            products,
+        });
+        const mail = await sendTeamMail({ label: message_.label, replyTo: message_.replyTo, subject: message_.subject, html: message_.html });
+        if (saved) markEmailResult(saved.id, mail.ok, mail.error);
+
+        // the visitor sees an error only when the request could be neither emailed nor saved
+        if (!mail.ok && !saved) return reply(500, "send_failed");
 
         return reply(200, "sent");
     } catch (error) {
