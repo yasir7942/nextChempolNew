@@ -19,6 +19,14 @@ export async function POST() {
         maxAge: 0,
     });
 
+    res.cookies.set("additives_admin_remember", "", {
+        httpOnly: true,
+        secure: isProduction(),
+        sameSite: "lax",
+        path: "/",
+        maxAge: 0,
+    });
+
     res.cookies.set("additives_admin_user", "", {
         httpOnly: false,
         secure: isProduction(),

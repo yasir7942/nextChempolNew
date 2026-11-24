@@ -33,6 +33,25 @@ export function isSameSite(request) {
     return allowed.includes(origin);
 }
 
+// The page a form was sent from (Referer header), only when it is a page of this site; "" otherwise.
+// Passed on to the Atlantic Inquiry Manager as source.page_url.
+export function formPageUrl(request) {
+    const referer = request.headers.get("referer") || "";
+    if (!referer || referer.length > 2000) return "";
+    try {
+        const url = new URL(referer);
+        if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+        const allowed = [
+            request.headers.get("host"),
+            request.headers.get("x-forwarded-host"),
+            hostOf(process.env.NEXT_PUBLIC_BASE_URL),
+        ].map(bareHost).filter(Boolean);
+        return allowed.includes(bareHost(url.host)) ? url.href : "";
+    } catch {
+        return "";
+    }
+}
+
 // Cloudflare and nginx put the visitor IP in these headers
 export function visitorIp(request) {
     return (

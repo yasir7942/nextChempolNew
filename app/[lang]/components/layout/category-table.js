@@ -4,18 +4,36 @@ import CategoryQuoteCta from "../elements/category-quote-cta";
 // Product table of a product category (Strapi: product-category → CategoryTabel).
 // Wide screens: a normal table. Below md: every row becomes a card, each value with its column label.
 // Rows without a linked product are skipped; with no rows nothing is shown.
-const CategoryTable = ({ rows = [], locale = "en", dictionary = {} }) => {
+// Column headings. The four Strapi fields (Chemistry, Form, SSI, MainUse) keep their names, but some
+// categories show other data in them: those categories get their own headings here, by category slug.
+// In Strapi, fill the fields in the same order as the headings.
+const FIELDS = ["Chemistry", "Form", "SSI", "MainUse"];
+const HEADINGS = {
+  default: [
+    ["chemistry", "Chemistry"],
+    ["form", "Form"],
+    ["ssi", "SSI (typical)"],
+    ["mainUse", "Main use"],
+  ],
+  // PCMO / gasoline engine oil additive packages
+  "pcmo-gasoline": [
+    ["performanceLevels", "Performance levels"],
+    ["saps", "SAPS"],
+    ["dosage", "Dosage, wt%"],
+    ["viscosityGrades", "Viscosity grades"],
+  ],
+};
+
+const CategoryTable = ({ rows = [], locale = "en", dictionary = {}, categorySlug = "" }) => {
   const labels = dictionary?.categoryTable || {};
   const list = (Array.isArray(rows) ? rows : []).filter((row) => row?.product?.slug && row?.product?.title);
 
   if (!list.length) return null;
 
-  const columns = [
-    { key: "Chemistry", label: labels.chemistry ?? "Chemistry" },
-    { key: "Form", label: labels.form ?? "Form" },
-    { key: "SSI", label: labels.ssi ?? "SSI (typical)" },
-    { key: "MainUse", label: labels.mainUse ?? "Main use" },
-  ];
+  const columns = (HEADINGS[categorySlug] || HEADINGS.default).map(([labelKey, fallback], index) => ({
+    key: FIELDS[index],
+    label: labels[labelKey] ?? fallback,
+  }));
 
   const head = "border border-textLightBlue bg-textLightBlue px-3 py-3 text-start font-semibold text-white align-top";
   const cell =

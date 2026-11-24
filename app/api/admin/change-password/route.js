@@ -58,12 +58,14 @@ export async function POST(request) {
         // Strapi issues a fresh token: keep this browser logged in with it
         const result = NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store" } });
         if (json?.jwt) {
+            // a login made without "Remember me" stays a session cookie
+            const remember = (await cookies()).get("additives_admin_remember")?.value !== "0";
             result.cookies.set(ADMIN_COOKIE, json.jwt, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "lax",
                 path: "/",
-                maxAge: 60 * 60 * 24 * 7,
+                ...(remember ? { maxAge: 60 * 60 * 24 * 7 } : {}),
             });
         }
         return result;

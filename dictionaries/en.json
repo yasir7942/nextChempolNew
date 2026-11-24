@@ -5,6 +5,10 @@
         "form": "Form",
         "ssi": "SSI (typical)",
         "mainUse": "Main use",
+        "performanceLevels": "Performance levels",
+        "saps": "SAPS",
+        "dosage": "Dosage, wt%",
+        "viscosityGrades": "Viscosity grades",
         "ctaText": "Not sure which grade fits? Send us your base oil and target grade."
     },
     "inquiry": {

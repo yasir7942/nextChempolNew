@@ -12,7 +12,10 @@
 import { sendTeamMail } from "@/libs/team-mail";
 import { buildSubmissionMail } from "@/libs/submission-mail";
 import { markEmailResult, saveSubmission } from "@/libs/inquiry-db";
-import { isRateLimited, isSameSite, reply, singleLine, verifyCaptcha, visitorIp } from "@/libs/form-security";
+import { after } from "next/server";
+import { i18n } from "@/i18n.config";
+import { formPageUrl, isRateLimited, isSameSite, reply, singleLine, verifyCaptcha, visitorIp } from "@/libs/form-security";
+import { queueInquiryForward } from "@/libs/inquiry-forward";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,6 +51,7 @@ export async function POST(request) {
     const country = singleLine(data?.country);
     const message = String(data?.message ?? "").trim();
     const captchaToken = String(data?.isCaptchaCode ?? "");
+    const locale = i18n.locales.includes(data?.locale) ? data.locale : i18n.defaultLocale;
 
     const fields = { fullName, phoneNumber, email, country, message };
     if (Object.values(fields).some((value) => !value)) return reply(400, "invalid", "Please fill in every field.");
@@ -69,6 +73,7 @@ export async function POST(request) {
         // 1. keep the query first, so it is never lost if the email fails
         const saved = saveSubmission({
             formType: "contact",
+            locale,
             fullName,
             email,
             phone: phoneNumber,
@@ -82,6 +87,25 @@ export async function POST(request) {
         const message_ = buildSubmissionMail({ formType: "contact", fullName, email, phone: phoneNumber, country, message });
         const mail = await sendTeamMail({ label: message_.label, replyTo: message_.replyTo, subject: message_.subject, html: message_.html });
         if (saved) markEmailResult(saved.id, mail.ok, mail.error);
+
+        // 3. copy for the Atlantic Inquiry Manager: stored now, sent after this response by after(),
+        //    so it never delays or changes what the visitor sees (libs/inquiry-forward.js)
+        const forward = queueInquiryForward({
+            formType: "contact",
+            clientSubmissionId: data?.clientSubmissionId,
+            submissionRowId: saved?.id,
+            locale,
+            fullName,
+            email,
+            phone: phoneNumber,
+            country,
+            message,
+            pageUrl: formPageUrl(request),
+            ip,
+            emailResult: { sent: mail.ok, sentAt: mail.ok ? new Date().toISOString() : null, attempts: 1, error: mail.error },
+            test: process.env.NODE_ENV !== "production",
+        });
+        if (forward) after(forward);
 
         // the visitor sees an error only when the query could be neither emailed nor saved
         if (!mail.ok && !saved) return reply(500, "send_failed");

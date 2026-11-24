@@ -6,6 +6,7 @@ import { NextResponse, after } from "next/server";
 import { flattenAttributes } from "@/libs/data-utils";
 import { syncRedirects } from "@/libs/redirects/sync";
 import { revalidateBoth, revalidateLocales, revalidateProductSearch, revalidateSite, revalidateVideoPages } from "@/libs/revalidate-pages";
+import { revalidateWholeSite } from "@/libs/revalidate-site";
 
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_ADMIN_BASE_URL + ""; // direct strapi api call
 const VALID_TOKEN = process.env.ADMIN_TOKEN;
@@ -157,9 +158,8 @@ async function revalidate(req, model, slug) {
         }
 
         if (SITE_WIDE_MODELS.includes(model)) {
-            // header menu / footer content is on every page
-            revalidateSite();
-            revalidateProductSearch(); // category titles are searchable
+            // header menu / footer content is on every page; same as the admin "Revalidate from Strapi" button
+            revalidateWholeSite();
         }
         else if (model == 'post') {
             console.log("revalidate post");

@@ -4,6 +4,7 @@ import React from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { MdCheckCircle } from 'react-icons/md';
 import { trackFormSubmission } from '@/libs/track';
+import { newSubmissionKey } from '@/libs/submission-key';
 
 // Same limits as app/api/send/route.js
 const MAX_LENGTH = { fullName: 100, phoneNumber: 30, email: 254, country: 100, message: 5000 };
@@ -29,6 +30,8 @@ const ContactForm = ({ locale, dictionary }) => {
   const [isCaptchaCode, setIsCaptchaCode] = useState('');
   const [website, setWebsite] = useState(''); // honeypot: hidden, only bots fill it in
   const recaptchaRef = React.useRef(null);
+  // one ID per filled-in form, so a double submit is stored once (libs/submission-key.js)
+  const [submissionKey, setSubmissionKey] = useState(newSubmissionKey);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,12 +48,13 @@ const ContactForm = ({ locale, dictionary }) => {
       const response = await fetch('/api/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName, phoneNumber, email, country, message, isCaptchaCode, website }),
+        body: JSON.stringify({ fullName, phoneNumber, email, country, message, isCaptchaCode, website, locale, clientSubmissionId: submissionKey }),
       });
 
       if (response.ok) {
         setSent(true);
         trackFormSubmission('contact');
+        setSubmissionKey(newSubmissionKey());
         // Reset form fields only on success
         setFullName('');
         setPhoneNumber('');

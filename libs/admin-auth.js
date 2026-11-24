@@ -5,11 +5,15 @@ import { NextResponse } from "next/server";
 // a Strapi users-permissions JWT in an httpOnly cookie.
 export const ADMIN_COOKIE = "additives_admin_jwt";
 
-// The logged-in Strapi user, or null when there is no valid admin session
-export async function getAdminUser() {
+/*
+  The admin session: { user } when logged in, { user: null } when not, and
+  { user: null, unreachable: true } when Strapi could not be asked (down, 5xx, no base URL).
+*/
+export async function checkAdminSession() {
     const jwt = (await cookies()).get(ADMIN_COOKIE)?.value || "";
     const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "").trim().replace(/\/$/, "");
-    if (!jwt || !base) return null;
+    if (!jwt) return { user: null };
+    if (!base) return { user: null, unreachable: true };
 
     try {
         const response = await fetch(`${base}/users/me`, {
@@ -17,10 +21,16 @@ export async function getAdminUser() {
             cache: "no-store",
         });
         const user = await response.json().catch(() => null);
-        return response.ok && user?.id ? user : null;
+        if (response.ok && user?.id) return { user };
+        return { user: null, unreachable: response.status >= 500 };
     } catch {
-        return null;
+        return { user: null, unreachable: true };
     }
+}
+
+// The logged-in Strapi user, or null when there is no valid admin session
+export async function getAdminUser() {
+    return (await checkAdminSession()).user;
 }
 
 // Role name that may open the customer submissions page. Compared ignoring case, spaces and
@@ -63,20 +73,27 @@ export async function getAdminUserWithRole() {
 
 const NO_STORE = { "Cache-Control": "no-store" };
 
+// true when a request that changes data was sent from another website (its Origin is not this host)
+export function isForeignOrigin(request) {
+    const origin = request.headers.get("origin");
+    if (!origin || request.method === "GET") return false;
+
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+    try {
+        return new URL(origin).host !== host;
+    } catch {
+        return true;
+    }
+}
+
 /*
   For admin API routes that change data: null when the request may go ahead,
   otherwise the error response. Requires the admin session, and refuses requests
   sent from another website (the session cookie alone is not enough).
 */
 export async function requireAdmin(request) {
-    const origin = request.headers.get("origin");
-    if (origin && request.method !== "GET") {
-        const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-        let sameSite = false;
-        try {
-            sameSite = new URL(origin).host === host;
-        } catch { }
-        if (!sameSite) return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403, headers: NO_STORE });
+    if (isForeignOrigin(request)) {
+        return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403, headers: NO_STORE });
     }
 
     if (!(await getAdminUser())) {
@@ -102,8 +119,8 @@ export async function requireSuperAdmin(request) {
 }
 
 // JSON response that browsers and proxies never cache
-export function adminJson(body, status = 200) {
-    return NextResponse.json(body, { status, headers: NO_STORE });
+export function adminJson(body, status = 200, headers = {}) {
+    return NextResponse.json(body, { status, headers: { ...NO_STORE, ...headers } });
 }
 
 // Error from libs/youtube/videos.js (VideoError carries its status) or anything unexpected

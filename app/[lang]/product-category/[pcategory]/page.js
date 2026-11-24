@@ -198,7 +198,7 @@ const ProductCategory = async props => {
           <BodyDataParse content={content} />
         </div>
 
-        <CategoryTable rows={pcategory.CategoryTabel} locale={lang} dictionary={dictionary} />
+        <CategoryTable rows={pcategory.CategoryTabel} locale={lang} dictionary={dictionary} categorySlug={params.pcategory} />
         <div className="w-full h-auto flex flex-col md:flex-row     ">
           {/*  Left Menu Column  */}
           <div className="w-full md:w-3/12 lg:w-[22%] p-6 md:pl-0  overflow-hidden ">

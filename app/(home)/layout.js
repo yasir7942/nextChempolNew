@@ -4,10 +4,17 @@
 // so <html lang> matches each page's language.
 import "../[lang]/globals.css";
 import { openSans } from "@/libs/fonts";
+import GoogleTagManager, { GoogleTagManagerNoScript } from "../[lang]/components/elements/google-tag-manager";
 
 export default function RootLayout({ children }) {
     return (
-        // html/body must be on one line, no whitespace
-        <html lang="en"><body className={openSans.className}>{children}</body></html>
+        <html lang="en">
+            <body className={openSans.className}>
+                {/* Google Tag Manager (GA4 runs inside it): see google-tag-manager.js */}
+                <GoogleTagManagerNoScript />
+                <GoogleTagManager />
+                {children}
+            </body>
+        </html>
     );
 }

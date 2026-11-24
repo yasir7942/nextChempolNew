@@ -5,6 +5,10 @@
     "form": "Forma",
     "ssi": "SSI (típico)",
     "mainUse": "Uso principal",
+    "performanceLevels": "Niveles de desempeño",
+    "saps": "SAPS",
+    "dosage": "Dosificación, % en peso",
+    "viscosityGrades": "Grados de viscosidad",
     "ctaText": "¿No está seguro de qué grado le conviene? Envíenos su aceite base y el grado objetivo."
   },
   "inquiry": {

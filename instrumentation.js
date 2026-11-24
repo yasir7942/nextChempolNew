@@ -4,4 +4,8 @@ export async function register() {
 
     const { startRedirectScheduler } = await import("./libs/redirects/scheduler");
     startRedirectScheduler();
+
+    // resends Atlantic Inquiry Manager copies that are still pending (libs/inquiry-forward.js)
+    const { startInquiryOutboxScheduler } = await import("./libs/inquiry-outbox-scheduler");
+    startInquiryOutboxScheduler();
 }

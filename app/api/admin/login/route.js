@@ -16,6 +16,8 @@ export async function POST(req) {
 
         const identifier = String(body?.identifier || "").trim();
         const password = String(body?.password || "");
+        // "Remember me" (default on): stay logged in for 7 days. Off: the login ends when the browser is closed.
+        const remember = body?.remember !== false;
 
         if (!identifier || !password) {
             return NextResponse.json(
@@ -81,12 +83,15 @@ export async function POST(req) {
             user: safeUser,
         });
 
+        // no maxAge = session cookie
+        const lifetime = remember ? { maxAge: 60 * 60 * 24 * 7 } : {};
+
         res.cookies.set("additives_admin_jwt", loginJson.jwt, {
             httpOnly: true,
             secure: isProduction(),
             sameSite: "lax",
             path: "/",
-            maxAge: 60 * 60 * 24 * 7,
+            ...lifetime,
         });
 
         res.cookies.set("additives_admin_user", JSON.stringify(safeUser), {
@@ -94,7 +99,16 @@ export async function POST(req) {
             secure: isProduction(),
             sameSite: "lax",
             path: "/",
-            maxAge: 60 * 60 * 24 * 7,
+            ...lifetime,
+        });
+
+        // remembers the choice, so a password change keeps the same kind of login
+        res.cookies.set("additives_admin_remember", remember ? "1" : "0", {
+            httpOnly: true,
+            secure: isProduction(),
+            sameSite: "lax",
+            path: "/",
+            ...lifetime,
         });
 
         return res;

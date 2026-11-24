@@ -11,6 +11,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 import { MdClose, MdCheckCircle } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa";
 import { trackFormSubmission, trackWhatsappClick } from "@/libs/track";
+import { newSubmissionKey } from "@/libs/submission-key";
 
 const MAX_PRODUCTS = 10;
 
@@ -49,6 +50,8 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  // one ID per filled-in form, so a double submit is stored once (libs/submission-key.js)
+  const [submissionKey, setSubmissionKey] = useState(newSubmissionKey);
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -144,12 +147,14 @@ const InquiryDialog = ({ type, locale, dictionary: d, product, onClose }) => {
           ...fields,
           website,
           isCaptchaCode: captcha,
+          clientSubmissionId: submissionKey,
         }),
       });
 
       if (response.ok) {
         setDone(true);
         trackFormSubmission(type);
+        setSubmissionKey(newSubmissionKey());
       } else {
         const result = await response.json().catch(() => ({}));
         setStatus(d[ERROR_MESSAGES[result.code]] || d.failed);

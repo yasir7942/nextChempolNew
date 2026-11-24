@@ -8,6 +8,7 @@ export default function AdminLoginPage() {
 
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
+    const [remember, setRemember] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -26,6 +27,7 @@ export default function AdminLoginPage() {
                 body: JSON.stringify({
                     identifier,
                     password,
+                    remember,
                 }),
                 cache: "no-store",
             });
@@ -95,6 +97,17 @@ export default function AdminLoginPage() {
                             required
                         />
                     </div>
+
+                    <label className="flex items-center gap-2 text-sm text-gray-700 select-none cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={remember}
+                            onChange={(e) => setRemember(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 accent-blue-600"
+                        />
+                        Remember me
+                        <span className="text-xs text-gray-400">(stay logged in for 7 days)</span>
+                    </label>
 
                     <button
                         type="submit"

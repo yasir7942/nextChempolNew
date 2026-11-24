@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, CircleUserRound, KeyRound, LogOut } from "lucide-react";
 import { ADMIN_PAGES } from "@/app/admin/admin-pages";
+import CacheActions from "@/app/admin/shared/components/cache-actions";
 
 // Two drop-down menus: the additives selector pages and the reports
 const SELECTOR_ITEMS = [
@@ -242,21 +243,26 @@ export default function AdminHeader() {
                         <DropdownMenu id="selector" label="Additives Selector" items={SELECTOR_ITEMS} pathname={pathname} openId={openId} setOpenId={setOpenId} />
                     </nav>
 
-                    {/* SuperAdmin: profile icon (profile page + logout); other roles keep the Logout button */}
-                    {!userLoaded ? (
-                        <div className="h-10 w-10" aria-hidden="true" />
-                    ) : isSuperAdmin ? (
-                        <ProfileMenu user={user} onLogout={handleLogout} loggingOut={loggingOut} />
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={handleLogout}
-                            disabled={loggingOut}
-                            className="w-fit rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-                        >
-                            {loggingOut ? "Logging out..." : "Logout"}
-                        </button>
-                    )}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* revalidate / Cloudflare buttons, only once the admin session is confirmed */}
+                        {user && <CacheActions />}
+
+                        {/* SuperAdmin: profile icon (profile page + logout); other roles keep the Logout button */}
+                        {!userLoaded ? (
+                            <div className="h-10 w-10" aria-hidden="true" />
+                        ) : isSuperAdmin ? (
+                            <ProfileMenu user={user} onLogout={handleLogout} loggingOut={loggingOut} />
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                disabled={loggingOut}
+                                className="w-fit rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                            >
+                                {loggingOut ? "Logging out..." : "Logout"}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>

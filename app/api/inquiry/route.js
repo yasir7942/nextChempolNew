@@ -8,7 +8,9 @@
 // Errors return a `code` the form turns into a translated message; details stay in the server log.
 
 import { i18n } from "@/i18n.config";
-import { isRateLimited, isSameSite, reply, singleLine, verifyCaptcha, visitorIp } from "@/libs/form-security";
+import { after } from "next/server";
+import { formPageUrl, isRateLimited, isSameSite, reply, singleLine, verifyCaptcha, visitorIp } from "@/libs/form-security";
+import { queueInquiryForward } from "@/libs/inquiry-forward";
 import { lookupProducts } from "@/libs/product-search";
 import { sendTeamMail } from "@/libs/team-mail";
 import { buildSubmissionMail } from "@/libs/submission-mail";
@@ -149,6 +151,30 @@ export async function POST(request) {
         });
         const mail = await sendTeamMail({ label: message_.label, replyTo: message_.replyTo, subject: message_.subject, html: message_.html });
         if (saved) markEmailResult(saved.id, mail.ok, mail.error);
+
+        // 3. copy for the Atlantic Inquiry Manager: stored now, sent after this response by after(),
+        //    so it never delays or changes what the visitor sees (libs/inquiry-forward.js)
+        const forward = queueInquiryForward({
+            formType: type,
+            clientSubmissionId: data?.clientSubmissionId,
+            submissionRowId: saved?.id,
+            locale,
+            fullName: fields.fullName,
+            company: fields.company,
+            email: fields.email,
+            phone: fields.phone,
+            country: fields.country,
+            address: fields.address,
+            city: fields.city,
+            postcode: fields.postcode,
+            message: remarks,
+            products: products.map((product) => ({ title: product.title, quantity: product.quantity || "" })),
+            pageUrl: formPageUrl(request),
+            ip,
+            emailResult: { sent: mail.ok, sentAt: mail.ok ? new Date().toISOString() : null, attempts: 1, error: mail.error },
+            test: process.env.NODE_ENV !== "production",
+        });
+        if (forward) after(forward);
 
         // the visitor sees an error only when the request could be neither emailed nor saved
         if (!mail.ok && !saved) return reply(500, "send_failed");

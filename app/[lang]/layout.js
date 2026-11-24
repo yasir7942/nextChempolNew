@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import SiteSchema from "./components/elements/site-schema";
 import { i18n } from "@/i18n.config";
 import { openSans } from "@/libs/fonts";
+import GoogleTagManager, { GoogleTagManagerNoScript } from "./components/elements/google-tag-manager";
 
 const SUPPORTED = ["en", "ar", "es"];
 
@@ -68,14 +69,18 @@ export default async function LangLayout({ children, params }) {
     readers. The inner div keeps its dir as before.
   */
   return (
-    // html/body must be on one line, no whitespace
-    <html lang={lang} dir={dir}><body className={openSans.className}>
-      <div dir={dir}>
-        <SiteSchema lang={lang} />
-        <Topbar locale={lang} />
-        {children}
-        <Footer locale={lang} />
-      </div>
-    </body></html>
+    <html lang={lang} dir={dir}>
+      <body className={openSans.className}>
+        {/* Google Tag Manager (GA4 runs inside it): see components/elements/google-tag-manager.js */}
+        <GoogleTagManagerNoScript />
+        <GoogleTagManager />
+        <div dir={dir}>
+          <SiteSchema lang={lang} />
+          <Topbar locale={lang} />
+          {children}
+          <Footer locale={lang} />
+        </div>
+      </body>
+    </html>
   );
 }

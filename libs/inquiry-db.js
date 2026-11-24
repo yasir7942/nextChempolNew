@@ -72,6 +72,27 @@ function open() {
         CREATE INDEX IF NOT EXISTS submissions_created_at ON submissions (created_at);
         CREATE INDEX IF NOT EXISTS submissions_email_sent ON submissions (email_sent);
         CREATE INDEX IF NOT EXISTS submissions_dedupe ON submissions (dedupe_key, created_at);
+
+        -- Copies waiting for / sent to the Atlantic Inquiry Manager (libs/inquiry-forward.js)
+        CREATE TABLE IF NOT EXISTS inquiry_outbox (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            submission_id     TEXT    NOT NULL UNIQUE,     -- sent as submission_id and Idempotency-Key
+            submission_row_id INTEGER UNIQUE,              -- submissions.id (NULL if the submission could not be saved)
+            body              TEXT    NOT NULL,            -- the exact JSON sent; resent unchanged on every retry
+            status            TEXT    NOT NULL DEFAULT 'pending', -- pending | delivered | failed
+            attempts          INTEGER NOT NULL DEFAULT 0,
+            created_at        TEXT    NOT NULL,
+            next_attempt_at   TEXT    NOT NULL,
+            retry_until       TEXT    NOT NULL,            -- retries stop after this (24 hours)
+            locked_until      TEXT,                        -- a sender is working on it until then
+            last_attempt_at   TEXT,
+            last_http_status  INTEGER,
+            last_error_code   TEXT,
+            last_error_fields TEXT,                        -- field names from a 422 answer, comma-separated
+            inquiry_id        TEXT,
+            delivered_at      TEXT
+        );
+        CREATE INDEX IF NOT EXISTS inquiry_outbox_due ON inquiry_outbox (status, next_attempt_at);
     `);
 
     try {
@@ -266,4 +287,96 @@ export function exportSubmissions(filters = {}) {
         .map(rowFromDb);
 
     return { rows: rows.slice(0, EXPORT_LIMIT), truncated: rows.length > EXPORT_LIMIT };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Outbox of the Atlantic Inquiry Manager (used by libs/inquiry-forward.js)
+// ---------------------------------------------------------------------------------------------
+
+const OUTBOX_RETRY_WINDOW_MS = 24 * 3600000;
+
+// Stores the body before it is sent. Returns { id, created: true }, { created: false } when this
+// submission (same submission_id or same saved row) is already queued, or null when the database failed.
+export function enqueueOutbox({ submissionId, submissionRowId = null, body }) {
+    try {
+        const now = new Date();
+        const result = open()
+            .prepare(
+                `INSERT OR IGNORE INTO inquiry_outbox (submission_id, submission_row_id, body, created_at, next_attempt_at, retry_until)
+                 VALUES (?, ?, ?, ?, ?, ?)`
+            )
+            .run(submissionId, submissionRowId, body, now.toISOString(), now.toISOString(), new Date(now.getTime() + OUTBOX_RETRY_WINDOW_MS).toISOString());
+
+        return result.changes ? { id: Number(result.lastInsertRowid), created: true } : { created: false };
+    } catch (error) {
+        console.error("Submission database: could not queue the Inquiry Manager copy", error?.code || error?.name || "error");
+        return null;
+    }
+}
+
+// Takes a pending item for `leaseMs` so no other sender works on it at the same time; the row, or null
+export function claimOutboxItem(id, leaseMs = 60000) {
+    const now = new Date();
+    const row = open()
+        .prepare(
+            `UPDATE inquiry_outbox SET locked_until = ?
+             WHERE id = ? AND status = 'pending' AND (locked_until IS NULL OR locked_until < ?)
+             RETURNING *`
+        )
+        .get(new Date(now.getTime() + leaseMs).toISOString(), id, now.toISOString());
+    return row ? { ...row, id: Number(row.id), attempts: Number(row.attempts) } : null;
+}
+
+// Pending items whose next attempt is due, oldest first
+export function dueOutboxIds(limit = 30) {
+    const now = new Date().toISOString();
+    return open()
+        .prepare(
+            `SELECT id FROM inquiry_outbox
+             WHERE status = 'pending' AND next_attempt_at <= ? AND (locked_until IS NULL OR locked_until < ?)
+             ORDER BY next_attempt_at LIMIT ?`
+        )
+        .all(now, now, limit)
+        .map((row) => Number(row.id));
+}
+
+// Result of one attempt. status: "delivered" | "pending" (retry at nextAttemptAt) | "failed"
+export function recordOutboxResult(id, { status, httpStatus = null, errorCode = null, errorFields = [], inquiryId = null, nextAttemptAt = null }) {
+    const now = new Date().toISOString();
+    open()
+        .prepare(
+            `UPDATE inquiry_outbox SET
+                status = ?, attempts = attempts + 1, locked_until = NULL, last_attempt_at = ?,
+                last_http_status = ?, last_error_code = ?, last_error_fields = ?,
+                inquiry_id = COALESCE(?, inquiry_id),
+                delivered_at = CASE WHEN ? = 'delivered' THEN ? ELSE delivered_at END,
+                next_attempt_at = COALESCE(?, next_attempt_at)
+             WHERE id = ?`
+        )
+        .run(status, now, httpStatus, errorCode, errorFields.length ? errorFields.join(",") : null, inquiryId, status, now, nextAttemptAt, id);
+}
+
+// Counts and the items that need attention (no inquiry content: only IDs, codes and dates)
+export function outboxSummary() {
+    const db = open();
+    const counts = { pending: 0, delivered: 0, failed: 0 };
+    for (const row of db.prepare("SELECT status, COUNT(*) AS n FROM inquiry_outbox GROUP BY status").all()) counts[row.status] = Number(row.n);
+
+    const columns = "submission_id, submission_row_id, attempts, created_at, last_attempt_at, next_attempt_at, last_http_status, last_error_code, last_error_fields";
+    return {
+        counts,
+        oldestPendingAt: db.prepare("SELECT MIN(created_at) AS at FROM inquiry_outbox WHERE status = 'pending'").get()?.at || null,
+        pending: db.prepare(`SELECT ${columns} FROM inquiry_outbox WHERE status = 'pending' ORDER BY created_at LIMIT 50`).all(),
+        failed: db.prepare(`SELECT ${columns} FROM inquiry_outbox WHERE status = 'failed' ORDER BY id DESC LIMIT 50`).all(),
+    };
+}
+
+// Puts failed items back in the queue (for example after the API key was fixed), with a new 24-hour window
+export function requeueFailedOutbox() {
+    const now = new Date();
+    return Number(
+        open()
+            .prepare("UPDATE inquiry_outbox SET status = 'pending', locked_until = NULL, next_attempt_at = ?, retry_until = ? WHERE status = 'failed'")
+            .run(now.toISOString(), new Date(now.getTime() + OUTBOX_RETRY_WINDOW_MS).toISOString()).changes
+    );
 }
